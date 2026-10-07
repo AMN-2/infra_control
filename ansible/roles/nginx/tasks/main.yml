@@ -15,11 +15,19 @@
     state: absent
   notify: Reload nginx
 
+# conf.d is read in alphabetical order; `00-` makes these http-level settings (the `main` log
+# format in particular) exist before the bench's frappe-bench.conf uses them.
 - name: Global settings
   ansible.builtin.template:
     src: infra-control.conf.j2
-    dest: /etc/nginx/conf.d/infra-control.conf
+    dest: /etc/nginx/conf.d/00-infra-control.conf
     mode: "0644"
+  notify: Reload nginx
+
+- name: Remove the settings file's old name
+  ansible.builtin.file:
+    path: /etc/nginx/conf.d/infra-control.conf
+    state: absent
   notify: Reload nginx
 
 - name: nginx is enabled and running

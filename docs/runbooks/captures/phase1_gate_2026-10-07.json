@@ -1,0 +1,106 @@
+{
+  "captured_at": "2026-10-07T18:44:41.052Z",
+  "site": "ops-staging.localhost",
+  "namespace": "/ops-staging.localhost",
+  "room": "all",
+  "job": {
+    "name": "JOB-00002",
+    "playbook": "server.snapshot",
+    "target": "SRV-0001",
+    "status": "Success",
+    "progress": 100,
+    "steps": [
+      {
+        "idx": 0,
+        "title": "Snapshot",
+        "status": "Success"
+      }
+    ]
+  },
+  "events": [
+    {
+      "t_ms": 107,
+      "event": "infra:job.updated",
+      "payload": {
+        "job": "JOB-00002",
+        "progress": 0,
+        "status": "Queued"
+      },
+      "valid": true
+    },
+    {
+      "t_ms": 399,
+      "event": "infra:job.updated",
+      "payload": {
+        "job": "JOB-00002",
+        "progress": 0,
+        "status": "Running"
+      },
+      "valid": true
+    },
+    {
+      "t_ms": 473,
+      "event": "infra:job.step",
+      "payload": {
+        "idx": 0,
+        "job": "JOB-00002",
+        "status": "Queued",
+        "title": "Snapshot"
+      },
+      "valid": true
+    },
+    {
+      "t_ms": 475,
+      "event": "infra:job.log",
+      "payload": {
+        "chunk": "Snapshot: ok\n",
+        "idx": 0,
+        "job": "JOB-00002"
+      },
+      "valid": true
+    },
+    {
+      "t_ms": 475,
+      "event": "infra:job.step",
+      "payload": {
+        "idx": 0,
+        "job": "JOB-00002",
+        "status": "Success",
+        "title": "Snapshot"
+      },
+      "valid": true
+    },
+    {
+      "t_ms": 477,
+      "event": "infra:job.updated",
+      "payload": {
+        "job": "JOB-00002",
+        "progress": 100,
+        "status": "Running"
+      },
+      "valid": true
+    },
+    {
+      "t_ms": 479,
+      "event": "infra:job.updated",
+      "payload": {
+        "job": "JOB-00002",
+        "progress": 100,
+        "status": "Success"
+      },
+      "valid": true
+    },
+    {
+      "t_ms": 479,
+      "event": "infra:inventory.changed",
+      "payload": {
+        "change": "updated",
+        "doctype": "Server",
+        "name": "SRV-0001"
+      },
+      "valid": true
+    }
+  ],
+  "all_valid": true,
+  "event_count": 8
+}

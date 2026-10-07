@@ -343,6 +343,7 @@ class FakeRecords:
 			else None
 		)
 		self.backup_sets: dict[str, dict[str, str]] = {}
+		self.public_key = "ssh-ed25519 AAAA controller infra-control@ops-staging"
 
 	def record_server(self, account: str, droplet: dict[str, Any]) -> str:
 		self.calls.append(("server", (account, droplet["provider_ref"])))
@@ -351,6 +352,13 @@ class FakeRecords:
 	def record_site(self, domain: str, bench: str) -> str:
 		self.calls.append(("site", (domain, bench)))
 		return domain
+
+	def record_bench(self, account: str, server: str, path: str) -> str:
+		self.calls.append(("bench", (account, server, path)))
+		return "BENCH-0009"
+
+	def controller_public_key(self) -> str:
+		return self.public_key
 
 	def record_backup(self, site: str, kind: str, location: str, size_mb: float, job_ref: str) -> str:
 		self.calls.append(("backup", (site, kind, location, size_mb)))
@@ -508,14 +516,18 @@ def test_create_server_end_to_end_with_firewall_and_configure() -> None:
 	third = a.get_status(ref)
 	assert third.state is OpState.SUCCESS and third.created == ("Server", "999")
 	# A2.3: the Server document is recorded so the engine can link the job to it (ADR 0001).
-	assert records.calls == [("server", ("DO-STAGING", "999"))]
+	assert records.calls == [
+		("server", ("DO-STAGING", "999")),
+		("bench", ("DO-STAGING", "SRV-0009", "/home/frappe/frappe-bench")),
+	]
+	assert runner.started[0][2] == {"hostname": "app-03.fra1", "bench_init": True}
 	assert a.cancel(ref) is True
 
 
 @responses.activate
 def test_create_server_refuses_without_controller_ip_or_ssh_key() -> None:
 	responses.get(url("account/keys"), json={"ssh_keys": [], "links": {}})
-	with pytest.raises(ProviderError, match="SSH key"):
+	with pytest.raises(ProviderError, match="SSH public key is not on this"):
 		adapter().call("create_server", hostname="h.fra1", region="fra1", size="s-1")
 	with pytest.raises(ValidationError):
 		adapter().call("create_server", hostname="", region="fra1", size="s-1")
@@ -607,3 +619,34 @@ def test_cloud_init_is_key_only() -> None:
 	text = render_cloud_init("h.fra1", "frappe", "ssh-ed25519 KEY\n")
 	assert "hostname: h.fra1" in text and "- ssh-ed25519 KEY" in text
 	assert "PermitRootLogin no" in text and "ssh_pwauth: false" in text
+
+
+@responses.activate
+def test_ssh_key_is_found_by_key_material_not_by_name() -> None:
+	"""A2.6: the staging team named the key 'infra-control staging'; the name must not matter."""
+	responses.get(
+		url("account/keys"),
+		json={
+			"ssh_keys": [
+				{"id": 1, "name": "someone else", "public_key": "ssh-ed25519 BBBB other"},
+				{
+					"id": 2,
+					"name": "infra-control staging",
+					"public_key": "ssh-ed25519 AAAA controller laptop",
+				},
+			],
+			"links": {},
+		},
+	)
+	assert adapter()._ssh_key()["id"] == 2
+
+	records = FakeRecords()
+	records.public_key = ""  # unreadable controller key: fall back to the conventional name
+	responses.get(
+		url("account/keys"),
+		json={
+			"ssh_keys": [{"id": 3, "name": "infra-control", "public_key": "ssh-ed25519 CCCC x"}],
+			"links": {},
+		},
+	)
+	assert adapter(records=records)._ssh_key()["id"] == 3

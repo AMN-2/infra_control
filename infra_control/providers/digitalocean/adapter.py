@@ -40,6 +40,8 @@ FIREWALL_NAME = "infra-control-managed"
 DEFAULT_IMAGE = "ubuntu-24-04-x64"
 DEFAULT_SSH_USER = "frappe"
 PROVISION_PLAYBOOK = "server_provision.yml"
+DEFAULT_BENCH_PATH = "/home/frappe/frappe-bench"
+"""Where server_provision.yml initialises the bench (roles/bench defaults: bench_name)."""
 
 # Playbook files per Provider method (A2.2/A2.3 ship them under ansible/playbooks/).
 SITE_PLAYBOOKS: dict[str, str] = {
@@ -60,6 +62,8 @@ class Records(Protocol):
 	"""What a successful operation leaves in the DocTypes (settings.py implements it with Frappe)."""
 
 	def record_server(self, account: str, droplet: dict[str, Any]) -> str: ...
+	def record_bench(self, account: str, server: str, path: str) -> str: ...
+	def controller_public_key(self) -> str: ...
 	def record_site(self, domain: str, bench: str) -> str: ...
 	def record_backup(self, site: str, kind: str, location: str, size_mb: float, job_ref: str) -> str: ...
 	def record_domain(self, site: str, domain: str) -> None: ...
@@ -164,12 +168,22 @@ class DigitalOceanProvider(Provider):
 		return self.runner.start(server, SITE_PLAYBOOKS[method], extra_vars)
 
 	def _ssh_key(self) -> dict[str, Any]:
-		for key in self.client.list_ssh_keys():
+		"""The account's SSH key holding the controller's public key.
+
+		Matched by key material first (the name a human typed does not matter), then by the name
+		`infra-control` as a fallback when the controller's public key cannot be read."""
+		keys = self.client.list_ssh_keys()
+		mine = _key_material(self._records.controller_public_key())
+		if mine:
+			for key in keys:
+				if _key_material(str(key.get("public_key", ""))) == mine:
+					return key
+		for key in keys:
 			if key.get("name") == SSH_KEY_NAME:
 				return key
 		raise ProviderError(
-			f"No DigitalOcean SSH key named {SSH_KEY_NAME!r} on this account",
-			{"hint": "Add the controller's public key under Settings → Security with that name"},
+			"The controller's SSH public key is not on this DigitalOcean account",
+			{"hint": "Add it under Settings → Security (any name; `infra-control` is conventional)"},
 		)
 
 	# --- site level (Ansible) --------------------------------------------------------------
@@ -516,7 +530,11 @@ class DigitalOceanProvider(Provider):
 				"ssh_port": 22,
 				"role": str(mapping.role_from_tags([str(t) for t in droplet.get("tags") or []])),
 			}
-			p.configure = self.runner.start(server, PROVISION_PLAYBOOK, {"hostname": p.hostname})
+			# A provisioned server ends with an initialised, production-ready bench (plan 9.2, exit
+			# gate: "a new DO server reaches a working site in one action").
+			p.configure = self.runner.start(
+				server, PROVISION_PLAYBOOK, {"hostname": p.hostname, "bench_init": True}
+			)
 		inner = self.runner.status(p.configure)
 		if inner.steps:
 			steps.extend(inner.steps)
@@ -524,7 +542,8 @@ class DigitalOceanProvider(Provider):
 			steps.append(OpStep("Configure server", inner.state, started_at=p.firewall_at))
 		created = None
 		if inner.state is OpState.SUCCESS:
-			self._records.record_server(self.config.account, mapping.normalize_droplet(droplet))
+			server_name = self._records.record_server(self.config.account, mapping.normalize_droplet(droplet))
+			self._records.record_bench(self.config.account, server_name, DEFAULT_BENCH_PATH)
 			created = ("Server", p.droplet_id)
 		return OpStatus(inner.state, tuple(steps), error=inner.error, created=created)
 
@@ -557,6 +576,12 @@ class _SettingsRecords:
 	def record_server(self, account: str, droplet: dict[str, Any]) -> str:
 		return settings.record_server(account, droplet)
 
+	def record_bench(self, account: str, server: str, path: str) -> str:
+		return settings.record_bench(account, server, path)
+
+	def controller_public_key(self) -> str:
+		return settings.controller_public_key()
+
 	def record_site(self, domain: str, bench: str) -> str:
 		return settings.record_site(domain, bench)
 
@@ -572,3 +597,9 @@ class _SettingsRecords:
 	def spaces_client(self) -> spaces.SpacesClient | None:
 		client: spaces.SpacesClient | None = settings.spaces_client()
 		return client
+
+
+def _key_material(public_key: str) -> str:
+	"""`ssh-ed25519 AAAA... comment` → `ssh-ed25519 AAAA...` (the comment is not part of the key)."""
+	parts = public_key.strip().split()
+	return " ".join(parts[:2]) if len(parts) >= 2 else ""

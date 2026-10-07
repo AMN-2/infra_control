@@ -42,8 +42,17 @@
   ansible.builtin.command:
     cmd: >-
       {{ bench_home }}/.local/bin/bench init {{ bench_name }}
-      --frappe-branch {{ bench_frappe_branch }} --python {{ bench_python }} --skip-redis-config-generation
+      --frappe-branch {{ bench_frappe_branch }} --python {{ bench_python }}
     chdir: "{{ bench_home }}"
     creates: "{{ bench_home }}/{{ bench_name }}/apps/frappe"
   environment:
     PATH: "{{ bench_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+- name: Production setup (supervisor and nginx for the bench)
+  when: bench_init | bool
+  ansible.builtin.command:
+    cmd: "{{ bench_home }}/.local/bin/bench setup production {{ bench_user }} --yes"
+    chdir: "{{ bench_home }}/{{ bench_name }}"
+    creates: "/etc/supervisor/conf.d/{{ bench_name }}.conf"
+  environment:
+    PATH: "{{ bench_home }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"

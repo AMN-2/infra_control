@@ -141,6 +141,34 @@ def record_server(account: str, droplet: dict[str, Any]) -> str:
 	return str(doc.name)
 
 
+def record_bench(account: str, server: str, path: str) -> str:
+	"""The bench a provision initialised (one per server path). Apps and version: inventory.sync."""
+	existing = frappe.db.get_value("Bench", {"server": server, "path": path}, "name")
+	if existing:
+		return str(existing)
+	doc: Any = frappe.get_doc(
+		{
+			"doctype": "Bench",
+			"title": os.path.basename(path.rstrip("/")) or path,
+			"provider_account": account,
+			"provider": "digitalocean",
+			"provider_ref": f"{server}:{path}",
+			"server": server,
+			"path": path,
+		}
+	)
+	doc.insert(ignore_permissions=True)
+	return str(doc.name)
+
+
+def controller_public_key() -> str:
+	"""The public half of `ssh_key_path()`, or "" when it cannot be read."""
+	try:
+		return Path(ssh_key_path() + ".pub").read_text().strip()
+	except OSError:
+		return ""
+
+
 def record_site(domain: str, bench: str) -> str:
 	"""Create the Site a successful `site.create` produced (name = domain)."""
 	if frappe.db.exists("Site", domain):

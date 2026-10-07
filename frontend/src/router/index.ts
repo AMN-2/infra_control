@@ -7,6 +7,12 @@ export const routes: RouteRecordRaw[] = [
 		name: "home",
 		component: () => import("@/features/home/HomeView.vue"),
 	},
+	{
+		// Living design-system showcase for review (B0.2). Restricted to Infra Admin once auth lands (Q-B7).
+		path: "/_design",
+		name: "design",
+		component: () => import("@/features/design/DesignShowcase.vue"),
+	},
 ];
 
 export const router = createRouter({

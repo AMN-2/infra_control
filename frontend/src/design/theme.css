@@ -1,0 +1,80 @@
+/*
+ * Tailwind theme: exposes tokens.css as utilities and removes Tailwind's default palette,
+ * easings and animations so nothing outside the tokens is reachable.
+ */
+@theme {
+	--color-*: initial;
+	--ease-*: initial;
+	--animate-*: initial;
+	--shadow-*: initial;
+	--font-*: initial;
+	--radius-*: initial;
+	--text-*: initial;
+	--tracking-*: initial;
+	--leading-*: initial;
+	--blur-*: initial;
+}
+
+@theme inline {
+	--color-canvas: var(--ic-canvas);
+	--color-surface-1: var(--ic-surface-1);
+	--color-surface-2: var(--ic-surface-2);
+	--color-surface-3: var(--ic-surface-3);
+	--color-scrim: var(--ic-scrim);
+	--color-line: var(--ic-line);
+	--color-line-strong: var(--ic-line-strong);
+	--color-fg: var(--ic-fg);
+	--color-fg-muted: var(--ic-fg-muted);
+	--color-fg-subtle: var(--ic-fg-subtle);
+	--color-fg-disabled: var(--ic-fg-disabled);
+	--color-accent: var(--ic-accent);
+	--color-accent-hover: var(--ic-accent-hover);
+	--color-accent-press: var(--ic-accent-press);
+	--color-accent-fg: var(--ic-accent-fg);
+	--color-accent-soft: var(--ic-accent-soft);
+	--color-accent-text: var(--ic-accent-text);
+	--color-healthy: var(--ic-healthy);
+	--color-degraded: var(--ic-degraded);
+	--color-down: var(--ic-down);
+	--color-running: var(--ic-running);
+	--color-neutral: var(--ic-neutral);
+	--color-healthy-soft: var(--ic-healthy-soft);
+	--color-degraded-soft: var(--ic-degraded-soft);
+	--color-down-soft: var(--ic-down-soft);
+	--color-running-soft: var(--ic-running-soft);
+	--color-neutral-soft: var(--ic-neutral-soft);
+	--color-transparent: transparent;
+	--color-current: currentColor;
+
+	--font-display: var(--ic-font-display);
+	--font-body: var(--ic-font-body);
+	--font-mono: var(--ic-font-mono);
+
+	--text-2xs: var(--ic-text-2xs);
+	--text-xs: var(--ic-text-xs);
+	--text-sm: var(--ic-text-sm);
+	--text-md: var(--ic-text-md);
+	--text-lg: var(--ic-text-lg);
+	--text-xl: var(--ic-text-xl);
+	--text-2xl: var(--ic-text-2xl);
+	--text-3xl: var(--ic-text-3xl);
+	--text-4xl: var(--ic-text-4xl);
+
+	--tracking-tight: var(--ic-tracking-tight);
+	--tracking-wide: var(--ic-tracking-wide);
+	--leading-tight: var(--ic-leading-tight);
+	--leading-snug: var(--ic-leading-snug);
+	--leading-normal: var(--ic-leading-normal);
+
+	--spacing: var(--ic-space-unit);
+
+	--radius-sm: var(--ic-radius-sm);
+	--radius: var(--ic-radius);
+	--radius-full: var(--ic-radius-full);
+
+	--shadow-overlay: var(--ic-shadow-overlay);
+
+	--ease-standard: var(--ic-ease);
+	--default-transition-duration: var(--ic-dur-base);
+	--default-transition-timing-function: var(--ic-ease);
+}

@@ -1,7 +1,7 @@
 # Agent A status
 
 Resume file for the next Agent A session. Update before every session ends.
-Last update: 2026-10-07 (session 2; single agent owns backend and frontend since this session).
+Last update: 2026-10-07 (session 3; single agent owns backend and frontend since session 2).
 
 ## Phase 0 tasks
 
@@ -21,30 +21,42 @@ after each merge GitHub retargets the next PR to `main`.
 Contracts approved by the reviewer on 2026-10-07 (in chat, after `25ddf00`), with the instruction to
 start Phase 1. Merging #3-#7 on GitHub and enabling Actions remain the reviewer's.
 
-## Phase 1 (complete on both sides, gate pending)
+## Phase 1 (complete on both sides; gate half-passed)
 
-Backend: A1.1 (#8), A1.3 (#9), A1.2 (#10), A1.4 (#11), A1.5 (#12). Frontend (same agent since
-2026-10-07): B0 foundation rebased (#13, supersedes #1/#2), B1.1 components (#14), B1.3 realtime
-+ stores (#15), B1.2 app shell (#16). Merge order: #3..#7, #8..#12, #13..#16, top-down.
+Backend: A1.1 (#8), A1.3 (#9), A1.2 (#10), A1.4 (#11), A1.5 (#12), gate follow-up
+[#17](https://github.com/AMN-2/infra_control/pull/17) (engine datetime fix, site-explicit
+integration tests, gate record). Frontend (same agent since 2026-10-07): B0 foundation rebased
+(#13, supersedes #1/#2), B1.1 components (#14), B1.3 realtime + stores (#15), B1.2 app shell
+(#16). Merge order: #3..#7, #8..#12, #17, #13..#16, top-down.
 
-Verified locally: backend ruff/mypy strict/145 pytest; frontend format/lint/vue-tsc/54 vitest/
-build (132 KB gz initial)/13 Playwright; the built SPA connects to the mock realtime server and
-validates every replayed event (see docs/runbooks/frontend_build.md, "Mock session").
+Verified locally (session 3): backend ruff / mypy --strict / 146 pytest; Frappe integration
+suite on a real site (`bench --site ops-staging.localhost run-tests --app infra_control`:
+16 tests, OK); frontend format / lint / vue-tsc / vitest / build (132 KB gz initial, budget
+250) / 13 Playwright. Session 3 found and fixed lint and type errors in the frontend test
+files that the earlier "green" had missed (commit `5213f05` on `agent-b/B1.2-app-shell`).
 
-**Exit gate, still needs the reviewer:** (1) the dummy playbook run on a staging server with
-steps arriving over Socket.IO: needs a control-plane site with the `infra` worker
-(docs/QUESTIONS.md Q9); (2) approval of the design system from `/infra/_design` (sections
-Surfaces..Motion from B0.2, Components from B1.1).
+**Exit gate:**
+
+1. **Passed (2026-10-07).** The dummy playbook `server.snapshot` ran on staging server
+   `SRV-0001` through `jobs.run`, a worker on the `infra` queue, and its steps arrived live over
+   Frappe's Socket.IO on namespace `/ops-staging.localhost`: 8 `infra:*` events, all valid
+   against `contracts/events`, job `Success`, reproduced twice. Record, capture and findings:
+   `docs/runbooks/job_engine.md`, "Phase 1 exit gate run". It surfaced a real engine bug
+   (tz-aware step timestamps rejected by MariaDB), fixed in #17.
+2. **Still needs the reviewer:** approval of the design system from `/infra/_design` (sections
+   Surfaces..Motion from B0.2, Components from B1.1).
 
 ## In progress
 
-Nothing. Do not start Phase 2 (A2.x providers, B2.x screens) before the Phase 1 exit gate.
+Nothing. Do not start Phase 2 (A2.x providers, B2.x screens) before the reviewer approves the
+design system (gate half 2) and merges the stack.
 
 ## Open questions (docs/QUESTIONS.md)
 
 - Q1–Q6: decided (recorded in the Decision column on the A0.5 branch).
 - Q7: FC `suspend_site` → deactivate/activate mapping. Proposed default in use. Needs a decision
   before A2.4.
+- Q9: closed on #17; the gate ran on the existing staging site `ops-staging.localhost`.
 - Q8: live Press sample captures blocked on a staging Frappe Cloud team (plan open question 5).
 - Q-B2 (Agent B's): answered by A0.5; Agent B should mark it decided once #7 merges.
 
@@ -53,9 +65,14 @@ Nothing. Do not start Phase 2 (A2.x providers, B2.x screens) before the Phase 1 
 - Push over HTTPS (`git push https://github.com/AMN-2/infra_control.git <branch>`); SSH keys
   are not set up for GitHub here. `gh` is authenticated as AMN-2.
 - Tooling: `ruff` from `~/.local/bin`; `mypy` and `pytest` from `~/frappe-bench/env/bin`.
-- `infra_control` is in `sites/apps.txt` but installed on no local site, so the Frappe
-  integration test (`infra_control/infra_control/tests/`) only runs in the GitHub `bench-tests`
-  job. Creating a site is a bench-wide action; ask the reviewer first.
+- `infra_control` is installed on the staging site `ops-staging.localhost` (session 3) with
+  `infra_use_dummy_provider: 1`; the Frappe integration tests run there. `workers.infra` is
+  declared in `sites/common_site_config.json` (backup `*.bak-infra-gate-20261007`); gunicorn
+  caches the queue list per worker, so `bench restart` is needed before `jobs.run` works from
+  every web worker. Seed records: user `infra.gate@ops-staging.localhost` (Infra roles, API
+  key), `Provider Account` `DO-STAGING` (staging, placeholder token), `Server` `SRV-0001`.
+  A dedicated `bench worker --queue infra` must be running for jobs to execute. Creating a
+  new site remains a bench-wide action; ask the reviewer first.
 - Agent B works in `/home/frappe/worktrees/infra_control-agent-b` (PRs #1, #2). Both sides
   edited `docs/QUESTIONS.md`; expect a trivial conflict when the second side rebases.
 

@@ -23,8 +23,9 @@ start Phase 1. Merging #3-#7 on GitHub and enabling Actions remain the reviewer'
 
 ## In progress
 
-A1.1 (DocTypes, roles, permissions, immutable audit log) on `agent-a/A1.1-doctypes`, stacked on
-A0.5. Previously: the PR #4 contracts review (6 blocking + 5 non-blocking items) is fully addressed in
+Phase 1 in order A1.1 -> A1.3 -> A1.2 -> A1.4 (A1.3 before A1.2 because the job engine
+resolves providers through the registry). A1.1 is on `agent-a/A1.1-doctypes` (PR #8), A1.3 on
+`agent-a/A1.3-provider-base` (PR #9). Next: A1.2 job engine on `agent-a/A1.2-job-engine`. Previously: the PR #4 contracts review (6 blocking + 5 non-blocking items) is fully addressed in
 `25ddf00` on `agent-a/A0.2-contracts`; the mock follows in `2028632` on `agent-a/A0.4-mock-server`.
 ADR 0001 (`docs/adr/`) records the creation-playbook target decision. The stack was rebased and
 force-pushed. Phase 0 exit gate is waiting on the human: approve `contracts/` and merge #3–#7.

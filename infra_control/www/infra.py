@@ -15,6 +15,7 @@ from urllib.parse import quote_plus
 import frappe
 import frappe.sessions
 
+from infra_control.core.permissions import ROLES, user_roles
 from infra_control.core.spa import SpaBoot, SpaNotBuiltError, load_assets
 
 no_cache = 1
@@ -35,6 +36,7 @@ def get_context(context: Any) -> None:
 		csrf_token=frappe.sessions.get_csrf_token(),
 		site_name=frappe.local.site,
 		session_user=frappe.session.user,
+		roles=tuple(r for r in ROLES if r in user_roles()),
 	)
 	context.boot = boot.as_dict()
 	context.csrf_token = boot.csrf_token

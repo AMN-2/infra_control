@@ -38,6 +38,7 @@ build is live without a restart.
 window.csrf_token = "<token>";
 window.infra_boot = {
   csrf_token, site_name, session_user,
+  roles: ["Infra Admin", "Infra Operator", "Infra Viewer"],   // the user's Infra roles, hierarchy applied
   base_path: "/infra/",
   api_base: "/api/method/infra_control.api.",
   socketio_path: "/socket.io"

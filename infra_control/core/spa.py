@@ -119,6 +119,8 @@ class SpaBoot:
 	csrf_token: str
 	site_name: str
 	session_user: str
+	roles: tuple[str, ...] = ()
+	"""Infra roles the user holds (hierarchy applied), for the client-side guard and menus."""
 	base_path: str = "/infra/"
 	api_base: str = "/api/method/infra_control.api."
 	socketio_path: str = "/socket.io"
@@ -129,6 +131,7 @@ class SpaBoot:
 			"csrf_token": self.csrf_token,
 			"site_name": self.site_name,
 			"session_user": self.session_user,
+			"roles": list(self.roles),
 			"base_path": self.base_path,
 			"api_base": self.api_base,
 			"socketio_path": self.socketio_path,

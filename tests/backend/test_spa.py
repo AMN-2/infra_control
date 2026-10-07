@@ -73,8 +73,12 @@ def test_public_frontend_dir_is_the_asset_base(repo_root: Path) -> None:
 
 
 def test_boot_dict_has_what_the_client_needs() -> None:
-	boot = spa.SpaBoot(csrf_token="t", site_name="s", session_user="u", extra={"k": 1}).as_dict()
+	boot = spa.SpaBoot(
+		csrf_token="t", site_name="s", session_user="u", roles=("Infra Admin", "Infra Viewer"), extra={"k": 1}
+	).as_dict()
 	assert boot["csrf_token"] == "t"
+	assert boot["roles"] == ["Infra Admin", "Infra Viewer"]
+	assert spa.SpaBoot(csrf_token="t", site_name="s", session_user="u").as_dict()["roles"] == []
 	assert boot["api_base"] == "/api/method/infra_control.api."
 	assert boot["socketio_path"] == "/socket.io"
 	assert boot["base_path"] == "/infra/"

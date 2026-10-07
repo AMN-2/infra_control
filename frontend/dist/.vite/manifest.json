@@ -1,0 +1,78 @@
+{
+  "index.html": {
+    "file": "assets/index-AC6VD4X8.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "dynamicImports": [
+      "src/features/home/HomeView.vue",
+      "src/features/design/DesignShowcase.vue"
+    ],
+    "css": [
+      "assets/index-hvB91y5-.css"
+    ],
+    "assets": [
+      "assets/space-grotesk-vietnamese-wght-normal-D0rl6rjA.woff2",
+      "assets/space-grotesk-latin-ext-wght-normal-D9tNdqV9.woff2",
+      "assets/space-grotesk-latin-wght-normal-BhU9QXUp.woff2",
+      "assets/jetbrains-mono-cyrillic-wght-normal-D73BlboJ.woff2",
+      "assets/jetbrains-mono-greek-wght-normal-Bw9x6K1M.woff2",
+      "assets/jetbrains-mono-vietnamese-wght-normal-Bt-aOZkq.woff2",
+      "assets/jetbrains-mono-latin-ext-wght-normal-DBQx-q_a.woff2",
+      "assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2"
+    ]
+  },
+  "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-cyrillic-wght-normal.woff2": {
+    "file": "assets/jetbrains-mono-cyrillic-wght-normal-D73BlboJ.woff2",
+    "src": "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-cyrillic-wght-normal.woff2"
+  },
+  "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-greek-wght-normal.woff2": {
+    "file": "assets/jetbrains-mono-greek-wght-normal-Bw9x6K1M.woff2",
+    "src": "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-greek-wght-normal.woff2"
+  },
+  "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-ext-wght-normal.woff2": {
+    "file": "assets/jetbrains-mono-latin-ext-wght-normal-DBQx-q_a.woff2",
+    "src": "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-ext-wght-normal.woff2"
+  },
+  "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2": {
+    "file": "assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
+    "src": "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2"
+  },
+  "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-vietnamese-wght-normal.woff2": {
+    "file": "assets/jetbrains-mono-vietnamese-wght-normal-Bt-aOZkq.woff2",
+    "src": "node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-vietnamese-wght-normal.woff2"
+  },
+  "node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-ext-wght-normal.woff2": {
+    "file": "assets/space-grotesk-latin-ext-wght-normal-D9tNdqV9.woff2",
+    "src": "node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-ext-wght-normal.woff2"
+  },
+  "node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2": {
+    "file": "assets/space-grotesk-latin-wght-normal-BhU9QXUp.woff2",
+    "src": "node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2"
+  },
+  "node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-vietnamese-wght-normal.woff2": {
+    "file": "assets/space-grotesk-vietnamese-wght-normal-D0rl6rjA.woff2",
+    "src": "node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-vietnamese-wght-normal.woff2"
+  },
+  "src/features/design/DesignShowcase.vue": {
+    "file": "assets/DesignShowcase-BhOENAF-.js",
+    "name": "DesignShowcase",
+    "src": "src/features/design/DesignShowcase.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ],
+    "css": [
+      "assets/DesignShowcase-Bjgmkp4c.css"
+    ]
+  },
+  "src/features/home/HomeView.vue": {
+    "file": "assets/HomeView-DdTMLwaN.js",
+    "name": "HomeView",
+    "src": "src/features/home/HomeView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  }
+}

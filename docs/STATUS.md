@@ -60,9 +60,9 @@ system from `/infra/_design`.
 | B2.3 Jobs list + Job viewer with live terminal, cancel/retry | done, full local CI green | `agent-b/B2.3-job-viewer` (on B2.2) | #20 |
 | A2.1 DigitalOcean client + adapter | done, 166 unit tests; not verified live (no staging token) | `agent-a/A2.1-digitalocean` (on #17), worktree `/home/frappe/worktrees/infra_control-agent-a` | #21 |
 | A2.2 Ansible roles, server.provision, service.control | done; Molecule converge + idempotence + verify green, 181 unit tests | `agent-a/A2.2-ansible-roles` (on #21) | #22 |
-| A2.3 Site playbooks on DO | next | | |
+| A2.3 Site playbooks on DO | done; Molecule green, 195 unit tests; playbooks run live in the exit gate | `agent-a/A2.3-site-playbooks` (on #22) | #23 |
 | A2.4 Frappe Cloud client + adapter | blocked on Q7/Q8 (staging team) | | |
-| A2.5 inventory.sync | | | |
+| A2.5 inventory.sync | next | | |
 
 Preview for the reviewer: `http://<host>:5180/infra/` (Vite + Prism mock + realtime replay,
 session 3; dies with the session). Phase 2 exit gate needs a real DigitalOcean staging token

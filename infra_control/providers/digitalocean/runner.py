@@ -2,9 +2,8 @@
 
 Every DO operation that needs SSH (site and bench playbooks, service control, metrics
 collection, custom playbooks, the post-create configuration of a droplet) goes through a
-`PlaybookRunner`. A2.1 ships the API half of the adapter with `UnavailableRunner`, which fails
-loudly instead of pretending; A2.2 provides the `ansible-runner` implementation and the engine
-sees the same `OpRef(kind="ansible")` either way.
+`PlaybookRunner`. `AnsibleRunner` (ansible.py, A2.2) is the real implementation; `UnavailableRunner` is used
+only when `ansible-runner` is not installed, and fails loudly instead of pretending.
 """
 
 from __future__ import annotations
@@ -32,9 +31,9 @@ class PlaybookRunner(Protocol):
 
 
 class UnavailableRunner:
-	"""Placeholder until A2.2: any SSH-backed call is a clear provider error, never a no-op."""
+	"""Used when ansible-runner is missing: any SSH-backed call is a clear error, never a no-op."""
 
-	reason = "Ansible runner is not configured on this controller (arrives with A2.2)"
+	reason = "ansible-runner is not installed on this controller (bench setup requirements)"
 
 	def start(
 		self,

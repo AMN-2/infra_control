@@ -1,0 +1,50 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Collect service states
+      ansible.builtin.service_facts:
+
+    - name: Services are running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services[item].state == 'running'
+        fail_msg: "{{ item }} is not running"
+      loop:
+        - mariadb.service
+        - redis-server.service
+        - nginx.service
+        - supervisor.service
+
+    - name: MariaDB uses utf8mb4
+      ansible.builtin.command: mariadb -N -e "SELECT @@character_set_server"
+      register: verify_charset
+      changed_when: false
+      failed_when: verify_charset.stdout | trim != 'utf8mb4'
+
+    - name: Redis answers on localhost only
+      ansible.builtin.command: redis-cli -h 127.0.0.1 ping
+      register: verify_redis
+      changed_when: false
+      failed_when: verify_redis.stdout | trim != 'PONG'
+
+    - name: nginx configuration is valid and the default site is gone
+      ansible.builtin.command: nginx -t
+      changed_when: false
+
+    - name: Default site removed
+      ansible.builtin.stat:
+        path: /etc/nginx/sites-enabled/default
+      register: verify_default_site
+      failed_when: verify_default_site.stat.exists
+
+    - name: bench CLI is installed for the frappe user
+      become_user: frappe
+      ansible.builtin.command: /home/frappe/.local/bin/bench --version
+      changed_when: false
+
+    - name: yarn is installed
+      ansible.builtin.command: yarn --version
+      changed_when: false

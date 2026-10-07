@@ -1,0 +1,27 @@
+---
+- name: Install Redis
+  ansible.builtin.apt:
+    name: redis-server
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Bind Redis to localhost
+  ansible.builtin.lineinfile:
+    path: /etc/redis/redis.conf
+    regexp: '^#?\s*bind '
+    line: "bind {{ redis_bind }}"
+  notify: Restart redis
+
+- name: Cap Redis memory
+  ansible.builtin.lineinfile:
+    path: /etc/redis/redis.conf
+    regexp: '^#?\s*maxmemory '
+    line: "maxmemory {{ redis_maxmemory }}"
+  notify: Restart redis
+
+- name: Redis is enabled and running
+  ansible.builtin.service:
+    name: redis-server
+    state: started
+    enabled: true

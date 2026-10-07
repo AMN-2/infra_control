@@ -308,21 +308,34 @@ def test_failure_then_retry_resumes_from_first_failed_step(
 		engine.retry_job(queued_name := engine.create_job("site.backup", "Site", "erp.client-a.iq").name)
 	retried = engine.retry_job(job.name)
 	assert retried.retry_of == job.name and retried.status == "Queued"
-	assert json.loads(ff.cache_client.get(f"infra:job:params:{retried.name}"))["_resume_from"] == 1
+	stashed = json.loads(ff.cache_client.get(f"infra:job:params:{retried.name}"))
+	# Index for the record, task name for Ansible's --start-at-task (plan 9.1 step 6).
+	assert stashed["_resume_from"] == 1
+	assert stashed["_resume_task"] == "bench migrate"
 	assert queued_name
 
 
-def test_build_call_passes_resume_from_to_ansible_playbooks(ff: FakeFrappe) -> None:
+def test_build_call_passes_the_resume_task_to_ansible_playbooks(ff: FakeFrappe) -> None:
 	playbook = ff.get_doc("Playbook", "server.apt_security")
 	target = engine.resolve_target("Server", "SRV-0001")
-	method, kwargs = engine._build_call(playbook, target, {"_resume_from": 2, "x": 1})
+	method, kwargs = engine._build_call(
+		playbook, target, {"_resume_from": 2, "_resume_task": "Apply security upgrades", "x": 1}
+	)
 	assert method == "run_playbook"
 	assert kwargs == {
 		"server": "SRV-0001",
 		"playbook_file": "server_apt_security.yml",
 		"extra_vars": {"x": 1},
-		"resume_from": 2,
+		"resume_task": "Apply security upgrades",
 	}
+	# The kwargs must be callable on a real adapter: this used to pass `resume_from`, which no
+	# run_playbook accepted, so every Ansible retry raised TypeError.
+	import inspect
+
+	from infra_control.providers.digitalocean.adapter import DigitalOceanProvider
+
+	inspect.signature(DigitalOceanProvider.run_playbook).bind(None, **kwargs)
+	inspect.signature(DummyProvider.run_playbook).bind(None, **kwargs)
 	site_target = engine.resolve_target("Site", "demo.smartchoice-iq.com")
 	assert engine._build_call(ff.get_doc("Playbook", "site.backup"), site_target, {"with_files": False}) == (
 		"backup_site",

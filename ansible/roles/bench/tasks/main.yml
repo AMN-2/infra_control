@@ -1,0 +1,49 @@
+---
+- name: Install bench prerequisites
+  ansible.builtin.apt:
+    name: "{{ bench_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install yarn globally
+  ansible.builtin.command: npm install -g yarn
+  args:
+    creates: /usr/local/bin/yarn
+
+- name: Supervisor is enabled and running
+  ansible.builtin.service:
+    name: supervisor
+    state: started
+    enabled: true
+
+- name: Install the bench CLI for the frappe user
+  become: true
+  become_user: "{{ bench_user }}"
+  ansible.builtin.command: "pipx install frappe-bench=={{ bench_cli_version }}"
+  args:
+    creates: "{{ bench_home }}/.local/bin/bench"
+  environment:
+    PATH: "{{ bench_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+- name: Put pipx binaries on the frappe user's PATH
+  ansible.builtin.lineinfile:
+    path: "{{ bench_home }}/.profile"
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    create: true
+    owner: "{{ bench_user }}"
+    group: "{{ bench_user }}"
+    mode: "0644"
+
+- name: Initialise a bench
+  when: bench_init | bool
+  become: true
+  become_user: "{{ bench_user }}"
+  ansible.builtin.command:
+    cmd: >-
+      {{ bench_home }}/.local/bin/bench init {{ bench_name }}
+      --frappe-branch {{ bench_frappe_branch }} --python {{ bench_python }} --skip-redis-config-generation
+    chdir: "{{ bench_home }}"
+    creates: "{{ bench_home }}/{{ bench_name }}/apps/frappe"
+  environment:
+    PATH: "{{ bench_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin"

@@ -1,0 +1,8 @@
+---
+mariadb_packages:
+  - mariadb-server
+  - mariadb-client
+  - libmariadb-dev
+mariadb_bind_address: 127.0.0.1
+mariadb_innodb_buffer_pool_size: 512M
+mariadb_max_connections: 200

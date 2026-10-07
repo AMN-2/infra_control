@@ -27,7 +27,7 @@ from infra_control.core.errors import ProviderError, ValidationError
 from infra_control.providers.base import OpRef, OpState, OpStatus, OpStep, Provider, ProviderConfig
 from infra_control.providers.digitalocean import mapping, settings
 from infra_control.providers.digitalocean.client import DigitalOceanClient
-from infra_control.providers.digitalocean.runner import PlaybookRunner, UnavailableRunner
+from infra_control.providers.digitalocean.runner import PlaybookRunner
 from infra_control.providers.registry import register
 
 KIND_ACTION = "do_action"
@@ -109,7 +109,7 @@ class DigitalOceanProvider(Provider):
 	) -> None:
 		super().__init__(config)
 		self.client = client or DigitalOceanClient(config.api_token)
-		self.runner: PlaybookRunner = runner or UnavailableRunner()
+		self.runner: PlaybookRunner = runner or settings.default_runner()
 		self._settings_loader = settings_loader
 		self._server_loader = server_loader
 		self._site_loader = site_loader
@@ -227,9 +227,15 @@ class DigitalOceanProvider(Provider):
 		)
 
 	def run_playbook(
-		self, server: str, playbook_file: str, extra_vars: dict[str, Any] | None = None
+		self,
+		server: str,
+		playbook_file: str,
+		extra_vars: dict[str, Any] | None = None,
+		resume_task: str | None = None,
 	) -> OpRef:
-		return self.runner.start(self._server(server), playbook_file, dict(extra_vars or {}))
+		return self.runner.start(
+			self._server(server), playbook_file, dict(extra_vars or {}), start_at_task=resume_task or None
+		)
 
 	def get_metrics(self, server: str) -> dict[str, Any]:
 		"""cpu/ram/disk/load1 from DigitalOcean Monitoring over the last 10 minutes.

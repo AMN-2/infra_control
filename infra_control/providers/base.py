@@ -191,6 +191,10 @@ class Provider(ABC):
 		raise NotSupported(Capability.METRICS, self.name)
 
 	def run_playbook(
-		self, server: str, playbook_file: str, extra_vars: dict[str, Any] | None = None
+		self,
+		server: str,
+		playbook_file: str,
+		extra_vars: dict[str, Any] | None = None,
+		resume_task: str | None = None,
 	) -> OpRef:
 		raise NotSupported(Capability.CUSTOM_PLAYBOOK, self.name)

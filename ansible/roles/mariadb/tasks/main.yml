@@ -1,0 +1,20 @@
+---
+- name: Install MariaDB
+  ansible.builtin.apt:
+    name: "{{ mariadb_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Frappe settings for MariaDB
+  ansible.builtin.template:
+    src: frappe.cnf.j2
+    dest: /etc/mysql/mariadb.conf.d/90-frappe.cnf
+    mode: "0644"
+  notify: Restart mariadb
+
+- name: MariaDB is enabled and running
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: true

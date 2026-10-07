@@ -14,6 +14,10 @@ dependencies = [
     "requests>=2.31",
     # DigitalOcean Spaces (S3-compatible) for off-site backups (A2.1).
     "boto3>=1.34",
+    # SSH-backed operations on DigitalOcean servers (A2.2): playbooks run through ansible-runner.
+    # Roles use only ansible.builtin modules, so ansible-core alone is enough on the controller.
+    "ansible-core>=2.17,<2.20",
+    "ansible-runner>=2.4",
 ]
 
 [project.optional-dependencies]

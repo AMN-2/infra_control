@@ -4,12 +4,19 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
-from typing import Any
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import frappe
 
 from infra_control.providers.digitalocean.spaces import SpacesConfig
+
+if TYPE_CHECKING:
+	from infra_control.providers.digitalocean.runner import PlaybookRunner
+
+DEFAULT_SSH_KEY = "~/.ssh/id_ed25519"
 
 
 @dataclass(frozen=True)
@@ -66,3 +73,34 @@ def load_site(name: str) -> dict[str, Any]:
 def load_bench(name: str) -> dict[str, Any]:
 	doc: Any = frappe.get_doc("Bench", name)
 	return {"name": name, "title": doc.title, "path": doc.path, "server": doc.server}
+
+
+def ssh_key_path() -> str:
+	"""Private key the controller uses for every managed server.
+
+	Site config `infra_ssh_private_key` (a path), default `~/.ssh/id_ed25519` of the bench user.
+	Its public half is the DigitalOcean SSH key named `infra-control` (docs/providers/digitalocean.md).
+	"""
+	configured = frappe.conf.get("infra_ssh_private_key") or DEFAULT_SSH_KEY
+	return os.path.expanduser(str(configured))
+
+
+def ansible_root() -> Path:
+	"""Private data dirs of Ansible runs, inside the site's private files (never web-served)."""
+	return Path(frappe.get_site_path("private", "infra_ansible")).resolve()
+
+
+def default_runner() -> PlaybookRunner:
+	"""ansible-runner when installed; otherwise a runner that fails every SSH call loudly."""
+	from infra_control.providers.digitalocean.ansible import (
+		AnsibleRunner,
+		ansible_runner_available,
+		default_playbooks_dir,
+	)
+	from infra_control.providers.digitalocean.runner import UnavailableRunner
+
+	if not ansible_runner_available():
+		return UnavailableRunner()
+	return AnsibleRunner(
+		root=ansible_root(), playbooks_dir=default_playbooks_dir(), ssh_key_path=ssh_key_path()
+	)

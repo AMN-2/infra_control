@@ -523,7 +523,7 @@ def test_site_and_service_methods_go_through_the_runner() -> None:
 
 def test_unavailable_runner_fails_loudly_never_silently() -> None:
 	a = adapter(UnavailableRunner())
-	with pytest.raises(ProviderError, match=r"A2\.2"):
+	with pytest.raises(ProviderError, match="ansible-runner is not installed"):
 		a.call("update_site", site="demo.iq")
 	with pytest.raises(ProviderError):
 		a.get_status(OpRef("digitalocean", KIND_ANSIBLE, "x"))

@@ -1,0 +1,30 @@
+---
+base_packages:
+  - acl
+  - build-essential
+  - ca-certificates
+  - cron
+  - curl
+  - git
+  - htop
+  - libffi-dev
+  - libssl-dev
+  - logrotate
+  - pkg-config
+  - python3-dev
+  - python3-pip
+  - python3-venv
+  - pipx
+  - rsync
+  - software-properties-common
+  - unattended-upgrades
+  - xvfb
+  - fontconfig
+base_timezone: Etc/UTC
+base_swap_mb: 2048
+base_swap_file: /swapfile
+base_frappe_user: frappe
+base_sysctl:
+  vm.swappiness: 10
+  vm.overcommit_memory: 1
+  net.core.somaxconn: 1024

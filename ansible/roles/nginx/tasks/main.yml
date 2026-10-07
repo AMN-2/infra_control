@@ -1,0 +1,29 @@
+---
+- name: Install nginx and certbot
+  ansible.builtin.apt:
+    name:
+      - nginx
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Remove the default site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+
+- name: Global settings
+  ansible.builtin.template:
+    src: infra-control.conf.j2
+    dest: /etc/nginx/conf.d/infra-control.conf
+    mode: "0644"
+  notify: Reload nginx
+
+- name: nginx is enabled and running
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true

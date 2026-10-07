@@ -91,7 +91,7 @@ pretty = true
 
 [[tool.mypy.overrides]]
 # Frappe ships no type information. Treat it as opaque; our own code stays strict.
-module = ["frappe", "frappe.*", "ansible_runner", "ansible_runner.*", "rq", "rq.*"]
+module = ["frappe", "frappe.*", "ansible_runner", "ansible_runner.*", "rq", "rq.*", "jsonschema", "jsonschema.*"]
 ignore_missing_imports = true
 follow_imports = "skip"
 

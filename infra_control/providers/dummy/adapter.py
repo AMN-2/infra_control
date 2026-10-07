@@ -58,7 +58,7 @@ class DummyProvider(Provider):
 		return OpRef(provider=self.name, kind="dummy", external_id=op_id)
 
 	# --- site level ---------------------------------------------------------------------
-	def create_site(self, site: str, bench: str, apps: list[str], **kw: Any) -> OpRef:
+	def create_site(self, site: str, bench: str, apps: list[str] | None = None, **kw: Any) -> OpRef:
 		return self._start(
 			"create_site",
 			["Create site", "Install apps"],
@@ -133,7 +133,8 @@ class DummyProvider(Provider):
 
 	def get_status(self, op: OpRef) -> OpStatus:
 		state = self.ops[op.external_id]
-		state.polls += 1
+		if not state.cancelled:
+			state.polls += 1  # a cancelled operation stops advancing
 		now = datetime.now(UTC)
 		done_steps = min(state.polls // state.polls_per_step, len(state.steps))
 		steps: list[OpStep] = []

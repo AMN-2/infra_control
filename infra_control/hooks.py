@@ -16,15 +16,13 @@ website_route_rules = [{"from_route": "/infra/<path:app_path>", "to_route": "inf
 after_install = "infra_control.install.after_install"
 after_migrate = "infra_control.install.after_migrate"
 
-# Scheduled tasks are added in Phase 1 (crash recovery) and Phase 3 (collector, rollups, alerts).
-# scheduler_events = {
-# 	"cron": {
-# 		"* * * * *": [
-# 			"infra_control.monitoring.collector.collect_all",
-# 			"infra_control.monitoring.alerts.evaluate_rules",
-# 			"infra_control.job_engine.recovery.fail_stale_jobs",
-# 		],
-# 	},
+# Crash recovery runs every minute (A1.2). Phase 3 adds the collector, alert engine and drift sync:
+# 	"* * * * *": [..., "infra_control.monitoring.collector.collect_all",
+# 	              "infra_control.monitoring.alerts.evaluate_rules"],
 # 	"hourly": ["infra_control.monitoring.drift.sync_all_providers"],
 # 	"daily": ["infra_control.providers.frappe_cloud.contract_test.run"],
-# }
+scheduler_events = {
+	"cron": {
+		"* * * * *": ["infra_control.job_engine.recovery.run"],
+	},
+}

@@ -7,7 +7,8 @@ collation-server = utf8mb4_unicode_ci
 innodb_buffer_pool_size = {{ mariadb_innodb_buffer_pool_size }}
 innodb_file_per_table = 1
 max_connections = {{ mariadb_max_connections }}
-skip-name-resolve
+# No skip-name-resolve: Frappe connects over TCP to 127.0.0.1 and its users are @'localhost';
+# without name resolution MariaDB refuses them (live gate, bench new-site: error 1130).
 
 [mysql]
 default-character-set = utf8mb4

@@ -7,7 +7,7 @@
   become_user: frappe
   gather_facts: false
   environment:
-    PATH: "/home/frappe/.local/bin:/usr/local/bin:/usr/bin:/bin"
+    PATH: "/home/frappe/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   vars:
     db_admin_cnf: /home/frappe/.config/infra-control/db-admin.cnf
     # bench restore picks decompression from the extension, so keep the real ones.

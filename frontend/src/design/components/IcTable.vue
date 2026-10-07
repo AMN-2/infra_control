@@ -74,12 +74,16 @@ function cell(row: T, key: keyof T): string {
 				</tr>
 			</tbody>
 			<tbody v-else>
+				<!-- No ic-state-layer here: its ::before on a <tr> renders as an extra table cell. -->
 				<tr
 					v-for="row in rows"
 					:key="keyOf(row)"
 					class="border-b border-line last:border-b-0"
 					:class="[
-						{ 'ic-state-layer cursor-pointer': clickable },
+						{
+							'cursor-pointer outline-none hover:bg-surface-2 focus-visible:bg-surface-2':
+								clickable,
+						},
 						selected === keyOf(row) ? 'bg-surface-2' : '',
 					]"
 					:tabindex="clickable ? 0 : undefined"

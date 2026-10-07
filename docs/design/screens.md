@@ -37,3 +37,26 @@ server's status and metrics in place and triggers the pulse. Layout decision: AD
 
 The diagram is spatial and always laid out LTR (`dir="ltr"` on the graph); the surrounding page
 follows the document direction.
+
+## Servers, Sites, Server detail, Site detail (B2.2)
+
+Source: `features/servers/`, `features/sites/`, shared `features/jobs/TargetActions.vue`,
+`features/jobs/RunPlaybookDialog.vue`, `features/jobs/schemaForm.ts`.
+
+| Screen | Content |
+|---|---|
+| Servers list | `IcTable` with status, provider, region, size, live cpu/disk chips from heartbeats, sites, heartbeat age. Filters from the query (`status`, `provider_account`) so Overview and Topology can link in. Rows open the detail. |
+| Sites list | Domain, status, provider, bench, DB size, last backup, SSL expiry. Filters `status`, `bench`, `server`. |
+| Server detail | Header (hostname, provider, region, size, role, IP), badges (status, provider, tags, running job), Metrics card with threshold chips and a session sparkline per metric, actions, tabs: Benches, Jobs (history for this target), Details (ids, IPs, capabilities). Heartbeats update status and metrics in place. |
+| Site detail | Header (domain, bench, plan), badges (status, provider, server, running job), facts (SSL days left with tone, DB size, backups with freshness tone), Domains, actions, tabs: Backups (kind, size, location, restore test), Jobs, Bench (apps, path, provider ref, capabilities). |
+
+**Actions (capability-driven).** `TargetActions` asks `playbooks.list` for the target, drops
+creation playbooks and any playbook whose `required_capability` the target lacks, hides itself
+for viewers, and shows "locked by JOB-x" with disabled buttons while the target's server holds a
+running job (one job per server). High-risk playbooks use the danger button.
+
+**Run-playbook dialog.** The form is rendered from `params_schema` (`schemaForm.ts`: string,
+password, boolean, number/integer, enum, list of strings), validated before submit (required,
+pattern, minLength, hostname, ranges) and again by the backend. High risk adds the typed
+confirmation (`confirm` = target name, enforced server-side too). Success: toast and navigation
+to the job viewer; failure: the API error (code and message) stays in the dialog.

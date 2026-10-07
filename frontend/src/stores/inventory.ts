@@ -14,6 +14,8 @@ export type Site = S["Site"];
 export type SiteDetail = S["SiteDetail"];
 export type Topology = S["Topology"];
 
+export const METRIC_HISTORY_MAX = 60;
+
 /** Servers, benches, sites and the topology, kept fresh by heartbeat and inventory events. */
 export const useInventoryStore = defineStore("inventory", () => {
 	const servers = ref<Server[]>([]);
@@ -109,6 +111,10 @@ export const useInventoryStore = defineStore("inventory", () => {
 	);
 	/** The most recent heartbeat, with a sequence so a watcher fires on every beat. */
 	const lastBeat = ref<{ server: string; ts: string; seq: number } | null>(null);
+	/** Session trend per server (last METRIC_HISTORY_MAX heartbeats) for the detail sparklines. */
+	const metricHistory = ref<
+		Record<string, { ts: string; cpu: number; ram: number; disk: number }[]>
+	>({});
 	const refetchTopology = trailing(() => void fetchTopology(), 1500);
 
 	let subscribed = false;
@@ -117,6 +123,10 @@ export const useInventoryStore = defineStore("inventory", () => {
 		subscribed = true;
 		onEvent("infra:server.heartbeat", (e) => {
 			heartbeats.value[e.server] = { ts: e.ts, cpu: e.cpu, ram: e.ram, disk: e.disk };
+			metricHistory.value[e.server] = [
+				...(metricHistory.value[e.server] ?? []),
+				{ ts: e.ts, cpu: e.cpu, ram: e.ram, disk: e.disk },
+			].slice(-METRIC_HISTORY_MAX);
 			lastBeat.value = { server: e.server, ts: e.ts, seq: (lastBeat.value?.seq ?? 0) + 1 };
 			const s = serverByName.value.get(e.server);
 			if (s) {
@@ -164,6 +174,7 @@ export const useInventoryStore = defineStore("inventory", () => {
 		benchDetails,
 		heartbeats,
 		lastBeat,
+		metricHistory,
 		loading,
 		error,
 		fetchServers,

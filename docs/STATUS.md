@@ -56,8 +56,8 @@ system from `/infra/_design`.
 | Task | State | Branch | PR |
 |---|---|---|---|
 | B2.1 Overview + Topology | done, full local CI green | `agent-b/B2.1-overview-topology` (on B1.2) | #18 |
-| B2.2 Server detail + Site detail | next | | |
-| B2.3 Job viewer + run-playbook dialog | | | |
+| B2.2 Servers/Sites lists, Server detail, Site detail, capability actions, run-playbook dialog | done, full local CI green | `agent-b/B2.2-detail-screens` (on B2.1) | #19 |
+| B2.3 Job viewer with live terminal | next | | |
 | A2.1 DigitalOcean client + adapter | | | |
 | A2.2 Ansible roles, server.provision, service.control | | | |
 | A2.3 Site playbooks on DO | | | |

@@ -15,10 +15,14 @@ declare global {
 	}
 }
 
-/** In `npm run dev` there is no Frappe page; the mock accepts any site and any user. */
+/**
+ * In `npm run dev` there is no Frappe page. The mock accepts any site and any user; against a real
+ * site (dev proxy with INFRA_SITE) the realtime namespace must be that site, so VITE_INFRA_SITE
+ * overrides it.
+ */
 export const DEV_BOOT: InfraBoot = {
 	csrf_token: "",
-	site_name: "mock.localhost",
+	site_name: (import.meta.env.VITE_INFRA_SITE as string | undefined) ?? "mock.localhost",
 	session_user: "dev@mock.localhost",
 	roles: ["Infra Admin", "Infra Operator", "Infra Viewer"],
 	base_path: "/infra/",

@@ -56,4 +56,8 @@ Logged-in users see a plain "Infra Control is not built" page (the reason is sho
 ## Development
 
 For day-to-day frontend work use `npm run dev` (Vite on :5173, `/api` proxied to the Prism
-mock on :4010). The Frappe page is only needed to test the real login, CSRF and asset path.
+mock on :4010 with a placeholder `Authorization` header, `/socket.io` to the replay server on
+:9000). Start the mocks first: `cd contracts/mock && npm run mock` and `npm run realtime`.
+Point the proxy at a real site instead with `INFRA_API_TARGET=http://<site>:8000` (then the
+browser's own session cookie is used) and `INFRA_REALTIME_TARGET`. The Frappe page is only
+needed to test the real login, CSRF and asset path.

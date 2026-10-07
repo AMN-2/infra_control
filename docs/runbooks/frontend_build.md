@@ -41,11 +41,17 @@ window.infra_boot = {
   roles: ["Infra Admin", "Infra Operator", "Infra Viewer"],   // the user's Infra roles, hierarchy applied
   base_path: "/infra/",
   api_base: "/api/method/infra_control.api.",
-  socketio_path: "/socket.io"
+  socketio_path: "/socket.io",
+  socketio_port: null   // a port number only when `bench serve` renders the page
 };
 ```
 
 Send `X-Frappe-CSRF-Token: window.csrf_token` on every POST.
+
+Realtime: behind nginx (production) the client connects to `/<site>` on the page's own origin and
+nginx routes `/socket.io` to Frappe's Socket.IO server. Frappe's dev server has no such route, so
+there the page sets `socketio_port` and the client connects to that port on the same host, the
+way Frappe's desk does with `window.dev_server`.
 
 ## When the bundle is missing
 

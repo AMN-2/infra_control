@@ -127,3 +127,11 @@ def test_built_frontend_is_ignored_by_git(repo_root: Path) -> None:
 	ignore = (repo_root / ".gitignore").read_text()
 	assert "infra_control/public/frontend/*" in ignore
 	assert (repo_root / "infra_control" / "public" / "frontend" / ".gitkeep").exists()
+
+
+def test_boot_carries_the_socketio_port_only_when_set() -> None:
+	"""Live gate part 3: on `bench serve` the SPA must reach Socket.IO on its own port."""
+	base = spa.SpaBoot(csrf_token="t", site_name="s", session_user="u")
+	assert base.as_dict()["socketio_port"] is None
+	dev = spa.SpaBoot(csrf_token="t", site_name="s", session_user="u", socketio_port=9000)
+	assert dev.as_dict()["socketio_port"] == 9000

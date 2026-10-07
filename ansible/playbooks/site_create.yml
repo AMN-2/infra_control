@@ -22,20 +22,47 @@
       no_log: true
 
     - name: Create the site
-      ansible.builtin.command:
-        argv:
-          - bench
-          - new-site
-          - "{{ site }}"
-          - --admin-password
-          - "{{ admin_password }}"
-          - --db-root-username
-          - "{{ db_admin.stdout_lines[0] }}"
-          - --db-root-password
-          - "{{ db_admin.stdout_lines[1] }}"
-        chdir: "{{ bench_path }}"
-        creates: "{{ bench_path }}/sites/{{ site }}/site_config.json"
-      no_log: true
+      block:
+        - name: bench new-site
+          ansible.builtin.command:
+            argv:
+              - bench
+              - new-site
+              - "{{ site }}"
+              - --admin-password
+              - "{{ admin_password }}"
+              - --db-root-username
+              - "{{ db_admin.stdout_lines[0] }}"
+              - --db-root-password
+              - "{{ db_admin.stdout_lines[1] }}"
+            chdir: "{{ bench_path }}"
+            creates: "{{ bench_path }}/sites/{{ site }}/site_config.json"
+          no_log: true
+      rescue:
+        # A failed new-site leaves sites/<site>/site_config.json behind, and `creates` would
+        # then skip the retry and report success with no site (seen in the live gate).
+        - name: Remove the partial site
+          ansible.builtin.command:
+            argv:
+              - bench
+              - drop-site
+              - "{{ site }}"
+              - --force
+              - --no-backup
+              - --db-root-username
+              - "{{ db_admin.stdout_lines[0] }}"
+              - --db-root-password
+              - "{{ db_admin.stdout_lines[1] }}"
+            chdir: "{{ bench_path }}"
+          failed_when: false
+          no_log: true
+        - name: Remove the partial site directory
+          ansible.builtin.file:
+            path: "{{ bench_path }}/sites/{{ site }}"
+            state: absent
+        - name: Report the failure
+          ansible.builtin.fail:
+            msg: "bench new-site failed for {{ site }}; partial files were removed so the job can be retried (details are hidden because the command carries passwords)"
 
     - name: Install apps
       ansible.builtin.command:

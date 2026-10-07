@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -37,6 +37,7 @@ def ff(monkeypatch: pytest.MonkeyPatch) -> FakeFrappe:
 	for module in (engine, realtime, audit, permissions, registry):
 		monkeypatch.setattr(module, "frappe", f)
 	monkeypatch.setattr(engine, "now_datetime", f.now)
+	monkeypatch.setattr(engine, "get_system_timezone", lambda: "Asia/Baghdad")
 	monkeypatch.setattr(audit, "now_datetime", f.now)
 	monkeypatch.setattr(engine, "sleep", lambda s: None)
 	monkeypatch.setattr(engine, "LOCK_WAIT_SECONDS", 0.0)
@@ -433,3 +434,20 @@ def test_fail_stale_jobs_releases_locks(ff: FakeFrappe) -> None:
 
 def test_registry_rejects_wrong_capability_sets_for_real_providers() -> None:
 	assert PROVIDER_CAPABILITIES[ProviderName.FRAPPE_CLOUD] < frozenset(Capability)
+
+
+def test_step_timestamps_are_stored_naive_in_the_system_timezone(ff: FakeFrappe) -> None:
+	"""Regression for the Phase 1 gate run: the dummy adapter reports tz-aware UTC timestamps and
+	MariaDB rejected the `+00:00` offset. Steps must land as naive system-time datetimes."""
+	job = engine.create_job("site.migrate", "Site", "demo.smartchoice-iq.com")
+	_run(ff, job)
+	steps = list(ff.store["Infra Job Step"].values())
+	assert steps
+	for step in steps:
+		for value in (step.started_at, step.ended_at):
+			assert value is None or (isinstance(value, datetime) and value.tzinfo is None)
+	aware = datetime(2026, 10, 7, 18, 40, 57, tzinfo=UTC)
+	assert engine._db_datetime(aware) == datetime(2026, 10, 7, 21, 40, 57)
+	assert engine._db_datetime(None) is None
+	naive = datetime(2026, 10, 7, 18, 40, 57)
+	assert engine._db_datetime(naive) is naive

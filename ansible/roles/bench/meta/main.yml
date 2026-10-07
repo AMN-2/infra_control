@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  role_name: bench
+  author: SmartChoice IQ
+  description: Node, yarn, supervisor, wkhtmltopdf and the bench CLI; optional bench init
+  license: MIT
+  min_ansible_version: "2.17"
+  platforms:
+    - name: Ubuntu
+      versions: [noble]
+dependencies: []

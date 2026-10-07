@@ -137,9 +137,9 @@ def test_registry_register_build_and_unknown() -> None:
 		registry.unregister("fc_like")
 	with pytest.raises(InternalError):
 		registry.adapter_class("nope")
-	# Known providers whose adapter is not shipped yet (Phase 2) fail loudly, not silently.
+	# A known provider whose adapter is not shipped yet (Frappe Cloud until A2.4) fails loudly.
 	with pytest.raises(InternalError):
-		registry.adapter_class(ProviderName.DIGITALOCEAN)
+		registry.adapter_class(ProviderName.FRAPPE_CLOUD)
 
 
 def test_registry_rejects_adapters_that_deviate_from_the_matrix() -> None:
@@ -150,7 +150,8 @@ def test_registry_rejects_adapters_that_deviate_from_the_matrix() -> None:
 	with pytest.raises(InternalError) as exc:
 		registry.register(BadDo)
 	assert "server" in exc.value.details["missing"]
-	assert ProviderName.DIGITALOCEAN not in registry.registered()
+	# The rejected impostor never replaces the real adapter (A2.1).
+	assert registry.registered().get(ProviderName.DIGITALOCEAN) is not BadDo
 
 
 def test_capabilities_for() -> None:

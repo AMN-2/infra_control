@@ -1,0 +1,16 @@
+---
+# Test infrastructure only: point the container at a responsive Ubuntu mirror. The stock image
+# uses archive.ubuntu.com, which can be unreachable from CI hosts; DigitalOcean droplets already
+# use mirrors.digitalocean.com. Override with MOLECULE_APT_MIRROR.
+- name: Prepare
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    apt_mirror: "{{ lookup('env', 'MOLECULE_APT_MIRROR') | default('http://mirrors.digitalocean.com/ubuntu/', true) }}"
+  tasks:
+    - name: Use the test mirror for the main archive
+      ansible.builtin.replace:
+        path: /etc/apt/sources.list.d/ubuntu.sources
+        regexp: 'http://archive\.ubuntu\.com/ubuntu/?'
+        replace: "{{ apt_mirror }}"

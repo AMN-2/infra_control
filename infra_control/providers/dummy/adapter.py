@@ -116,7 +116,11 @@ class DummyProvider(Provider):
 		return {"cpu": 1.0, "ram": 2.0, "disk": 3.0, "load1": 0.1, "queue_backlog": 0}
 
 	def run_playbook(
-		self, server: str, playbook_file: str, extra_vars: dict[str, Any] | None = None
+		self,
+		server: str,
+		playbook_file: str,
+		extra_vars: dict[str, Any] | None = None,
+		resume_task: str | None = None,
 	) -> OpRef:
 		return self._start(
 			"run_playbook", [f"Run {playbook_file}"], server=server, playbook_file=playbook_file

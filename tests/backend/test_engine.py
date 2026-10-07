@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -37,6 +37,7 @@ def ff(monkeypatch: pytest.MonkeyPatch) -> FakeFrappe:
 	for module in (engine, realtime, audit, permissions, registry):
 		monkeypatch.setattr(module, "frappe", f)
 	monkeypatch.setattr(engine, "now_datetime", f.now)
+	monkeypatch.setattr(engine, "get_system_timezone", lambda: "Asia/Baghdad")
 	monkeypatch.setattr(audit, "now_datetime", f.now)
 	monkeypatch.setattr(engine, "sleep", lambda s: None)
 	monkeypatch.setattr(engine, "LOCK_WAIT_SECONDS", 0.0)
@@ -307,21 +308,34 @@ def test_failure_then_retry_resumes_from_first_failed_step(
 		engine.retry_job(queued_name := engine.create_job("site.backup", "Site", "erp.client-a.iq").name)
 	retried = engine.retry_job(job.name)
 	assert retried.retry_of == job.name and retried.status == "Queued"
-	assert json.loads(ff.cache_client.get(f"infra:job:params:{retried.name}"))["_resume_from"] == 1
+	stashed = json.loads(ff.cache_client.get(f"infra:job:params:{retried.name}"))
+	# Index for the record, task name for Ansible's --start-at-task (plan 9.1 step 6).
+	assert stashed["_resume_from"] == 1
+	assert stashed["_resume_task"] == "bench migrate"
 	assert queued_name
 
 
-def test_build_call_passes_resume_from_to_ansible_playbooks(ff: FakeFrappe) -> None:
+def test_build_call_passes_the_resume_task_to_ansible_playbooks(ff: FakeFrappe) -> None:
 	playbook = ff.get_doc("Playbook", "server.apt_security")
 	target = engine.resolve_target("Server", "SRV-0001")
-	method, kwargs = engine._build_call(playbook, target, {"_resume_from": 2, "x": 1})
+	method, kwargs = engine._build_call(
+		playbook, target, {"_resume_from": 2, "_resume_task": "Apply security upgrades", "x": 1}
+	)
 	assert method == "run_playbook"
 	assert kwargs == {
 		"server": "SRV-0001",
 		"playbook_file": "server_apt_security.yml",
 		"extra_vars": {"x": 1},
-		"resume_from": 2,
+		"resume_task": "Apply security upgrades",
 	}
+	# The kwargs must be callable on a real adapter: this used to pass `resume_from`, which no
+	# run_playbook accepted, so every Ansible retry raised TypeError.
+	import inspect
+
+	from infra_control.providers.digitalocean.adapter import DigitalOceanProvider
+
+	inspect.signature(DigitalOceanProvider.run_playbook).bind(None, **kwargs)
+	inspect.signature(DummyProvider.run_playbook).bind(None, **kwargs)
 	site_target = engine.resolve_target("Site", "demo.smartchoice-iq.com")
 	assert engine._build_call(ff.get_doc("Playbook", "site.backup"), site_target, {"with_files": False}) == (
 		"backup_site",
@@ -433,3 +447,20 @@ def test_fail_stale_jobs_releases_locks(ff: FakeFrappe) -> None:
 
 def test_registry_rejects_wrong_capability_sets_for_real_providers() -> None:
 	assert PROVIDER_CAPABILITIES[ProviderName.FRAPPE_CLOUD] < frozenset(Capability)
+
+
+def test_step_timestamps_are_stored_naive_in_the_system_timezone(ff: FakeFrappe) -> None:
+	"""Regression for the Phase 1 gate run: the dummy adapter reports tz-aware UTC timestamps and
+	MariaDB rejected the `+00:00` offset. Steps must land as naive system-time datetimes."""
+	job = engine.create_job("site.migrate", "Site", "demo.smartchoice-iq.com")
+	_run(ff, job)
+	steps = list(ff.store["Infra Job Step"].values())
+	assert steps
+	for step in steps:
+		for value in (step.started_at, step.ended_at):
+			assert value is None or (isinstance(value, datetime) and value.tzinfo is None)
+	aware = datetime(2026, 10, 7, 18, 40, 57, tzinfo=UTC)
+	assert engine._db_datetime(aware) == datetime(2026, 10, 7, 21, 40, 57)
+	assert engine._db_datetime(None) is None
+	naive = datetime(2026, 10, 7, 18, 40, 57)
+	assert engine._db_datetime(naive) is naive

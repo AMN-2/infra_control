@@ -1,0 +1,37 @@
+---
+# site.migrate (plan 9.2, 13.7): back up first and stop if the backup fails; then maintenance on,
+# bench migrate, maintenance off. If migrate fails, maintenance is switched off again and the
+# job fails with the migrate error.
+- name: Migrate site
+  hosts: all
+  become: true
+  become_user: frappe
+  gather_facts: false
+  environment:
+    PATH: "/home/frappe/.local/bin:/usr/local/bin:/usr/bin:/bin"
+  tasks:
+    - name: Preflight
+      ansible.builtin.include_tasks: tasks/site_preflight.yml
+
+    - name: Backup before migrating
+      ansible.builtin.include_tasks: tasks/backup_upload.yml
+
+    - name: Migrate under maintenance
+      block:
+        - name: Enable maintenance mode
+          ansible.builtin.command:
+            argv: [bench, --site, "{{ site }}", set-maintenance-mode, "on"]
+            chdir: "{{ bench_path }}"
+          changed_when: true
+
+        - name: bench migrate
+          ansible.builtin.command:
+            argv: "{{ ['bench', '--site', site, 'migrate'] + (['--skip-search-index'] if skip_search_index | default(false) else []) }}"
+            chdir: "{{ bench_path }}"
+          changed_when: true
+      always:
+        - name: Disable maintenance mode
+          ansible.builtin.command:
+            argv: [bench, --site, "{{ site }}", set-maintenance-mode, "off"]
+            chdir: "{{ bench_path }}"
+          changed_when: true

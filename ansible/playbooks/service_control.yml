@@ -1,0 +1,31 @@
+---
+# service.control (plan 9.2): restart or reload one of the allow-listed services.
+- name: Control a service
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    service_units:
+      nginx: nginx
+      supervisor: supervisor
+      mariadb: mariadb
+      redis: redis-server
+    allowed_actions: [restart, reload]
+  tasks:
+    - name: Check the request
+      ansible.builtin.assert:
+        that:
+          - service in service_units
+          - action in allowed_actions
+        fail_msg: "service must be one of {{ service_units | list }}, action one of {{ allowed_actions }}"
+        quiet: true
+
+    - name: Validate nginx configuration first
+      ansible.builtin.command: nginx -t
+      changed_when: false
+      when: service == 'nginx'
+
+    - name: "{{ action | capitalize }} {{ service }}"
+      ansible.builtin.service:
+        name: "{{ service_units[service] }}"
+        state: "{{ 'restarted' if action == 'restart' else 'reloaded' }}"

@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  role_name: mariadb
+  author: SmartChoice IQ
+  description: MariaDB with Frappe's character set and InnoDB settings, bound to localhost
+  license: MIT
+  min_ansible_version: "2.17"
+  platforms:
+    - name: Ubuntu
+      versions: [noble]
+dependencies: []

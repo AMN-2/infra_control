@@ -1,0 +1,89 @@
+---
+# A stalled mirror connection otherwise blocks apt forever (seen in Molecule): bounded timeouts
+# and retries go in before the first install.
+- name: Bound apt network timeouts and retries
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/80-infra-control-network
+    content: |
+      Acquire::http::Timeout "30";
+      Acquire::https::Timeout "30";
+      Acquire::ftp::Timeout "30";
+      Acquire::Retries "5";
+    mode: "0644"
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ base_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Set timezone
+  ansible.builtin.file:
+    src: "/usr/share/zoneinfo/{{ base_timezone }}"
+    dest: /etc/localtime
+    state: link
+    force: true
+
+- name: Write /etc/timezone
+  ansible.builtin.copy:
+    dest: /etc/timezone
+    content: "{{ base_timezone }}\n"
+    mode: "0644"
+
+- name: Ensure the frappe user exists
+  ansible.builtin.user:
+    name: "{{ base_frappe_user }}"
+    shell: /bin/bash
+    create_home: true
+    groups: sudo
+    append: true
+
+- name: Kernel parameters
+  ansible.builtin.template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.d/90-infra-control.conf
+    mode: "0644"
+  notify: Apply sysctl
+
+- name: Check for a swap file
+  ansible.builtin.stat:
+    path: "{{ base_swap_file }}"
+  register: base_swap_stat
+  when: base_swap_mb | int > 0
+
+- name: Create and enable swap
+  when:
+    - base_swap_mb | int > 0
+    - not base_swap_stat.stat.exists
+    - ansible_virtualization_type not in ['docker', 'container', 'podman']
+  block:
+    - name: Allocate swap file
+      ansible.builtin.command: "fallocate -l {{ base_swap_mb }}M {{ base_swap_file }}"
+      args:
+        creates: "{{ base_swap_file }}"
+    - name: Restrict swap file permissions
+      ansible.builtin.file:
+        path: "{{ base_swap_file }}"
+        mode: "0600"
+    - name: Format swap  # noqa: no-changed-when (guarded by the stat above)
+      ansible.builtin.command: "mkswap {{ base_swap_file }}"
+    - name: Activate swap  # noqa: no-changed-when
+      ansible.builtin.command: "swapon {{ base_swap_file }}"
+
+- name: Persist swap in fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    line: "{{ base_swap_file }} none swap sw 0 0"
+    state: present
+  when:
+    - base_swap_mb | int > 0
+    - ansible_virtualization_type not in ['docker', 'container', 'podman']
+
+- name: Enable unattended security upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+    mode: "0644"

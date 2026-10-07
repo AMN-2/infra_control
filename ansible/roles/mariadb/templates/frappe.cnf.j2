@@ -1,0 +1,13 @@
+# Managed by infra_control (role mariadb). Root authenticates over the unix socket only.
+[mysqld]
+bind-address = {{ mariadb_bind_address }}
+character-set-client-handshake = FALSE
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+innodb_buffer_pool_size = {{ mariadb_innodb_buffer_pool_size }}
+innodb_file_per_table = 1
+max_connections = {{ mariadb_max_connections }}
+skip-name-resolve
+
+[mysql]
+default-character-set = utf8mb4

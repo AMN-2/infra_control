@@ -18,12 +18,13 @@ import json
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import frappe
 import jsonschema
-from frappe.utils import add_to_date, get_datetime, now_datetime
+from frappe.utils import add_to_date, get_datetime, get_system_timezone, now_datetime
 
 from infra_control.core import audit
 from infra_control.core.enums import (
@@ -292,14 +293,19 @@ def cancel_job(job_name: str, *, user: str | None = None) -> Any:
 
 
 def first_failed_step(job_name: str) -> int | None:
+	failed = _first_failed_row(job_name)
+	return int(failed["step_index"]) if failed else None
+
+
+def _first_failed_row(job_name: str) -> dict[str, Any] | None:
 	rows = frappe.get_all(
 		"Infra Job Step",
 		filters={"job": job_name, "status": StepStatus.FAILED},
-		fields=["step_index"],
+		fields=["step_index", "title"],
 		order_by="step_index asc",
 		limit=1,
 	)
-	return int(rows[0]["step_index"]) if rows else None
+	return dict(rows[0]) if rows else None
 
 
 def retry_job(job_name: str, *, user: str | None = None) -> Any:
@@ -309,9 +315,11 @@ def retry_job(job_name: str, *, user: str | None = None) -> Any:
 			f"Only Failed jobs can be retried; {job_name} is {job.status}", {"status": job.status}
 		)
 	params = _unstash_params(job_name)
-	resume_from = first_failed_step(job_name)
-	if resume_from is not None:
-		params["_resume_from"] = resume_from
+	failed = _first_failed_row(job_name)
+	if failed is not None:
+		params["_resume_from"] = int(failed["step_index"])
+		# Ansible steps are tasks; the task name is what `--start-at-task` needs (plan 9.1 step 6).
+		params["_resume_task"] = str(failed.get("title") or "")
 	playbook: Any = frappe.get_doc("Playbook", job.playbook)
 	confirm = job.target_name if Risk(playbook.risk) is Risk.HIGH else None
 	return create_job(
@@ -387,8 +395,8 @@ def _build_call(playbook: Any, target: Target, params: dict[str, Any]) -> tuple[
 			"playbook_file": playbook.ansible_file,
 			"extra_vars": kwargs,
 		}
-		if "_resume_from" in params:
-			call["resume_from"] = params["_resume_from"]
+		if params.get("_resume_task"):
+			call["resume_task"] = params["_resume_task"]
 		return "run_playbook", call
 	method = str(playbook.provider_method)
 	for param, arg in _METHOD_PARAM_MAP.get(method, {}).items():
@@ -477,6 +485,18 @@ def _sync_steps(doc: Any, status: OpStatus, secrets: list[str]) -> None:
 		realtime.emit(*realtime.job_updated(doc.name, JobStatus.RUNNING, progress))
 
 
+def _db_datetime(value: datetime | None) -> datetime | None:
+	"""Normalise a provider timestamp for storage.
+
+	Adapters return timezone-aware datetimes (UTC). Frappe stores naive datetimes in the system
+	timezone, and MariaDB in strict mode rejects an ISO string carrying an offset, so every
+	provider timestamp crosses this boundary before it reaches a Datetime column.
+	"""
+	if value is None or value.tzinfo is None:
+		return value
+	return value.astimezone(ZoneInfo(get_system_timezone())).replace(tzinfo=None)
+
+
 def _write_step(
 	doc: Any,
 	idx: int,
@@ -485,8 +505,8 @@ def _write_step(
 	output: str,
 	secrets: list[str],
 	*,
-	started_at: Any = None,
-	ended_at: Any = None,
+	started_at: datetime | None = None,
+	ended_at: datetime | None = None,
 	emit_log: bool = False,
 ) -> None:
 	"""Upsert the Infra Job Step, emit `job.step` on status change and `job.log` for new output."""
@@ -516,9 +536,9 @@ def _write_step(
 	if output != previous_output:
 		changed["output"] = output[-OUTPUT_KEEP_BYTES:]
 	if started_at and not step.started_at:
-		changed["started_at"] = started_at
+		changed["started_at"] = _db_datetime(started_at)
 	if ended_at and not step.ended_at:
-		changed["ended_at"] = ended_at
+		changed["ended_at"] = _db_datetime(ended_at)
 	if changed:
 		step.db_set(changed)
 	if new_chunk and (emit_log or output != previous_output):

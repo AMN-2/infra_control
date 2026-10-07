@@ -1,0 +1,4 @@
+# Managed by infra_control (role base).
+{% for key, value in base_sysctl.items() %}
+{{ key }} = {{ value }}
+{% endfor %}

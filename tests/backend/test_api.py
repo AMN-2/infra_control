@@ -82,6 +82,7 @@ def ff(monkeypatch: pytest.MonkeyPatch) -> FakeFrappe:
 	monkeypatch.setattr(overview, "now_datetime", f.now)
 	monkeypatch.setattr(inventory, "now_datetime", f.now)
 	monkeypatch.setattr(engine, "now_datetime", f.now)
+	monkeypatch.setattr(engine, "get_system_timezone", lambda: "Asia/Baghdad")
 	monkeypatch.setattr(audit, "now_datetime", f.now)
 	monkeypatch.setattr(engine, "sleep", lambda s: None)
 	f.conf["infra_use_dummy_provider"] = 1

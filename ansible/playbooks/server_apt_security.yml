@@ -1,0 +1,26 @@
+---
+# server.apt_security (plan 9.2): apply pending security updates now and report whether a
+# reboot is required. Never reboots on its own (server.reboot is a separate high-risk playbook).
+- name: Security updates
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Refresh the package index
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+
+    - name: Apply security upgrades
+      ansible.builtin.command: unattended-upgrade -v
+      register: apt_security_result
+      changed_when: "'Packages that will be upgraded' in apt_security_result.stdout"
+
+    - name: Check whether a reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: apt_security_reboot
+
+    - name: Report reboot requirement
+      ansible.builtin.debug:
+        msg: "{{ 'reboot required: run server.reboot when convenient' if apt_security_reboot.stat.exists else 'no reboot required' }}"

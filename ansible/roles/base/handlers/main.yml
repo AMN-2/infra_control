@@ -1,0 +1,6 @@
+---
+- name: Apply sysctl
+  ansible.builtin.command: sysctl --system
+  changed_when: false
+  # Containers (Molecule) cannot write kernel parameters; real droplets can.
+  failed_when: false

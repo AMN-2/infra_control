@@ -1,0 +1,14 @@
+---
+# Shared by every site playbook: the bench and (unless creating) the site must exist.
+- name: Check the bench
+  ansible.builtin.stat:
+    path: "{{ bench_path }}/apps/frappe"
+  register: preflight_bench
+  failed_when: not preflight_bench.stat.exists
+
+- name: Check the site
+  ansible.builtin.stat:
+    path: "{{ bench_path }}/sites/{{ site }}/site_config.json"
+  register: preflight_site
+  failed_when: not preflight_site.stat.exists
+  when: not (creating_site | default(false))

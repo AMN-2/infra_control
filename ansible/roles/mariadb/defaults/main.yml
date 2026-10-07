@@ -1,0 +1,13 @@
+---
+mariadb_packages:
+  - mariadb-server
+  - mariadb-client
+  - libmariadb-dev
+mariadb_bind_address: 127.0.0.1
+mariadb_innodb_buffer_pool_size: 512M
+mariadb_max_connections: 200
+# Database admin for `bench new-site` / `bench restore` (root stays socket-only). The password is
+# generated on the server once and never leaves it; it lives in an option file only frappe reads.
+mariadb_admin_user: infra_admin
+mariadb_admin_owner: frappe
+mariadb_admin_cnf: "/home/{{ mariadb_admin_owner }}/.config/infra-control/db-admin.cnf"

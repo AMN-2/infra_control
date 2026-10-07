@@ -20,9 +20,15 @@ after each merge GitHub retargets the next PR to `main`.
 
 Nothing. Phase 0 exit gate is waiting on the human: approve `contracts/` and merge #3–#7.
 
-**Exact next step for the next session:** check that CI is green on #3–#7
-(`gh pr checks <n> --repo AMN-2/infra_control`); fix anything red. Then wait for contract
-approval. Do not start Phase 1 (A1.x) until the reviewer approves the contracts.
+**Blocker for the reviewer:** GitHub Actions has never run on this repository (zero workflow
+runs, on Agent B's PRs #1–#2 as well; only the Sourcery app reports). Enable Actions under
+Settings → Actions → General (the PAT used by `gh` cannot change it). Until then "both CI
+pipelines green" can only be shown locally; all A0.x checks pass locally as listed above.
+
+**Exact next step for the next session:** once Actions is on, check `gh pr checks <n>
+--repo AMN-2/infra_control` for #3–#7 and fix anything red (the `bench-tests` job is the only
+place the `/infra` integration test runs). Then wait for contract approval. Do not start
+Phase 1 (A1.x) until the reviewer approves the contracts.
 
 ## Open questions (docs/QUESTIONS.md)
 

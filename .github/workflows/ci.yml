@@ -1,22 +1,99 @@
-
 name: CI
 
 on:
   push:
-    branches:
-      - develop
+    branches: [main, develop]
   pull_request:
 
 concurrency:
-  group: develop-infta_control-${{ github.event.number }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+  FRAPPE_BRANCH: version-15
+
 jobs:
-  tests:
+  # -------------------------------------------------------------------------
+  # Backend quality: ruff, mypy --strict, unit tests (no Frappe site needed)
+  # -------------------------------------------------------------------------
+  backend-quality:
+    name: Backend quality (ruff, mypy, pytest)
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-    name: Server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install frappe (import-only, no site) and dev tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install "frappe @ git+https://github.com/frappe/frappe.git@${FRAPPE_BRANCH}"
+          pip install -e ".[dev]"
+
+      - name: ruff check
+        run: ruff check .
+
+      - name: ruff format --check
+        run: ruff format --check .
+
+      - name: mypy --strict infra_control
+        run: mypy --strict infra_control
+
+      - name: pytest (unit)
+        run: pytest tests/backend -m "not integration and not contract"
+
+  # -------------------------------------------------------------------------
+  # Contract tests: OpenAPI + event schemas are valid and complete; examples validate
+  # -------------------------------------------------------------------------
+  contracts:
+    name: Contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dev tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: pytest (contract)
+        run: pytest tests/backend -m contract
+
+      - uses: actions/setup-node@v4
+        if: hashFiles('contracts/mock/package.json') != ''
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: contracts/mock/package-lock.json
+
+      - name: Mock server smoke test
+        if: hashFiles('contracts/mock/package.json') != ''
+        working-directory: contracts/mock
+        run: |
+          npm ci
+          npm run smoke
+
+  # -------------------------------------------------------------------------
+  # Frappe integration: install the app on a fresh site and run bench tests
+  # -------------------------------------------------------------------------
+  bench-tests:
+    name: Frappe site install + bench tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
 
     services:
       redis-cache:
@@ -36,71 +113,50 @@ jobs:
         options: --health-cmd="mariadb-admin ping" --health-interval=5s --health-timeout=2s --health-retries=3
 
     steps:
-      - name: Clone
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Find tests
-        run: |
-          echo "Finding tests"
-          grep -rn "def test" > /dev/null
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           check-latest: true
 
       - name: Cache pip
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/*requirements.txt', '**/pyproject.toml', '**/setup.py', '**/setup.cfg') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-            ${{ runner.os }}-
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: 'echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT'
+      - name: Install MariaDB client
+        run: sudo apt-get update && sudo apt-get install -y mariadb-client
 
-      - uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Install MariaDB Client
-        run: sudo apt-get install mariadb-client-10.6
-
-      - name: Setup
+      - name: Bench init
         run: |
           pip install frappe-bench
-          bench init --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
+          bench init --skip-redis-config-generation --skip-assets --frappe-branch ${FRAPPE_BRANCH} --python "$(which python)" ~/frappe-bench
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
 
-      - name: Install
+      - name: Install app on a fresh site
         working-directory: /home/runner/frappe-bench
         run: |
-          bench get-app infta_control $GITHUB_WORKSPACE
+          bench get-app infra_control "$GITHUB_WORKSPACE"
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
-          bench --site test_site install-app infta_control
-          bench build
+          bench --site test_site install-app infra_control
+          bench build --app infra_control
         env:
-          CI: 'Yes'
+          CI: "Yes"
 
-      - name: Run Tests
+      - name: bench run-tests
         working-directory: /home/runner/frappe-bench
         run: |
           bench --site test_site set-config allow_tests true
-          bench --site test_site run-tests --app infta_control
+          bench --site test_site run-tests --app infra_control
         env:
           TYPE: server

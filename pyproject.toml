@@ -1,14 +1,30 @@
 [project]
-name = "infta_control"
+name = "infra_control"
 authors = [
     { name = "Ameen", email = "amen562aff@gmail.com"}
 ]
-description = "Infra Control is a contoller for smartchoice infrastructure "
-requires-python = ">=3.10"
+description = "Infrastructure orchestrator for SmartChoice IQ hosting: servers, benches and sites on DigitalOcean and Frappe Cloud"
+requires-python = ">=3.11"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # "frappe~=15.0.0" # Installed and managed by bench.
+]
+
+[project.optional-dependencies]
+# Tooling for `ruff check`, `mypy --strict infra_control`, `pytest` and the contract tests.
+dev = [
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pytest>=8",
+    "hypothesis>=6",
+    "responses>=0.23",
+    "jsonschema>=4.23",
+    "openapi-spec-validator>=0.7",
+    "PyYAML>=6",
+    "types-PyYAML",
+    "types-requests",
+    "types-redis",
 ]
 
 [build-system]
@@ -19,38 +35,71 @@ build-backend = "flit_core.buildapi"
 [tool.bench.dev-dependencies]
 # package_name = "~=1.1.0"
 
+# ---------------------------------------------------------------------------
+# ruff
+# ---------------------------------------------------------------------------
 [tool.ruff]
 line-length = 110
-target-version = "py310"
+target-version = "py311"
+extend-exclude = ["frontend", "node_modules", "contracts/mock/node_modules", "*.md"]
 
 [tool.ruff.lint]
 select = [
-    "F",
-    "E",
-    "W",
-    "I",
-    "UP",
-    "B",
-    "RUF",
+    "F",   # pyflakes
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "RUF", # ruff-specific
+    "S",   # bandit (secrets, subprocess, yaml.load ...)
+    "T20", # no stray print()
 ]
 ignore = [
-    "B017", # assertRaises(Exception) - should be more specific
-    "B018", # useless expression, not assigned to anything
-    "B023", # function doesn't bind loop variable - will have last iteration's value
-    "B904", # raise inside except without from
-    "E101", # indentation contains mixed spaces and tabs
-    "E402", # module level import not at top of file
-    "E501", # line too long
-    "E741", # ambiguous variable name
-    "F401", # "unused" imports
-    "F403", # can't detect undefined names from * import
-    "F405", # can't detect undefined names from * import
-    "F722", # syntax error in forward type annotation
-    "W191", # indentation contains tabs
+    "E101", # indentation contains mixed spaces and tabs (Frappe uses tabs)
+    "E501", # line too long (formatter owns line length)
+    "W191", # indentation contains tabs (Frappe convention)
+    "RUF012", # mutable class attributes (Frappe document classes)
+    "S101",   # assert is fine in tests and invariants
 ]
 typing-modules = ["frappe.types.DF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "T20"]
+".github/scripts/**" = ["T20", "S603", "S607"]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "tab"
 docstring-code-format = true
+
+# ---------------------------------------------------------------------------
+# mypy (plan section 2: `mypy --strict` on infra_control/)
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["infra_control"]
+exclude = ["infra_control/infra_control/doctype/.*/test_.*\\.py$"]
+warn_unreachable = true
+show_error_codes = true
+pretty = true
+
+[[tool.mypy.overrides]]
+# Frappe ships no type information. Treat it as opaque; our own code stays strict.
+module = ["frappe", "frappe.*", "ansible_runner", "ansible_runner.*", "rq", "rq.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+# ---------------------------------------------------------------------------
+# pytest (unit + contract tests; Frappe site integration tests run via bench)
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests/backend"]
+pythonpath = ["."]
+addopts = "-ra -q --strict-markers"
+markers = [
+    "integration: needs a running Frappe site (skipped in the quality job)",
+    "contract: validates contracts/ (OpenAPI + event schemas)",
+]
+filterwarnings = ["error::DeprecationWarning:infra_control.*"]

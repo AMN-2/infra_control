@@ -1,0 +1,27 @@
+name: Path guard
+
+# Plan section 11.4: a PR from `agent-a/*` touching `frontend/` (or the reverse) fails.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  path-guard:
+    name: Ownership check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check changed paths against branch ownership
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: python .github/scripts/path_guard.py --branch "$HEAD_REF" --base "origin/$BASE_REF"

@@ -1,40 +1,42 @@
-### Infta Control
+### Infra Control
 
-Infra Control is a contoller for smartchoice infrastructure 
+Infrastructure orchestrator for SmartChoice IQ hosting: servers, benches and sites on
+DigitalOcean and Frappe Cloud, behind one audited job engine and one mission-control UI.
+
+Read `AGENTS.md` and `ORCHESTRATOR_IMPLEMENTATION_PLAN.md` before contributing.
+
+### Layout
+
+```
+contracts/        OpenAPI 3.1 spec, realtime event schemas, mock server (binding for both agents)
+infra_control/    Frappe app: api/, core/, job_engine/, providers/, monitoring/, bulk/
+ansible/          Roles and playbooks run by the job engine on DigitalOcean servers
+frontend/         Vue 3 SPA served at /infra
+tests/backend/    pytest unit + contract tests;  tests/frontend/  vitest + Playwright
+docs/             providers/, runbooks/, design/, adr/, QUESTIONS.md
+```
 
 ### Installation
-
-You can install this app using the [bench](https://github.com/frappe/bench) CLI:
 
 ```bash
 cd $PATH_TO_YOUR_BENCH
 bench get-app $URL_OF_THIS_REPO --branch develop
-bench install-app infta_control
+bench --site <control-plane-site> install-app infra_control
 ```
 
-### Contributing
+The control plane runs on its own dedicated site and droplet. Do not install it on a site that
+hosts client workloads.
 
-This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:
+### Development
 
 ```bash
-cd apps/infta_control
-pre-commit install
+pip install -e ".[dev]"          # ruff, mypy, pytest, contract validators
+ruff check . && ruff format --check .
+mypy --strict infra_control
+pytest tests/backend
 ```
 
-Pre-commit is configured to use the following tools for checking and formatting your code:
-
-- ruff
-- eslint
-- prettier
-- pyupgrade
-
-### CI
-
-This app can use GitHub Actions for CI. The following workflows are configured:
-
-- CI: Installs this app and runs unit tests on every push to `develop` branch.
-- Linters: Runs [Frappe Semgrep Rules](https://github.com/frappe/semgrep-rules) and [pip-audit](https://pypi.org/project/pip-audit/) on every pull request.
-
+`pre-commit install` enables ruff on commit. CI runs the same checks plus a path-ownership guard.
 
 ### License
 

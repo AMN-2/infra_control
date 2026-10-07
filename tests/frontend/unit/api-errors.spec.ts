@@ -21,3 +21,20 @@ describe("toApiError", () => {
 		}
 	});
 });
+
+describe("realtimeOrigin", () => {
+	it("uses the page origin behind nginx and the Socket.IO port on Frappe's dev server", async () => {
+		const { realtimeOrigin, readBoot } = await import("@/api/boot");
+		const loc = { protocol: "http:", hostname: "ops-staging.localhost" };
+		expect(realtimeOrigin({ socketio_port: null }, loc)).toBeUndefined();
+		expect(realtimeOrigin(null, loc)).toBeUndefined();
+		expect(realtimeOrigin({ socketio_port: 9000 }, loc)).toBe(
+			"http://ops-staging.localhost:9000"
+		);
+		window.infra_boot = { session_user: "u", socketio_port: 9000 };
+		expect(readBoot()?.socketio_port).toBe(9000);
+		window.infra_boot = { session_user: "u" };
+		expect(readBoot()?.socketio_port).toBeNull();
+		delete window.infra_boot;
+	});
+});

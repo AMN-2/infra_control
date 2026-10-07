@@ -37,6 +37,7 @@ def get_context(context: Any) -> None:
 		site_name=frappe.local.site,
 		session_user=frappe.session.user,
 		roles=tuple(r for r in ROLES if r in user_roles()),
+		socketio_port=dev_socketio_port(),
 	)
 	context.boot = boot.as_dict()
 	context.csrf_token = boot.csrf_token
@@ -50,3 +51,11 @@ def get_context(context: Any) -> None:
 		frappe.log_error(title="Infra Control frontend not built", message=str(exc))
 		return
 	context.assets = assets
+
+
+def dev_socketio_port() -> int | None:
+	"""Frappe's dev server (`bench serve`, DEV_SERVER=1) has no nginx routing /socket.io."""
+	if not getattr(frappe.local, "dev_server", 0):
+		return None
+	port = frappe.conf.get("socketio_port")
+	return int(port) if port else 9000

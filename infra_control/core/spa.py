@@ -142,6 +142,10 @@ class SpaBoot:
 	base_path: str = "/infra/"
 	api_base: str = "/api/method/infra_control.api."
 	socketio_path: str = "/socket.io"
+	socketio_port: int | None = None
+	"""Set only when `bench serve` (Frappe's dev server) renders the page: there is no nginx in
+	front to route /socket.io, so the client connects to this port on the same host, exactly as
+	Frappe's own desk client does (`window.dev_server`). `None` in production."""
 	extra: dict[str, Any] = field(default_factory=dict)
 
 	def as_dict(self) -> dict[str, Any]:
@@ -153,5 +157,6 @@ class SpaBoot:
 			"base_path": self.base_path,
 			"api_base": self.api_base,
 			"socketio_path": self.socketio_path,
+			"socketio_port": self.socketio_port,
 			**self.extra,
 		}

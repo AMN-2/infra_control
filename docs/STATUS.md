@@ -1,15 +1,15 @@
 # Agent A status
 
 Resume file for the next Agent A session. Update before every session ends.
-Last update: 2026-10-07 (session 2).
+Last update: 2026-10-07 (session 2, after the PR #4 contracts review).
 
 ## Phase 0 tasks
 
 | Task | State | Branch | PR | Verified by |
 |---|---|---|---|---|
 | A0.1 Scaffold, CI, path guard | done | `agent-a/A0.1-scaffold-ci` | [#3](https://github.com/AMN-2/infra_control/pull/3) → main | ruff, mypy --strict, 16 unit tests |
-| A0.2 Contracts | done, awaiting human approval | `agent-a/A0.2-contracts` | [#4](https://github.com/AMN-2/infra_control/pull/4) → A0.1 | 35 contract tests |
-| A0.4 Mock + realtime replay | done | `agent-a/A0.4-mock-server` | [#5](https://github.com/AMN-2/infra_control/pull/5) → A0.2 | `npm run smoke` (26 ops, 5 scenarios) |
+| A0.2 Contracts | review fixes pushed (commit `25ddf00`), awaiting approval | `agent-a/A0.2-contracts` | [#4](https://github.com/AMN-2/infra_control/pull/4) → A0.1 | 35 contract tests |
+| A0.4 Mock + realtime replay | done, updated for the review (`2028632`) | `agent-a/A0.4-mock-server` | [#5](https://github.com/AMN-2/infra_control/pull/5) → A0.2 | `npm run smoke` (26 ops, 5 scenarios) |
 | A0.3 Press API verification | done (source-based) | `agent-a/A0.3-press-api-verification` | [#6](https://github.com/AMN-2/infra_control/pull/6) → A0.4 | docs/providers/frappe_cloud.md; Q7, Q8 |
 | A0.5 Serve SPA at `/infra` (Q-B2) + Q1–Q6 decisions | done | `agent-a/A0.5-serve-spa` | [#7](https://github.com/AMN-2/infra_control/pull/7) → A0.3 | 10 unit tests; integration test runs in bench CI |
 
@@ -18,7 +18,10 @@ after each merge GitHub retargets the next PR to `main`.
 
 ## In progress
 
-Nothing. Phase 0 exit gate is waiting on the human: approve `contracts/` and merge #3–#7.
+Nothing. The PR #4 contracts review (6 blocking + 5 non-blocking items) is fully addressed in
+`25ddf00` on `agent-a/A0.2-contracts`; the mock follows in `2028632` on `agent-a/A0.4-mock-server`.
+ADR 0001 (`docs/adr/`) records the creation-playbook target decision. The stack was rebased and
+force-pushed. Phase 0 exit gate is waiting on the human: approve `contracts/` and merge #3–#7.
 
 **Blocker for the reviewer:** GitHub Actions has never run on this repository (zero workflow
 runs, on Agent B's PRs #1–#2 as well; only the Sourcery app reports). Enable Actions under

@@ -254,3 +254,11 @@ def test_site_playbooks_run_as_frappe_with_preflight() -> None:
 		(play,) = load(path.name)
 		assert play["become_user"] == "frappe", path.name
 		assert play["tasks"][0]["ansible.builtin.include_tasks"] == "tasks/site_preflight.yml", path.name
+
+
+def test_site_playbooks_can_find_system_binaries() -> None:
+	"""Live gate JOB-00008: nginx lives in /usr/sbin, which the play PATH left out."""
+	for path in PLAYBOOKS.glob("site_*.yml"):
+		(play,) = load(path.name)
+		dirs = play["environment"]["PATH"].split(":")
+		assert "/usr/sbin" in dirs and "/home/frappe/.local/bin" in dirs, path.name

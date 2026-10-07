@@ -4,6 +4,7 @@ Ansible process is started (an injected launcher records the call)."""
 from __future__ import annotations
 
 import json
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -149,7 +150,8 @@ def test_start_launches_ansible_runner_with_inventory_vars_and_resume(
 	assert kw["envvars"]["ANSIBLE_ROLES_PATH"].endswith("ansible/roles")
 	assert "StrictHostKeyChecking=accept-new" in kw["envvars"]["ANSIBLE_SSH_ARGS"]
 	assert kw["cancel_callback"]() is False
-	assert kw["binary"].endswith("ansible-playbook")
+	assert "binary" not in kw  # RAW mode would drop the playbook argument
+	assert kw["envvars"]["PATH"].split(":")[0] == str(Path(sys.executable).parent)
 
 
 def test_start_refuses_playbooks_outside_the_playbooks_dir(tmp_path: Path, playbooks: Path) -> None:
@@ -259,3 +261,35 @@ def test_roles_never_install_conflicting_packages() -> None:
 				installed.update(str(v) for v in value)
 	for group in CONFLICTING_PACKAGES:
 		assert len(group & installed) <= 1, f"conflicting packages {sorted(group & installed)}"
+
+
+def test_ansible_runner_builds_a_playbook_command_from_our_arguments(tmp_path: Path, playbooks: Path) -> None:
+	"""Regression for the live gate: feed ansible-runner's real config the exact kwargs start()
+	produces and check the generated command runs the playbook (and honours --start-at-task)."""
+	ansible_runner = pytest.importorskip("ansible_runner")
+	from ansible_runner.config.runner import RunnerConfig
+
+	runner, calls = make_runner(tmp_path, playbooks)
+	runner.start(SERVER, "service_control.yml", {"service": "nginx"}, start_at_task="Reload nginx")
+	from ansible_runner.utils import dump_artifacts
+
+	kw = dict(calls[0])
+	dump_artifacts(kw)  # what run_async does first: writes the inventory dict to a file
+	allowed = {
+		"private_data_dir",
+		"ident",
+		"playbook",
+		"inventory",
+		"extravars",
+		"envvars",
+		"cmdline",
+		"suppress_env_files",
+		"binary",  # the argument that broke the live run must reach the real config
+	}
+	config = RunnerConfig(**{k: v for k, v in kw.items() if k in allowed})
+	config.prepare()
+	command = config.command
+	assert ansible_runner is not None
+	assert command[0].endswith("ansible-playbook")
+	assert str((playbooks / "service_control.yml").resolve()) in command
+	assert "--start-at-task" in command and "Reload nginx" in command

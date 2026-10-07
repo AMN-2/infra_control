@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import json
 import shlex
-import shutil
 import sys
 import uuid
 from collections.abc import Callable
@@ -209,6 +208,10 @@ class AnsibleRunner:
 			inventory=inventory_for(server, self.ssh_key_path),
 			extravars=dict(extra_vars or {}),
 			envvars={
+				# The venv's ansible-playbook first. Passing `binary=` instead would switch
+				# ansible-runner to RAW mode, which drops the playbook argument (seen live in the
+				# Phase 2 gate: ansible-playbook printed its usage and exited 2).
+				"PATH": ansible_path(),
 				"ANSIBLE_ROLES_PATH": str(self.playbooks_dir.parent / "roles"),
 				"ANSIBLE_SSH_ARGS": SSH_ARGS,
 				"ANSIBLE_FORCE_COLOR": "0",
@@ -219,7 +222,6 @@ class AnsibleRunner:
 			cancel_callback=cancel_marker.exists,
 			# Facts stay in the artifacts; secrets in extravars are masked by the engine on output.
 			suppress_env_files=True,
-			binary=ansible_playbook_binary(),
 		)
 		return OpRef("digitalocean", KIND, ident)
 
@@ -288,12 +290,13 @@ def ansible_runner_available() -> bool:
 	return True
 
 
-def ansible_playbook_binary() -> str:
-	"""`ansible-playbook` next to the worker's Python (the bench venv), else from PATH.
+def ansible_path() -> str:
+	"""PATH for the Ansible process: the worker's venv `bin` first, then the inherited PATH.
 
 	A bench worker's PATH does not always include the venv's `bin`, so ansible-runner would not
-	find the binary that `bench setup requirements` installed."""
-	local = Path(sys.executable).with_name("ansible-playbook")
-	if local.is_file():
-		return str(local)
-	return shutil.which("ansible-playbook") or "ansible-playbook"
+	find the `ansible-playbook` that `bench setup requirements` installed."""
+	import os
+
+	venv_bin = str(Path(sys.executable).parent)
+	inherited = os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin")
+	return inherited if inherited.split(":")[0] == venv_bin else f"{venv_bin}:{inherited}"

@@ -23,6 +23,6 @@ export function validateEvent<E extends EventName>(
 		compiled.set(event, fn);
 	}
 	// The schema is the contract for this event, so a passing payload has the generated type.
-	if (fn(payload)) return { ok: true, payload: payload as unknown as EventMap[E] };
+	if (fn(payload)) return { ok: true, payload: payload as EventMap[E] };
 	return { ok: false, error: ajv.errorsText(fn.errors) };
 }

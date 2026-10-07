@@ -22,6 +22,20 @@ const csrf: Middleware = {
 	},
 };
 
+/**
+ * Contract rule (contracts/openapi.yaml, FrappeFrameworkError): re-authenticate on 401, or on a
+ * 403 whose body has no `error` envelope (expired session); a 403 with the envelope is a
+ * permission problem for the current user.
+ */
+export function needsReauthentication(status: number, body: unknown): boolean {
+	if (status === 401) return true;
+	if (status !== 403) return false;
+	return !(typeof body === "object" && body !== null && "error" in body);
+}
+
+/** Set once at startup (main.ts) so the client never imports a store. */
+export const authHooks: { onReauthenticate: () => void } = { onReauthenticate: () => undefined };
+
 /** Turns error envelopes into thrown ApiError so stores handle one shape. */
 const errors: Middleware = {
 	async onResponse({ response }) {
@@ -30,6 +44,7 @@ const errors: Middleware = {
 			.clone()
 			.json()
 			.catch(() => null);
+		if (needsReauthentication(response.status, body)) authHooks.onReauthenticate();
 		throw toApiError(response.status, body);
 	},
 };

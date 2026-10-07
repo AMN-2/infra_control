@@ -1,24 +1,59 @@
 {
-  "_runtime-core.esm-bundler-BZo0nlbj.js": {
-    "file": "assets/runtime-core.esm-bundler-BZo0nlbj.js",
-    "name": "runtime-core.esm-bundler"
+  "_IcEmptyState-BFheBlRD.js": {
+    "file": "assets/IcEmptyState-BFheBlRD.js",
+    "name": "IcEmptyState",
+    "imports": [
+      "_components-tsFIEgfS.js"
+    ]
+  },
+  "_IcPageHeader-BTqb3uPq.js": {
+    "file": "assets/IcPageHeader-BTqb3uPq.js",
+    "name": "IcPageHeader",
+    "imports": [
+      "_components-tsFIEgfS.js"
+    ]
+  },
+  "_PlaceholderView-DYBMpSp_.js": {
+    "file": "assets/PlaceholderView-DYBMpSp_.js",
+    "name": "PlaceholderView",
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_IcPageHeader-BTqb3uPq.js",
+      "_IcEmptyState-BFheBlRD.js"
+    ]
+  },
+  "_components-tsFIEgfS.js": {
+    "file": "assets/components-tsFIEgfS.js",
+    "name": "components",
+    "dynamicImports": [
+      "node_modules/@xterm/xterm/lib/xterm.mjs",
+      "node_modules/@xterm/addon-fit/lib/addon-fit.mjs"
+    ]
   },
   "index.html": {
-    "file": "assets/index-DHfahrsx.js",
+    "file": "assets/index-DUDSxG0h.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
     "imports": [
-      "_runtime-core.esm-bundler-BZo0nlbj.js"
+      "_components-tsFIEgfS.js"
     ],
     "dynamicImports": [
-      "node_modules/@xterm/xterm/lib/xterm.mjs",
-      "node_modules/@xterm/addon-fit/lib/addon-fit.mjs",
-      "src/features/home/HomeView.vue",
-      "src/features/design/DesignShowcase.vue"
+      "src/features/overview/OverviewView.vue",
+      "src/features/topology/TopologyView.vue",
+      "src/features/servers/ServersView.vue",
+      "src/features/servers/ServerDetailView.vue",
+      "src/features/sites/SitesView.vue",
+      "src/features/sites/SiteDetailView.vue",
+      "src/features/jobs/JobsView.vue",
+      "src/features/jobs/JobDetailView.vue",
+      "src/features/bulk/BulkView.vue",
+      "src/features/alerts/AlertsView.vue",
+      "src/features/design/DesignShowcase.vue",
+      "src/features/system/NotFoundView.vue"
     ],
     "css": [
-      "assets/index-K2x9d-em.css"
+      "assets/index-WVvk39bh.css"
     ],
     "assets": [
       "assets/space-grotesk-vietnamese-wght-normal-D0rl6rjA.woff2",
@@ -79,26 +114,129 @@
     "src": "node_modules/@xterm/xterm/lib/xterm.mjs",
     "isDynamicEntry": true
   },
+  "src/features/alerts/AlertsView.vue": {
+    "file": "assets/AlertsView-HtREHb_d.js",
+    "name": "AlertsView",
+    "src": "src/features/alerts/AlertsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
+    ]
+  },
+  "src/features/bulk/BulkView.vue": {
+    "file": "assets/BulkView-BpzOXANq.js",
+    "name": "BulkView",
+    "src": "src/features/bulk/BulkView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
+    ]
+  },
   "src/features/design/DesignShowcase.vue": {
-    "file": "assets/DesignShowcase-BPtYtgD1.js",
+    "file": "assets/DesignShowcase-B7rXRX1k.js",
     "name": "DesignShowcase",
     "src": "src/features/design/DesignShowcase.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_runtime-core.esm-bundler-BZo0nlbj.js",
+      "_components-tsFIEgfS.js",
+      "_IcPageHeader-BTqb3uPq.js",
+      "_IcEmptyState-BFheBlRD.js",
       "index.html"
     ],
     "css": [
       "assets/DesignShowcase-Bjgmkp4c.css"
     ]
   },
-  "src/features/home/HomeView.vue": {
-    "file": "assets/HomeView-C7vT_F_l.js",
-    "name": "HomeView",
-    "src": "src/features/home/HomeView.vue",
+  "src/features/jobs/JobDetailView.vue": {
+    "file": "assets/JobDetailView-DIa3ChVD.js",
+    "name": "JobDetailView",
+    "src": "src/features/jobs/JobDetailView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_runtime-core.esm-bundler-BZo0nlbj.js"
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
+    ]
+  },
+  "src/features/jobs/JobsView.vue": {
+    "file": "assets/JobsView-DY6616L4.js",
+    "name": "JobsView",
+    "src": "src/features/jobs/JobsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
+    ]
+  },
+  "src/features/overview/OverviewView.vue": {
+    "file": "assets/OverviewView-96KdvvGE.js",
+    "name": "OverviewView",
+    "src": "src/features/overview/OverviewView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
+    ]
+  },
+  "src/features/servers/ServerDetailView.vue": {
+    "file": "assets/ServerDetailView--MtLneIN.js",
+    "name": "ServerDetailView",
+    "src": "src/features/servers/ServerDetailView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
+    ]
+  },
+  "src/features/servers/ServersView.vue": {
+    "file": "assets/ServersView-DwxD8ppC.js",
+    "name": "ServersView",
+    "src": "src/features/servers/ServersView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
+    ]
+  },
+  "src/features/sites/SiteDetailView.vue": {
+    "file": "assets/SiteDetailView-C4xDnVZf.js",
+    "name": "SiteDetailView",
+    "src": "src/features/sites/SiteDetailView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
+    ]
+  },
+  "src/features/sites/SitesView.vue": {
+    "file": "assets/SitesView-Bm5fPvG9.js",
+    "name": "SitesView",
+    "src": "src/features/sites/SitesView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
+    ]
+  },
+  "src/features/system/NotFoundView.vue": {
+    "file": "assets/NotFoundView-DKp8gp0H.js",
+    "name": "NotFoundView",
+    "src": "src/features/system/NotFoundView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_IcEmptyState-BFheBlRD.js"
+    ]
+  },
+  "src/features/topology/TopologyView.vue": {
+    "file": "assets/TopologyView-BrzBzs2f.js",
+    "name": "TopologyView",
+    "src": "src/features/topology/TopologyView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-tsFIEgfS.js",
+      "_PlaceholderView-DYBMpSp_.js"
     ]
   }
 }

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, injectBoot, test } from "./fixtures";
 
 test.describe("design showcase", () => {
 	test("renders every section without errors", async ({ page }) => {
@@ -39,6 +39,7 @@ test.describe("design showcase", () => {
 	test("honours the OS reduced-motion preference", async ({ browser }) => {
 		const context = await browser.newContext({ reducedMotion: "reduce" });
 		const page = await context.newPage();
+		await injectBoot(page);
 		await page.goto("./_design");
 		const dur = await page.evaluate(() =>
 			getComputedStyle(document.documentElement).getPropertyValue("--ic-dur-scene").trim()

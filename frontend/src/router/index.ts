@@ -1,17 +1,91 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
+import { installGuards } from "./guards";
+
+declare module "vue-router" {
+	interface RouteMeta {
+		title: string;
+		/** Role required beyond being logged in. */
+		requiresRole?: "Infra Admin" | "Infra Operator";
+		/** Hidden from navigation and the palette. */
+		hidden?: boolean;
+	}
+}
 
 /** The SPA is served at /infra (plan §2). Every feature route is lazy-loaded (plan §10.4). */
 export const routes: RouteRecordRaw[] = [
+	{ path: "/", redirect: "/overview" },
 	{
-		path: "/",
-		name: "home",
-		component: () => import("@/features/home/HomeView.vue"),
+		path: "/overview",
+		name: "overview",
+		component: () => import("@/features/overview/OverviewView.vue"),
+		meta: { title: "Overview" },
 	},
 	{
-		// Living design-system showcase for review (B0.2). Restricted to Infra Admin once auth lands (Q-B7).
+		path: "/topology",
+		name: "topology",
+		component: () => import("@/features/topology/TopologyView.vue"),
+		meta: { title: "Topology" },
+	},
+	{
+		path: "/servers",
+		name: "servers",
+		component: () => import("@/features/servers/ServersView.vue"),
+		meta: { title: "Servers" },
+	},
+	{
+		path: "/servers/:name",
+		name: "server",
+		component: () => import("@/features/servers/ServerDetailView.vue"),
+		meta: { title: "Server", hidden: true },
+	},
+	{
+		path: "/sites",
+		name: "sites",
+		component: () => import("@/features/sites/SitesView.vue"),
+		meta: { title: "Sites" },
+	},
+	{
+		path: "/sites/:name",
+		name: "site",
+		component: () => import("@/features/sites/SiteDetailView.vue"),
+		meta: { title: "Site", hidden: true },
+	},
+	{
+		path: "/jobs",
+		name: "jobs",
+		component: () => import("@/features/jobs/JobsView.vue"),
+		meta: { title: "Jobs" },
+	},
+	{
+		path: "/jobs/:name",
+		name: "job",
+		component: () => import("@/features/jobs/JobDetailView.vue"),
+		meta: { title: "Job", hidden: true },
+	},
+	{
+		path: "/bulk",
+		name: "bulk",
+		component: () => import("@/features/bulk/BulkView.vue"),
+		meta: { title: "Bulk rollouts" },
+	},
+	{
+		path: "/alerts",
+		name: "alerts",
+		component: () => import("@/features/alerts/AlertsView.vue"),
+		meta: { title: "Alerts" },
+	},
+	{
+		// Living design-system showcase; Infra Admin only (Q-B7).
 		path: "/_design",
 		name: "design",
 		component: () => import("@/features/design/DesignShowcase.vue"),
+		meta: { title: "Design system", requiresRole: "Infra Admin", hidden: true },
+	},
+	{
+		path: "/:pathMatch(.*)*",
+		name: "not-found",
+		component: () => import("@/features/system/NotFoundView.vue"),
+		meta: { title: "Not found", hidden: true },
 	},
 ];
 
@@ -19,3 +93,4 @@ export const router = createRouter({
 	history: createWebHistory("/infra/"),
 	routes,
 });
+installGuards(router);

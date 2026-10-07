@@ -1,0 +1,14 @@
+{
+  "name": "bulk-cancelled",
+  "description": "bulk.cancel on a running bulk site.backup BULK-0010: the current target finishes, the remaining target is skipped and the operation ends Cancelled.",
+  "steps": [
+    { "delay_ms": 300, "event": "infra:bulk.updated", "payload": { "bulk": "BULK-0010", "status": "Running", "done": 1, "total": 3, "current_batch": 1 } },
+    { "delay_ms": 300, "event": "infra:job.updated", "payload": { "job": "JOB-00080", "status": "Running", "progress": 0 } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00080", "idx": 0, "title": "Backup database and files", "status": "Running" } },
+    { "delay_ms": 600, "event": "infra:job.log", "payload": { "job": "JOB-00080", "idx": 0, "chunk": "Backup saved: 20261007_094500-erp_client_a_iq-database.sql.gz (41.2 MB)\n" } },
+    { "delay_ms": 800, "event": "infra:job.log", "payload": { "job": "JOB-00080", "idx": 0, "chunk": "Uploaded to spaces://scq-backups/erp.client-a.iq/...\n" } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00080", "idx": 0, "title": "Backup database and files", "status": "Success" } },
+    { "delay_ms": 100, "event": "infra:job.updated", "payload": { "job": "JOB-00080", "status": "Success", "progress": 100 } },
+    { "delay_ms": 200, "event": "infra:bulk.updated", "payload": { "bulk": "BULK-0010", "status": "Cancelled", "done": 3, "total": 3, "current_batch": 1 } }
+  ]
+}

@@ -35,6 +35,7 @@ to `http://localhost:9000/<site>` (any namespace), `path: "/socket.io"`. Events 
 | `failing-migrate` | `site.migrate` that backs up, fails on `bench migrate`, skips the rest, fires a critical alert |
 | `bulk-rollout` | Bulk migrate: canary, then a batch of two in parallel, `bulk.updated` after every target |
 | `bulk-halted` | Bulk migrate whose canary fails: status `Halted`, nothing else runs |
+| `bulk-cancelled` | `bulk.cancel` on a running bulk backup: current target finishes, rest skipped, status `Cancelled` |
 | `alert-flap` | Server goes `Down`, critical alert fires, then recovers and resolves |
 
 Trigger a replay:

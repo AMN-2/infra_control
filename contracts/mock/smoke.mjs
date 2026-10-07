@@ -35,6 +35,7 @@ const eventValidators = Object.fromEntries(
 const QUERY = {
 	"servers.get": { server: "SRV-0001" },
 	"sites.get": { site: "demo.smartchoice-iq.com" },
+	"benches.get": { bench: "BENCH-0001" },
 	"metrics.series": { server: "SRV-0001", metric: "cpu", from: "2026-10-07T09:25:00Z", to: "2026-10-07T09:30:00Z", resolution: "1m" },
 	"jobs.get": { job: "JOB-00042" },
 	"bulk.get": { bulk: "BULK-0007" },
@@ -46,8 +47,9 @@ const BODY = {
 	"jobs.retry": { job: "JOB-00041" },
 	"bulk.pause": { bulk: "BULK-0007" },
 	"bulk.resume": { bulk: "BULK-0007" },
+	"bulk.cancel": { bulk: "BULK-0007" },
 	"alerts.ack": { alert: "ALERT-00018" },
-	"alert_rules.create": { title: "RAM above 95%", target_doctype: "Server", metric: "ram", operator: "gt", threshold: 95, for_minutes: 5, severity: "critical", channels: ["telegram"] },
+	"alert_rules.create": { title: "RAM above 95%", kind: "metric", target_doctype: "Server", metric: "ram", operator: "gt", threshold: 95, for_minutes: 5, severity: "critical", channels: ["telegram"] },
 	"alert_rules.update": { rule: "RULE-0003", threshold: 90 },
 	"alert_rules.delete": { rule: "RULE-0003" },
 };
@@ -125,6 +127,19 @@ try {
 	const forcedBody = await forced.json();
 	if (forced.status !== 409 || forcedBody?.error?.code !== "capability_missing") fail(`Prefer: code=409 -> ${forced.status} ${JSON.stringify(forcedBody)}`);
 	else console.log("REST: Prefer: code=409 yields the capability_missing envelope");
+	const limited = await fetch(`${PRISM}/api/method/infra_control.api.servers.list`, { headers: { ...AUTH, Prefer: "code=429" } });
+	const limitedBody = await limited.json();
+	if (limited.status !== 429 || limitedBody?.error?.code !== "rate_limited") fail(`Prefer: code=429 -> ${limited.status} ${JSON.stringify(limitedBody)}`);
+	else console.log("REST: Prefer: code=429 yields the rate_limited envelope");
+	// Both 403 shapes are served: the envelope (permission denied) and Frappe's own (re-authenticate).
+	const forbidden = await fetch(`${PRISM}/api/method/infra_control.api.jobs.run`, {
+		method: "POST",
+		headers: { ...AUTH, "content-type": "application/json", Prefer: "code=403, example=reauthenticate" },
+		body: JSON.stringify({ playbook: "site.backup", target_doctype: "Site", target_name: "demo.smartchoice-iq.com" }),
+	});
+	const forbiddenBody = await forbidden.json();
+	if (forbidden.status !== 403 || "error" in forbiddenBody || forbiddenBody.exc_type !== "PermissionError") fail(`Prefer: code=403 example=reauthenticate -> ${forbidden.status} ${JSON.stringify(forbiddenBody)}`);
+	else console.log("REST: Prefer: code=403, example=reauthenticate yields Frappe's PermissionError shape");
 
 	// ---- Realtime: replay every scenario, validate every event -----------------------------
 	const socket = io(`${RT}/mock.localhost`, { path: "/socket.io", transports: ["websocket"] });

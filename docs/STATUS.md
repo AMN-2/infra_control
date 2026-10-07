@@ -16,9 +16,15 @@ Last update: 2026-10-07 (session 2, after the PR #4 contracts review).
 Branches are stacked in that order on `main` (root commit `24ea201`). Merge PRs top-down;
 after each merge GitHub retargets the next PR to `main`.
 
+## Phase 0 exit gate
+
+Contracts approved by the reviewer on 2026-10-07 (in chat, after `25ddf00`), with the instruction to
+start Phase 1. Merging #3-#7 on GitHub and enabling Actions remain the reviewer's.
+
 ## In progress
 
-Nothing. The PR #4 contracts review (6 blocking + 5 non-blocking items) is fully addressed in
+A1.1 (DocTypes, roles, permissions, immutable audit log) on `agent-a/A1.1-doctypes`, stacked on
+A0.5. Previously: the PR #4 contracts review (6 blocking + 5 non-blocking items) is fully addressed in
 `25ddf00` on `agent-a/A0.2-contracts`; the mock follows in `2028632` on `agent-a/A0.4-mock-server`.
 ADR 0001 (`docs/adr/`) records the creation-playbook target decision. The stack was rebased and
 force-pushed. Phase 0 exit gate is waiting on the human: approve `contracts/` and merge #3–#7.

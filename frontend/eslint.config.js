@@ -11,6 +11,7 @@ export default defineConfigWithVueTs(
 			"playwright-report/**",
 			"test-results/**",
 			"src/api/schema.d.ts",
+			"src/realtime/events.generated.ts",
 		],
 	},
 	pluginVue.configs["flat/recommended"],

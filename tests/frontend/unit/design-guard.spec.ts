@@ -17,6 +17,7 @@ const EXEMPT = [
 	"design/motion.ts",
 	"design/color.ts",
 	"api/schema.d.ts",
+	"realtime/events.generated.ts",
 ];
 
 function walk(dir: string): string[] {

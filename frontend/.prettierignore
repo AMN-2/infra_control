@@ -1,3 +1,4 @@
 src/api/schema.d.ts
 package-lock.json
 dist
+src/realtime/events.generated.ts

@@ -16,7 +16,8 @@ const STUB = `${HEADER}// contracts/openapi.yaml is not merged yet: no endpoints
 
 let output;
 if (existsSync(contract)) {
-	const ast = await openapiTS(new URL(`file://${contract}`), { immutable: true });
+	// Not `immutable`: Pinia stores mutate these objects when realtime events arrive (B1.3).
+	const ast = await openapiTS(new URL(`file://${contract}`));
 	output = HEADER + astToString(ast);
 } else {
 	console.warn("[gen-api] contracts/openapi.yaml not found; using the empty stub.");

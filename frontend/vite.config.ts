@@ -15,6 +15,8 @@ const assetBase = process.env.INFRA_UI_BASE ?? "/infra/";
 
 /** Dev only: where `/api` is proxied. Defaults to the Prism mock in contracts/mock. */
 const apiTarget = process.env.INFRA_API_TARGET ?? "http://127.0.0.1:4010";
+/** Dev only: where `/socket.io` is proxied. Defaults to the realtime replay in contracts/mock. */
+const realtimeTarget = process.env.INFRA_REALTIME_TARGET ?? "http://127.0.0.1:9000";
 
 export default defineConfig(({ command }) => ({
 	base: command === "build" ? assetBase : "/infra/",
@@ -27,6 +29,8 @@ export default defineConfig(({ command }) => ({
 		strictPort: true,
 		proxy: {
 			"/api": { target: apiTarget, changeOrigin: true },
+			// Realtime: the Socket.IO replay server from contracts/mock (`npm run realtime`).
+			"/socket.io": { target: realtimeTarget, ws: true, changeOrigin: true },
 		},
 	},
 	build: {

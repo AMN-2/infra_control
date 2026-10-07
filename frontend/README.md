@@ -24,3 +24,17 @@ Environment:
 - `INFRA_UI_BASE`: the asset base for production builds (see `docs/questions/agent-b.md` Q-B2).
 
 Rules that apply here: talk to the backend only through `src/api/client.ts` (generated types), touch the socket only from `src/realtime/`, and take every colour, size, duration and easing from `src/design/`.
+
+## Realtime and stores (B1.3)
+
+- `src/realtime/` is the only module that imports `socket.io-client`. It connects to Frappe's
+  Socket.IO namespace `/<site>` on path `/socket.io` with the session cookie, validates every
+  payload against `contracts/events` (Ajv, schemas generated into `events.generated.ts` by
+  `npm run gen:events`) and dispatches typed events through `onEvent(name, handler)`.
+  Invalid payloads are dropped and counted (`realtimeDropped`).
+- `src/stores/` holds one Pinia store per feature (session, overview, inventory, jobs, alerts,
+  playbooks). Stores fetch through the generated client and update from events; components never
+  touch the socket. `alerts.acknowledge` is the only optimistic action.
+- Dev: run the mock (`cd contracts/mock && npm run dev`) and `npm run dev` here. `/api` is
+  proxied to Prism on :4010 and `/socket.io` to the replay server on :9000; trigger scenarios
+  with `POST http://localhost:9000/mock/replay/<name>`.

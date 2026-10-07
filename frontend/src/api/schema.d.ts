@@ -2,520 +2,520 @@
 // GENERATED from contracts/openapi.yaml by scripts/gen-api.mjs. Do not edit.
 
 export interface paths {
-    readonly "/api/method/infra_control.api.overview.summary": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.overview.summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Counts by status, running jobs, firing alerts */
-        readonly get: operations["overview_summary"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["overview_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.inventory.topology": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.inventory.topology": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Nodes and edges for providers, servers, benches and sites */
-        readonly get: operations["inventory_topology"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["inventory_topology"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.servers.list": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.servers.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** List servers */
-        readonly get: operations["servers_list"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["servers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.servers.get": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.servers.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Server detail with capabilities, benches and latest metrics */
-        readonly get: operations["servers_get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["servers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.sites.list": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.sites.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** List sites */
-        readonly get: operations["sites_list"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["sites_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.sites.get": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.sites.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Site detail with capabilities, bench and recent backups */
-        readonly get: operations["sites_get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["sites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.benches.list": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.benches.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** List benches (Frappe Cloud benches have `server` = null) */
-        readonly get: operations["benches_list"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["benches_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.benches.get": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.benches.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Bench detail with its sites and capabilities */
-        readonly get: operations["benches_get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["benches_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.metrics.series": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.metrics.series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Time series for one metric of one server */
-        readonly get: operations["metrics_series"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["metrics_series"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.playbooks.list": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.playbooks.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Playbooks applicable to a target type, filtered by the target's capabilities */
-        readonly get: operations["playbooks_list"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["playbooks_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.jobs.run": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.jobs.run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Validate, audit, create an Infra Job and enqueue it */
-        readonly post: operations["jobs_run"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["jobs_run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.jobs.cancel": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.jobs.cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Cancel a queued or running job */
-        readonly post: operations["jobs_cancel"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["jobs_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.jobs.retry": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.jobs.retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Create a new job linked to a failed one, resuming from its first failed step */
-        readonly post: operations["jobs_retry"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["jobs_retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.jobs.list": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.jobs.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** List jobs, newest first */
-        readonly get: operations["jobs_list"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["jobs_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.jobs.get": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.jobs.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Job with its steps and masked output */
-        readonly get: operations["jobs_get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.bulk.create": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.bulk.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Create and start a bulk operation (backup, canary, batches) */
-        readonly post: operations["bulk_create"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["bulk_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.bulk.pause": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.bulk.pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Pause after the current batch finishes */
-        readonly post: operations["bulk_pause"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["bulk_pause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.bulk.resume": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.bulk.resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Resume a paused or halted bulk operation with the remaining targets */
-        readonly post: operations["bulk_resume"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["bulk_resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.bulk.cancel": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.bulk.cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /**
          * Cancel a bulk operation; stops after the current target finishes
          * @description The target currently running completes (its job is not interrupted); every remaining target
          *     becomes `Skipped` and the bulk operation ends in status `Cancelled`. Allowed from `Queued`,
          *     `Running`, `Paused` and `Halted`; otherwise `409 invalid_state`.
          */
-        readonly post: operations["bulk_cancel"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["bulk_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.bulk.get": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.bulk.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Bulk operation with per-target progress */
-        readonly get: operations["bulk_get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["bulk_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.alerts.list": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.alerts.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** List alerts, firing first then newest */
-        readonly get: operations["alerts_list"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["alerts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.alerts.ack": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.alerts.ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Acknowledge a firing alert */
-        readonly post: operations["alerts_ack"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["alerts_ack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.alert_rules.list": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.alert_rules.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** List alert rules */
-        readonly get: operations["alert_rules_list"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["alert_rules_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.alert_rules.get": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.alert_rules.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** One alert rule */
-        readonly get: operations["alert_rules_get"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["alert_rules_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.alert_rules.create": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.alert_rules.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Create an alert rule (Infra Admin) */
-        readonly post: operations["alert_rules_create"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["alert_rules_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.alert_rules.update": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.alert_rules.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Update an alert rule (Infra Admin); omitted fields keep their value */
-        readonly post: operations["alert_rules_update"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["alert_rules_update"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.alert_rules.delete": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.alert_rules.delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly get?: never;
-        readonly put?: never;
+        get?: never;
+        put?: never;
         /** Delete a metric alert rule (Infra Admin); its historical alerts are kept. Built-in rules -> 409 invalid_state */
-        readonly post: operations["alert_rules_delete"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        post: operations["alert_rules_delete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.audit.list": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.audit.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Paginated immutable audit log, newest first */
-        readonly get: operations["audit_list"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["audit_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    readonly "/api/method/infra_control.api.search.query": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    "/api/method/infra_control.api.search.query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         /** Command palette search across servers, sites, benches, playbooks, jobs and alerts */
-        readonly get: operations["search_query"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+        get: operations["search_query"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {string} */
-        readonly ErrorCode: "validation_error" | "permission_denied" | "not_found" | "confirmation_required" | "capability_missing" | "invalid_state" | "invalid_cursor" | "rate_limited" | "provider_error" | "internal_error";
-        readonly Error: {
-            readonly code: components["schemas"]["ErrorCode"];
-            readonly message: string;
+        ErrorCode: "validation_error" | "permission_denied" | "not_found" | "confirmation_required" | "capability_missing" | "invalid_state" | "invalid_cursor" | "rate_limited" | "provider_error" | "internal_error";
+        Error: {
+            code: components["schemas"]["ErrorCode"];
+            message: string;
             /** @description Machine-readable context; keys depend on `code`. */
-            readonly details: {
-                readonly [key: string]: unknown;
+            details: {
+                [key: string]: unknown;
             };
         };
-        readonly ErrorResponse: {
-            readonly error: components["schemas"]["Error"];
+        ErrorResponse: {
+            error: components["schemas"]["Error"];
         };
         /**
          * @description Emitted by Frappe before the handler runs, so it never has the `error` envelope. Verified on
@@ -529,41 +529,41 @@ export interface components {
          *     Clients detect "re-authenticate" as `status === 401 || (status === 403 && !("error" in body))`
          *     and "permission denied" as `status === 403 && body.error?.code === "permission_denied"`.
          */
-        readonly FrappeFrameworkError: {
+        FrappeFrameworkError: {
             /** @enum {string} */
-            readonly exc_type: "AuthenticationError" | "PermissionError" | "CSRFTokenError";
-            readonly exception?: string;
+            exc_type: "AuthenticationError" | "PermissionError" | "CSRFTokenError";
+            exception?: string;
             /** @description JSON-encoded list of JSON-encoded message objects (Frappe format) */
-            readonly _server_messages?: string;
+            _server_messages?: string;
         } & {
-            readonly [key: string]: unknown;
+            [key: string]: unknown;
         };
         /** @enum {string} */
-        readonly Provider: "digitalocean" | "frappe_cloud";
+        Provider: "digitalocean" | "frappe_cloud";
         /** @enum {string} */
-        readonly Capability: "site" | "bench" | "server" | "ssh" | "snapshot" | "service_control" | "metrics" | "custom_playbook" | "managed_backup" | "managed_update";
+        Capability: "site" | "bench" | "server" | "ssh" | "snapshot" | "service_control" | "metrics" | "custom_playbook" | "managed_backup" | "managed_update";
         /** @enum {string} */
-        readonly ServerStatus: "Provisioning" | "Active" | "Degraded" | "Down" | "Archived";
+        ServerStatus: "Provisioning" | "Active" | "Degraded" | "Down" | "Archived";
         /** @enum {string} */
-        readonly SiteStatus: "Pending" | "Active" | "Maintenance" | "Suspended" | "Broken" | "Archived";
+        SiteStatus: "Pending" | "Active" | "Maintenance" | "Suspended" | "Broken" | "Archived";
         /** @enum {string} */
-        readonly JobStatus: "Queued" | "Running" | "Success" | "Failed" | "Cancelled";
+        JobStatus: "Queued" | "Running" | "Success" | "Failed" | "Cancelled";
         /** @enum {string} */
-        readonly StepStatus: "Queued" | "Running" | "Success" | "Failed" | "Cancelled" | "Skipped";
+        StepStatus: "Queued" | "Running" | "Success" | "Failed" | "Cancelled" | "Skipped";
         /** @enum {string} */
-        readonly BulkStatus: "Queued" | "Running" | "Paused" | "Halted" | "Success" | "Failed" | "Cancelled";
+        BulkStatus: "Queued" | "Running" | "Paused" | "Halted" | "Success" | "Failed" | "Cancelled";
         /** @enum {string} */
-        readonly BulkPhase: "backup" | "canary" | "batches" | "done";
+        BulkPhase: "backup" | "canary" | "batches" | "done";
         /** @enum {string} */
-        readonly BulkTargetStatus: "Pending" | "Running" | "Success" | "Failed" | "Skipped";
+        BulkTargetStatus: "Pending" | "Running" | "Success" | "Failed" | "Skipped";
         /** @enum {string} */
-        readonly AlertStatus: "firing" | "acknowledged" | "resolved";
+        AlertStatus: "firing" | "acknowledged" | "resolved";
         /** @enum {string} */
-        readonly Severity: "info" | "warning" | "critical";
+        Severity: "info" | "warning" | "critical";
         /** @enum {string} */
-        readonly Risk: "low" | "medium" | "high";
+        Risk: "low" | "medium" | "high";
         /** @enum {string} */
-        readonly TargetDoctype: "Server" | "Site" | "Bench" | "Provider Account";
+        TargetDoctype: "Server" | "Site" | "Bench" | "Provider Account";
         /**
          * @description `metric`: threshold on a server metric (user-created). `heartbeat`: no server heartbeat for
          *     `for_minutes`. `ssl_expiry`: a site certificate expires within `threshold` days. `drift`:
@@ -571,424 +571,424 @@ export interface components {
          *     Only `metric` rules can be created or deleted; the other kinds exist as built-in rules.
          * @enum {string}
          */
-        readonly AlertRuleKind: "metric" | "heartbeat" | "ssl_expiry" | "drift" | "contract";
+        AlertRuleKind: "metric" | "heartbeat" | "ssl_expiry" | "drift" | "contract";
         /** @enum {string} */
-        readonly ServerRole: "app" | "db" | "proxy" | "all";
+        ServerRole: "app" | "db" | "proxy" | "all";
         /** @enum {string} */
-        readonly MetricName: "cpu" | "ram" | "disk" | "load1" | "queue_backlog";
+        MetricName: "cpu" | "ram" | "disk" | "load1" | "queue_backlog";
         /** @enum {string} */
-        readonly Resolution: "1m" | "1h" | "1d";
+        Resolution: "1m" | "1h" | "1d";
         /** @enum {string} */
-        readonly FailurePolicy: "halt" | "continue";
+        FailurePolicy: "halt" | "continue";
         /** @enum {string} */
-        readonly Operator: "gt" | "gte" | "lt" | "lte" | "eq";
+        Operator: "gt" | "gte" | "lt" | "lte" | "eq";
         /** @enum {string} */
-        readonly AlertChannel: "telegram" | "email";
+        AlertChannel: "telegram" | "email";
         /** @enum {string} */
-        readonly BackupKind: "db" | "files" | "snapshot";
+        BackupKind: "db" | "files" | "snapshot";
         /** @enum {string} */
-        readonly AuditResult: "success" | "failed" | "denied";
+        AuditResult: "success" | "failed" | "denied";
         /** @enum {string} */
-        readonly SearchResultType: "server" | "site" | "bench" | "playbook" | "job" | "alert";
-        readonly TargetRef: {
-            readonly target_doctype: components["schemas"]["TargetDoctype"];
-            readonly target_name: string;
+        SearchResultType: "server" | "site" | "bench" | "playbook" | "job" | "alert";
+        TargetRef: {
+            target_doctype: components["schemas"]["TargetDoctype"];
+            target_name: string;
         };
-        readonly JobRef: {
-            readonly job: string;
+        JobRef: {
+            job: string;
         };
-        readonly BulkRef: {
-            readonly bulk: string;
+        BulkRef: {
+            bulk: string;
         };
         /** @description Pass as `cursor` to fetch the next page; `null` when there is none. */
-        readonly NextCursor: string | null;
-        readonly InstalledApp: {
-            readonly app: string;
-            readonly version: string | null;
-            readonly branch: string | null;
+        NextCursor: string | null;
+        InstalledApp: {
+            app: string;
+            version: string | null;
+            branch: string | null;
         };
-        readonly Server: {
+        Server: {
             /** @description Stable id (naming series), e.g. `SRV-0001` */
-            readonly name: string;
+            name: string;
             /** @description Display name (the droplet name); used as the topology label and the search title */
-            readonly hostname: string;
-            readonly provider: components["schemas"]["Provider"];
-            readonly provider_account: string;
+            hostname: string;
+            provider: components["schemas"]["Provider"];
+            provider_account: string;
             /** @description Droplet id */
-            readonly provider_ref: string;
-            readonly public_ip: string | null;
-            readonly private_ip: string | null;
-            readonly role: components["schemas"]["ServerRole"];
-            readonly region: string;
-            readonly size: string;
-            readonly tags: readonly string[];
-            readonly status: components["schemas"]["ServerStatus"];
+            provider_ref: string;
+            public_ip: string | null;
+            private_ip: string | null;
+            role: components["schemas"]["ServerRole"];
+            region: string;
+            size: string;
+            tags: string[];
+            status: components["schemas"]["ServerStatus"];
             /** Format: date-time */
-            readonly last_heartbeat: string | null;
+            last_heartbeat: string | null;
             /** @description Provider-level capability set (plan section 4.2); actions come from `playbooks.list` */
-            readonly capabilities: readonly components["schemas"]["Capability"][];
-            readonly bench_count: number;
-            readonly site_count: number;
+            capabilities: components["schemas"]["Capability"][];
+            bench_count: number;
+            site_count: number;
         };
-        readonly ServerPage: {
-            readonly items: readonly components["schemas"]["Server"][];
-            readonly next_cursor: components["schemas"]["NextCursor"];
+        ServerPage: {
+            items: components["schemas"]["Server"][];
+            next_cursor: components["schemas"]["NextCursor"];
         };
-        readonly MetricSnapshot: {
+        MetricSnapshot: {
             /** Format: date-time */
-            readonly ts: string;
+            ts: string;
             /** @description percent */
-            readonly cpu: number;
+            cpu: number;
             /** @description percent */
-            readonly ram: number;
+            ram: number;
             /** @description percent */
-            readonly disk: number;
-            readonly load1: number;
-            readonly queue_backlog: number;
+            disk: number;
+            load1: number;
+            queue_backlog: number;
         };
-        readonly ServerDetail: components["schemas"]["Server"] & {
-            readonly benches: readonly components["schemas"]["Bench"][];
-            readonly latest_metrics: components["schemas"]["MetricSnapshot"] | null;
+        ServerDetail: components["schemas"]["Server"] & {
+            benches: components["schemas"]["Bench"][];
+            latest_metrics: components["schemas"]["MetricSnapshot"] | null;
             /** @description Name of the job currently holding this server's lock */
-            readonly running_job: string | null;
+            running_job: string | null;
         };
-        readonly Bench: {
-            readonly name: string;
+        Bench: {
+            name: string;
             /** @description Display name (bench directory name or Press release group title) */
-            readonly title: string;
-            readonly provider: components["schemas"]["Provider"];
-            readonly provider_account: string;
-            readonly provider_ref: string;
+            title: string;
+            provider: components["schemas"]["Provider"];
+            provider_account: string;
+            provider_ref: string;
             /** @description `null` for Frappe Cloud benches */
-            readonly server: string | null;
-            readonly path: string | null;
-            readonly frappe_version: string | null;
-            readonly apps: readonly components["schemas"]["InstalledApp"][];
-            readonly site_count: number;
+            server: string | null;
+            path: string | null;
+            frappe_version: string | null;
+            apps: components["schemas"]["InstalledApp"][];
+            site_count: number;
             /** @description Provider-level capability set (plan section 4.2); actions come from `playbooks.list` */
-            readonly capabilities: readonly components["schemas"]["Capability"][];
+            capabilities: components["schemas"]["Capability"][];
         };
-        readonly BenchPage: {
-            readonly items: readonly components["schemas"]["Bench"][];
-            readonly next_cursor: components["schemas"]["NextCursor"];
+        BenchPage: {
+            items: components["schemas"]["Bench"][];
+            next_cursor: components["schemas"]["NextCursor"];
         };
-        readonly BenchDetail: components["schemas"]["Bench"] & {
-            readonly sites: readonly components["schemas"]["Site"][];
+        BenchDetail: components["schemas"]["Bench"] & {
+            sites: components["schemas"]["Site"][];
             /** @description Job currently holding the lock of this bench's server (`null` for Frappe Cloud) */
-            readonly running_job: string | null;
+            running_job: string | null;
         };
-        readonly Site: {
-            readonly name: string;
-            readonly domain: string;
-            readonly provider: components["schemas"]["Provider"];
-            readonly provider_account: string;
-            readonly provider_ref: string;
-            readonly bench: string;
-            readonly server: string | null;
-            readonly status: components["schemas"]["SiteStatus"];
-            readonly plan: string | null;
+        Site: {
+            name: string;
+            domain: string;
+            provider: components["schemas"]["Provider"];
+            provider_account: string;
+            provider_ref: string;
+            bench: string;
+            server: string | null;
+            status: components["schemas"]["SiteStatus"];
+            plan: string | null;
             /** Format: date-time */
-            readonly ssl_expiry: string | null;
-            readonly db_size_mb: number | null;
+            ssl_expiry: string | null;
+            db_size_mb: number | null;
             /** Format: date-time */
-            readonly last_backup: string | null;
-            readonly custom_domains: readonly string[];
+            last_backup: string | null;
+            custom_domains: string[];
             /** @description Provider-level capability set (plan section 4.2); actions come from `playbooks.list` */
-            readonly capabilities: readonly components["schemas"]["Capability"][];
+            capabilities: components["schemas"]["Capability"][];
         };
-        readonly SitePage: {
-            readonly items: readonly components["schemas"]["Site"][];
-            readonly next_cursor: components["schemas"]["NextCursor"];
+        SitePage: {
+            items: components["schemas"]["Site"][];
+            next_cursor: components["schemas"]["NextCursor"];
         };
-        readonly Backup: {
-            readonly name: string;
-            readonly site: string;
-            readonly kind: components["schemas"]["BackupKind"];
+        Backup: {
+            name: string;
+            site: string;
+            kind: components["schemas"]["BackupKind"];
             /** @description Storage path or provider reference, never a signed URL */
-            readonly location: string;
-            readonly size_mb: number;
+            location: string;
+            size_mb: number;
             /** Format: date-time */
-            readonly created_at: string;
+            created_at: string;
             /** Format: date-time */
-            readonly last_restore_test: string | null;
-            readonly restore_test_ok: boolean | null;
+            last_restore_test: string | null;
+            restore_test_ok: boolean | null;
         };
-        readonly SiteDetail: components["schemas"]["Site"] & {
-            readonly bench_info: components["schemas"]["Bench"];
+        SiteDetail: components["schemas"]["Site"] & {
+            bench_info: components["schemas"]["Bench"];
             /** @description Most recent first */
-            readonly backups: readonly components["schemas"]["Backup"][];
-            readonly running_job: string | null;
+            backups: components["schemas"]["Backup"][];
+            running_job: string | null;
         };
         /** @enum {string} */
-        readonly TopologyNodeType: "provider" | "server" | "bench" | "site";
-        readonly TopologyNode: {
+        TopologyNodeType: "provider" | "server" | "bench" | "site";
+        TopologyNode: {
             /** @description `<type>:<ref>`, unique in the graph */
-            readonly id: string;
-            readonly type: components["schemas"]["TopologyNodeType"];
+            id: string;
+            type: components["schemas"]["TopologyNodeType"];
             /** @description Document name (Provider Account, Server, Bench or Site) */
-            readonly ref: string;
+            ref: string;
             /** @description Display name: Server.hostname, Bench.title, Site.domain, Provider Account label */
-            readonly label: string;
+            label: string;
             /** @description Unified status for servers and sites; `null` for providers and benches */
-            readonly status: string | null;
-            readonly provider: components["schemas"]["Provider"];
-            readonly has_running_job: boolean;
+            status: string | null;
+            provider: components["schemas"]["Provider"];
+            has_running_job: boolean;
         };
-        readonly TopologyEdge: {
-            readonly id: string;
-            readonly source: string;
-            readonly target: string;
+        TopologyEdge: {
+            id: string;
+            source: string;
+            target: string;
         };
-        readonly Topology: {
-            readonly nodes: readonly components["schemas"]["TopologyNode"][];
-            readonly edges: readonly components["schemas"]["TopologyEdge"][];
+        Topology: {
+            nodes: components["schemas"]["TopologyNode"][];
+            edges: components["schemas"]["TopologyEdge"][];
             /** Format: date-time */
-            readonly generated_at: string;
+            generated_at: string;
         };
-        readonly ServerStatusCounts: {
-            readonly Provisioning: number;
-            readonly Active: number;
-            readonly Degraded: number;
-            readonly Down: number;
-            readonly Archived: number;
+        ServerStatusCounts: {
+            Provisioning: number;
+            Active: number;
+            Degraded: number;
+            Down: number;
+            Archived: number;
         };
-        readonly SiteStatusCounts: {
-            readonly Pending: number;
-            readonly Active: number;
-            readonly Maintenance: number;
-            readonly Suspended: number;
-            readonly Broken: number;
-            readonly Archived: number;
+        SiteStatusCounts: {
+            Pending: number;
+            Active: number;
+            Maintenance: number;
+            Suspended: number;
+            Broken: number;
+            Archived: number;
         };
-        readonly OverviewSummary: {
-            readonly servers: {
-                readonly total: number;
-                readonly by_status: components["schemas"]["ServerStatusCounts"];
+        OverviewSummary: {
+            servers: {
+                total: number;
+                by_status: components["schemas"]["ServerStatusCounts"];
             };
-            readonly sites: {
-                readonly total: number;
-                readonly by_status: components["schemas"]["SiteStatusCounts"];
+            sites: {
+                total: number;
+                by_status: components["schemas"]["SiteStatusCounts"];
             };
-            readonly jobs: {
-                readonly queued: number;
-                readonly running: number;
-                readonly success_24h: number;
-                readonly failed_24h: number;
+            jobs: {
+                queued: number;
+                running: number;
+                success_24h: number;
+                failed_24h: number;
             };
-            readonly alerts: {
+            alerts: {
                 /** @description All unresolved alerts (firing + acknowledged) */
-                readonly unresolved: number;
-                readonly info: number;
-                readonly warning: number;
-                readonly critical: number;
+                unresolved: number;
+                info: number;
+                warning: number;
+                critical: number;
             };
-            readonly running_jobs: readonly components["schemas"]["Job"][];
-            readonly recent_alerts: readonly components["schemas"]["Alert"][];
+            running_jobs: components["schemas"]["Job"][];
+            recent_alerts: components["schemas"]["Alert"][];
             /** Format: date-time */
-            readonly generated_at: string;
+            generated_at: string;
         };
-        readonly MetricPoint: {
+        MetricPoint: {
             /** Format: date-time */
-            readonly ts: string;
+            ts: string;
             /** @description `null` marks a gap (no reading) */
-            readonly value: number | null;
+            value: number | null;
         };
-        readonly MetricSeries: {
-            readonly server: string;
-            readonly metric: components["schemas"]["MetricName"];
-            readonly resolution: components["schemas"]["Resolution"];
+        MetricSeries: {
+            server: string;
+            metric: components["schemas"]["MetricName"];
+            resolution: components["schemas"]["Resolution"];
             /** Format: date-time */
-            readonly from: string;
+            from: string;
             /** Format: date-time */
-            readonly to: string;
-            readonly points: readonly components["schemas"]["MetricPoint"][];
+            to: string;
+            points: components["schemas"]["MetricPoint"][];
         };
-        readonly Playbook: {
+        Playbook: {
             /** @description e.g. `site.migrate` */
-            readonly key: string;
-            readonly title: string;
-            readonly description: string;
+            key: string;
+            title: string;
+            description: string;
             /** @description The existing document a job targets. Creation playbooks target the parent (`Provider Account` for `server.provision`, `Bench` for `site.create`). */
-            readonly target_doctype: components["schemas"]["TargetDoctype"];
+            target_doctype: components["schemas"]["TargetDoctype"];
             /** @description Doctype of the document the job creates (`Server`, `Site`), else `null`. The UI renders a "create" form from `params_schema` when set. */
-            readonly creates: components["schemas"]["TargetDoctype"] | null;
-            readonly risk: components["schemas"]["Risk"];
-            readonly required_capability: components["schemas"]["Capability"] | null;
+            creates: components["schemas"]["TargetDoctype"] | null;
+            risk: components["schemas"]["Risk"];
+            required_capability: components["schemas"]["Capability"] | null;
             /** @description JSON Schema (draft 2020-12) for `params`. The UI renders the form from it. */
-            readonly params_schema: {
-                readonly [key: string]: unknown;
+            params_schema: {
+                [key: string]: unknown;
             };
         };
-        readonly PlaybookList: {
-            readonly items: readonly components["schemas"]["Playbook"][];
+        PlaybookList: {
+            items: components["schemas"]["Playbook"][];
         };
-        readonly Job: {
-            readonly name: string;
-            readonly playbook: string;
-            readonly playbook_title: string;
-            readonly target_doctype: components["schemas"]["TargetDoctype"];
-            readonly target_name: string;
+        Job: {
+            name: string;
+            playbook: string;
+            playbook_title: string;
+            target_doctype: components["schemas"]["TargetDoctype"];
+            target_name: string;
             /** @description Masked; secrets never appear */
-            readonly params: {
-                readonly [key: string]: unknown;
+            params: {
+                [key: string]: unknown;
             };
-            readonly status: components["schemas"]["JobStatus"];
-            readonly progress: number;
-            readonly steps_done: number;
+            status: components["schemas"]["JobStatus"];
+            progress: number;
+            steps_done: number;
             /** @description 0 while unknown */
-            readonly steps_total: number;
+            steps_total: number;
             /** @description User id, or `scheduler` */
-            readonly triggered_by: string;
-            readonly bulk_operation: string | null;
-            readonly retry_of: string | null;
+            triggered_by: string;
+            bulk_operation: string | null;
+            retry_of: string | null;
             /** @description The document a creation playbook produced (`server.provision` -> Server, `site.create` -> Site). `null` until the job succeeds and for all other playbooks. */
-            readonly created: components["schemas"]["TargetRef"] | null;
+            created: components["schemas"]["TargetRef"] | null;
             /** @description `jobs.cancel` was called; the status flips to `Cancelled` when the worker observes it */
-            readonly cancel_requested: boolean;
+            cancel_requested: boolean;
             /** Format: date-time */
-            readonly created_at: string;
+            created_at: string;
             /** Format: date-time */
-            readonly started_at: string | null;
+            started_at: string | null;
             /** Format: date-time */
-            readonly ended_at: string | null;
+            ended_at: string | null;
             /** @description Short masked failure reason */
-            readonly error: string | null;
+            error: string | null;
         };
-        readonly JobStep: {
-            readonly idx: number;
-            readonly title: string;
-            readonly status: components["schemas"]["StepStatus"];
+        JobStep: {
+            idx: number;
+            title: string;
+            status: components["schemas"]["StepStatus"];
             /** @description Masked, may be truncated to the last 64 KB */
-            readonly output: string;
+            output: string;
             /** Format: date-time */
-            readonly started_at: string | null;
+            started_at: string | null;
             /** Format: date-time */
-            readonly ended_at: string | null;
+            ended_at: string | null;
         };
-        readonly JobDetail: components["schemas"]["Job"] & {
-            readonly steps: readonly components["schemas"]["JobStep"][];
+        JobDetail: components["schemas"]["Job"] & {
+            steps: components["schemas"]["JobStep"][];
         };
-        readonly JobPage: {
-            readonly items: readonly components["schemas"]["Job"][];
-            readonly next_cursor: components["schemas"]["NextCursor"];
+        JobPage: {
+            items: components["schemas"]["Job"][];
+            next_cursor: components["schemas"]["NextCursor"];
         };
-        readonly JobEnvelope: {
-            readonly job: components["schemas"]["Job"];
+        JobEnvelope: {
+            job: components["schemas"]["Job"];
         };
-        readonly JobRunRequest: {
-            readonly playbook: string;
-            readonly target_doctype: components["schemas"]["TargetDoctype"];
-            readonly target_name: string;
+        JobRunRequest: {
+            playbook: string;
+            target_doctype: components["schemas"]["TargetDoctype"];
+            target_name: string;
             /** @default {} */
-            readonly params: {
-                readonly [key: string]: unknown;
+            params: {
+                [key: string]: unknown;
             };
             /** @description Must equal `target_name` for high-risk playbooks */
-            readonly confirm?: string;
+            confirm?: string;
         };
-        readonly BulkOperation: {
-            readonly name: string;
-            readonly playbook: string;
-            readonly playbook_title: string;
-            readonly status: components["schemas"]["BulkStatus"];
-            readonly phase: components["schemas"]["BulkPhase"];
-            readonly failure_policy: components["schemas"]["FailurePolicy"];
-            readonly batch_size: number;
-            readonly canary_target: components["schemas"]["TargetRef"];
+        BulkOperation: {
+            name: string;
+            playbook: string;
+            playbook_title: string;
+            status: components["schemas"]["BulkStatus"];
+            phase: components["schemas"]["BulkPhase"];
+            failure_policy: components["schemas"]["FailurePolicy"];
+            batch_size: number;
+            canary_target: components["schemas"]["TargetRef"];
             /** @description Number of targets including the canary */
-            readonly total: number;
+            total: number;
             /** @description Targets in a terminal state */
-            readonly done: number;
-            readonly failed: number;
+            done: number;
+            failed: number;
             /** @description 0 = canary */
-            readonly current_batch: number;
-            readonly batches_total: number;
-            readonly triggered_by: string;
+            current_batch: number;
+            batches_total: number;
+            triggered_by: string;
             /** Format: date-time */
-            readonly created_at: string;
+            created_at: string;
             /** Format: date-time */
-            readonly started_at: string | null;
+            started_at: string | null;
             /** Format: date-time */
-            readonly ended_at: string | null;
+            ended_at: string | null;
         };
-        readonly BulkTarget: {
-            readonly target_doctype: components["schemas"]["TargetDoctype"];
-            readonly target_name: string;
-            readonly status: components["schemas"]["BulkTargetStatus"];
-            readonly job: string | null;
+        BulkTarget: {
+            target_doctype: components["schemas"]["TargetDoctype"];
+            target_name: string;
+            status: components["schemas"]["BulkTargetStatus"];
+            job: string | null;
             /** @description 0 = canary */
-            readonly batch: number;
+            batch: number;
         };
-        readonly BulkOperationDetail: components["schemas"]["BulkOperation"] & {
-            readonly targets: readonly components["schemas"]["BulkTarget"][];
+        BulkOperationDetail: components["schemas"]["BulkOperation"] & {
+            targets: components["schemas"]["BulkTarget"][];
         };
-        readonly BulkEnvelope: {
-            readonly bulk: components["schemas"]["BulkOperation"];
+        BulkEnvelope: {
+            bulk: components["schemas"]["BulkOperation"];
         };
-        readonly BulkCreateRequest: {
-            readonly playbook: string;
-            readonly targets: readonly components["schemas"]["TargetRef"][];
+        BulkCreateRequest: {
+            playbook: string;
+            targets: components["schemas"]["TargetRef"][];
             /** @description Must be one of `targets` */
-            readonly canary_target: components["schemas"]["TargetRef"];
+            canary_target: components["schemas"]["TargetRef"];
             /** @default 5 */
-            readonly batch_size: number;
+            batch_size: number;
             /** @default halt */
-            readonly failure_policy: components["schemas"]["FailurePolicy"];
+            failure_policy: components["schemas"]["FailurePolicy"];
             /** @default {} */
-            readonly params: {
-                readonly [key: string]: unknown;
+            params: {
+                [key: string]: unknown;
             };
             /** @description For high-risk playbooks: must equal `"<playbook key>:<number of targets>"`, e.g. `site.restore:3` */
-            readonly confirm?: string;
+            confirm?: string;
         };
-        readonly Alert: {
-            readonly name: string;
-            readonly rule: string;
-            readonly rule_title: string;
-            readonly kind: components["schemas"]["AlertRuleKind"];
-            readonly severity: components["schemas"]["Severity"];
-            readonly status: components["schemas"]["AlertStatus"];
-            readonly target: components["schemas"]["TargetRef"];
+        Alert: {
+            name: string;
+            rule: string;
+            rule_title: string;
+            kind: components["schemas"]["AlertRuleKind"];
+            severity: components["schemas"]["Severity"];
+            status: components["schemas"]["AlertStatus"];
+            target: components["schemas"]["TargetRef"];
             /** @description Metric name, or `null` for non-metric alerts (heartbeat, drift, contract) */
-            readonly metric: string | null;
-            readonly value: number | null;
-            readonly message: string;
+            metric: string | null;
+            value: number | null;
+            message: string;
             /** Format: date-time */
-            readonly fired_at: string;
-            readonly acknowledged_by: string | null;
+            fired_at: string;
+            acknowledged_by: string | null;
             /** Format: date-time */
-            readonly acknowledged_at: string | null;
+            acknowledged_at: string | null;
             /** Format: date-time */
-            readonly resolved_at: string | null;
+            resolved_at: string | null;
         };
-        readonly AlertPage: {
-            readonly items: readonly components["schemas"]["Alert"][];
-            readonly next_cursor: components["schemas"]["NextCursor"];
+        AlertPage: {
+            items: components["schemas"]["Alert"][];
+            next_cursor: components["schemas"]["NextCursor"];
         };
-        readonly AlertEnvelope: {
-            readonly alert: components["schemas"]["Alert"];
+        AlertEnvelope: {
+            alert: components["schemas"]["Alert"];
         };
         /** @description Body of `alert_rules.create`. Only `metric` rules can be created; the built-in kinds exist from install. */
-        readonly AlertRuleInput: {
-            readonly title: string;
+        AlertRuleInput: {
+            title: string;
             /**
              * @default metric
              * @constant
              */
-            readonly kind: "metric";
+            kind: "metric";
             /**
              * @default Server
              * @constant
              */
-            readonly target_doctype: "Server";
-            readonly metric: components["schemas"]["MetricName"];
-            readonly operator: components["schemas"]["Operator"];
-            readonly threshold: number;
-            readonly for_minutes: number;
-            readonly severity: components["schemas"]["Severity"];
-            readonly channels: readonly components["schemas"]["AlertChannel"][];
+            target_doctype: "Server";
+            metric: components["schemas"]["MetricName"];
+            operator: components["schemas"]["Operator"];
+            threshold: number;
+            for_minutes: number;
+            severity: components["schemas"]["Severity"];
+            channels: components["schemas"]["AlertChannel"][];
             /** @default true */
-            readonly enabled: boolean;
+            enabled: boolean;
         };
         /**
          * @description Field usage per `kind` (enforced by the `allOf` conditions below):
@@ -1006,72 +1006,72 @@ export interface components {
          *     `heartbeat`; `threshold` for `ssl_expiry`. Anything else -> `400 validation_error`.
          *     Built-in rules cannot be created or deleted (`409 invalid_state`).
          */
-        readonly AlertRule: {
-            readonly name: string;
-            readonly title: string;
-            readonly kind: components["schemas"]["AlertRuleKind"];
+        AlertRule: {
+            name: string;
+            title: string;
+            kind: components["schemas"]["AlertRuleKind"];
             /** @enum {string} */
-            readonly target_doctype: "Server" | "Site" | "Provider Account";
-            readonly metric: components["schemas"]["MetricName"] | null;
-            readonly operator: components["schemas"]["Operator"] | null;
-            readonly threshold: number | null;
-            readonly for_minutes: number | null;
-            readonly severity: components["schemas"]["Severity"];
-            readonly channels: readonly components["schemas"]["AlertChannel"][];
-            readonly enabled: boolean;
+            target_doctype: "Server" | "Site" | "Provider Account";
+            metric: components["schemas"]["MetricName"] | null;
+            operator: components["schemas"]["Operator"] | null;
+            threshold: number | null;
+            for_minutes: number | null;
+            severity: components["schemas"]["Severity"];
+            channels: components["schemas"]["AlertChannel"][];
+            enabled: boolean;
             /** @description Created on install; cannot be deleted */
-            readonly builtin: boolean;
+            builtin: boolean;
             /** Format: date-time */
-            readonly modified_at: string;
+            modified_at: string;
         } & (unknown & unknown & unknown & unknown);
         /** @description Omitted fields keep their value. Fields that do not apply to the rule's `kind` (see `AlertRule`) are rejected with `400 validation_error`. */
-        readonly AlertRuleUpdate: {
-            readonly rule: string;
-            readonly title?: string;
-            readonly metric?: components["schemas"]["MetricName"];
-            readonly operator?: components["schemas"]["Operator"];
-            readonly threshold?: number;
-            readonly for_minutes?: number;
-            readonly severity?: components["schemas"]["Severity"];
-            readonly channels?: readonly components["schemas"]["AlertChannel"][];
-            readonly enabled?: boolean;
+        AlertRuleUpdate: {
+            rule: string;
+            title?: string;
+            metric?: components["schemas"]["MetricName"];
+            operator?: components["schemas"]["Operator"];
+            threshold?: number;
+            for_minutes?: number;
+            severity?: components["schemas"]["Severity"];
+            channels?: components["schemas"]["AlertChannel"][];
+            enabled?: boolean;
         };
-        readonly AlertRulePage: {
-            readonly items: readonly components["schemas"]["AlertRule"][];
-            readonly next_cursor: components["schemas"]["NextCursor"];
+        AlertRulePage: {
+            items: components["schemas"]["AlertRule"][];
+            next_cursor: components["schemas"]["NextCursor"];
         };
-        readonly AlertRuleEnvelope: {
-            readonly rule: components["schemas"]["AlertRule"];
+        AlertRuleEnvelope: {
+            rule: components["schemas"]["AlertRule"];
         };
-        readonly AuditEntry: {
-            readonly name: string;
+        AuditEntry: {
+            name: string;
             /** Format: date-time */
-            readonly ts: string;
-            readonly user: string;
+            ts: string;
+            user: string;
             /** @description e.g. `jobs.run:site.migrate`, `alerts.ack`, `alert_rules.update` */
-            readonly action: string;
-            readonly target: components["schemas"]["TargetRef"] | null;
+            action: string;
+            target: components["schemas"]["TargetRef"] | null;
             /** @description SHA-256 of the canonical params JSON; params themselves are never stored here */
-            readonly params_hash: string;
-            readonly job: string | null;
-            readonly result: components["schemas"]["AuditResult"];
+            params_hash: string;
+            job: string | null;
+            result: components["schemas"]["AuditResult"];
         };
-        readonly AuditPage: {
-            readonly items: readonly components["schemas"]["AuditEntry"][];
-            readonly next_cursor: components["schemas"]["NextCursor"];
+        AuditPage: {
+            items: components["schemas"]["AuditEntry"][];
+            next_cursor: components["schemas"]["NextCursor"];
         };
-        readonly SearchResult: {
-            readonly type: components["schemas"]["SearchResultType"];
+        SearchResult: {
+            type: components["schemas"]["SearchResultType"];
             /** @description Document name or playbook key */
-            readonly id: string;
+            id: string;
             /** @description Display name: Server.hostname, Bench.title, Site.domain, playbook title, job title, alert rule title */
-            readonly title: string;
-            readonly subtitle: string | null;
-            readonly status: string | null;
-            readonly provider: components["schemas"]["Provider"] | null;
+            title: string;
+            subtitle: string | null;
+            status: string | null;
+            provider: components["schemas"]["Provider"] | null;
         };
-        readonly SearchResults: {
-            readonly items: readonly components["schemas"]["SearchResult"][];
+        SearchResults: {
+            items: components["schemas"]["SearchResult"][];
         };
     };
     responses: {
@@ -1079,9 +1079,9 @@ export interface components {
          * @description Invalid `Authorization: token` header (Frappe `AuthenticationError`, framework shape). A missing
          *     or expired session cookie does **not** produce 401; see `Forbidden`.
          */
-        readonly Unauthorized: {
+        Unauthorized: {
             headers: {
-                readonly [name: string]: unknown;
+                [name: string]: unknown;
             };
             content: {
                 /**
@@ -1090,7 +1090,7 @@ export interface components {
                  *       "exc_type": "AuthenticationError"
                  *     }
                  */
-                readonly "application/json": components["schemas"]["FrappeFrameworkError"];
+                "application/json": components["schemas"]["FrappeFrameworkError"];
             };
         };
         /**
@@ -1100,19 +1100,19 @@ export interface components {
          *     - **Permission denied**: body is the `error` envelope with `code: permission_denied`; the user is
          *       logged in but the role lacks the right.
          */
-        readonly Forbidden: {
+        Forbidden: {
             headers: {
-                readonly [name: string]: unknown;
+                [name: string]: unknown;
             };
             content: {
-                readonly "application/json": components["schemas"]["ErrorResponse"] | components["schemas"]["FrappeFrameworkError"];
+                "application/json": components["schemas"]["ErrorResponse"] | components["schemas"]["FrappeFrameworkError"];
             };
         };
         /** @description Too many requests; retry after the number of seconds in `Retry-After` */
-        readonly RateLimited: {
+        RateLimited: {
             headers: {
-                readonly "Retry-After"?: number;
-                readonly [name: string]: unknown;
+                "Retry-After"?: number;
+                [name: string]: unknown;
             };
             content: {
                 /**
@@ -1126,13 +1126,13 @@ export interface components {
                  *       }
                  *     }
                  */
-                readonly "application/json": components["schemas"]["ErrorResponse"];
+                "application/json": components["schemas"]["ErrorResponse"];
             };
         };
         /** @description Target does not exist */
-        readonly NotFound: {
+        NotFound: {
             headers: {
-                readonly [name: string]: unknown;
+                [name: string]: unknown;
             };
             content: {
                 /**
@@ -1147,13 +1147,13 @@ export interface components {
                  *       }
                  *     }
                  */
-                readonly "application/json": components["schemas"]["ErrorResponse"];
+                "application/json": components["schemas"]["ErrorResponse"];
             };
         };
         /** @description Invalid parameters or body */
-        readonly ValidationError: {
+        ValidationError: {
             headers: {
-                readonly [name: string]: unknown;
+                [name: string]: unknown;
             };
             content: {
                 /**
@@ -1167,7 +1167,7 @@ export interface components {
                  *       }
                  *     }
                  */
-                readonly "application/json": components["schemas"]["ErrorResponse"];
+                "application/json": components["schemas"]["ErrorResponse"];
             };
         };
         /**
@@ -1175,18 +1175,18 @@ export interface components {
          *     `jobs.run`, `"<playbook key>:<target count>"` for `bulk.create`. `details.expected` always
          *     carries the exact string to type.
          */
-        readonly ValidationOrConfirmation: {
+        ValidationOrConfirmation: {
             headers: {
-                readonly [name: string]: unknown;
+                [name: string]: unknown;
             };
             content: {
-                readonly "application/json": components["schemas"]["ErrorResponse"];
+                "application/json": components["schemas"]["ErrorResponse"];
             };
         };
         /** @description The target's provider does not support the required capability */
-        readonly CapabilityMissing: {
+        CapabilityMissing: {
             headers: {
-                readonly [name: string]: unknown;
+                [name: string]: unknown;
             };
             content: {
                 /**
@@ -1201,13 +1201,13 @@ export interface components {
                  *       }
                  *     }
                  */
-                readonly "application/json": components["schemas"]["ErrorResponse"];
+                "application/json": components["schemas"]["ErrorResponse"];
             };
         };
         /** @description The entity is not in a state that allows this action */
-        readonly InvalidState: {
+        InvalidState: {
             headers: {
-                readonly [name: string]: unknown;
+                [name: string]: unknown;
             };
             content: {
                 /**
@@ -1221,14 +1221,14 @@ export interface components {
                  *       }
                  *     }
                  */
-                readonly "application/json": components["schemas"]["ErrorResponse"];
+                "application/json": components["schemas"]["ErrorResponse"];
             };
         };
     };
     parameters: {
-        readonly limit: number;
+        limit: number;
         /** @description Opaque cursor from a previous page's `next_cursor`. */
-        readonly cursor: string;
+        cursor: string;
     };
     requestBodies: never;
     headers: never;
@@ -1236,843 +1236,843 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    readonly overview_summary: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    overview_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Overview summary */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["OverviewSummary"];
+                    "application/json": components["schemas"]["OverviewSummary"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly inventory_topology: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    inventory_topology: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Topology graph */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["Topology"];
+                    "application/json": components["schemas"]["Topology"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly servers_list: {
-        readonly parameters: {
-            readonly query?: {
-                readonly status?: components["schemas"]["ServerStatus"];
-                readonly provider_account?: string;
-                readonly role?: components["schemas"]["ServerRole"];
-                readonly region?: string;
-                readonly limit?: components["parameters"]["limit"];
+    servers_list: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["ServerStatus"];
+                provider_account?: string;
+                role?: components["schemas"]["ServerRole"];
+                region?: string;
+                limit?: components["parameters"]["limit"];
                 /** @description Opaque cursor from a previous page's `next_cursor`. */
-                readonly cursor?: components["parameters"]["cursor"];
+                cursor?: components["parameters"]["cursor"];
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Page of servers */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ServerPage"];
+                    "application/json": components["schemas"]["ServerPage"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly servers_get: {
-        readonly parameters: {
-            readonly query: {
-                readonly server: string;
+    servers_get: {
+        parameters: {
+            query: {
+                server: string;
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Server detail */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ServerDetail"];
+                    "application/json": components["schemas"]["ServerDetail"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly sites_list: {
-        readonly parameters: {
-            readonly query?: {
-                readonly status?: components["schemas"]["SiteStatus"];
-                readonly provider_account?: string;
-                readonly bench?: string;
-                readonly server?: string;
-                readonly limit?: components["parameters"]["limit"];
+    sites_list: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["SiteStatus"];
+                provider_account?: string;
+                bench?: string;
+                server?: string;
+                limit?: components["parameters"]["limit"];
                 /** @description Opaque cursor from a previous page's `next_cursor`. */
-                readonly cursor?: components["parameters"]["cursor"];
+                cursor?: components["parameters"]["cursor"];
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Page of sites */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["SitePage"];
+                    "application/json": components["schemas"]["SitePage"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly sites_get: {
-        readonly parameters: {
-            readonly query: {
-                readonly site: string;
+    sites_get: {
+        parameters: {
+            query: {
+                site: string;
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Site detail */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["SiteDetail"];
+                    "application/json": components["schemas"]["SiteDetail"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly benches_list: {
-        readonly parameters: {
-            readonly query?: {
-                readonly provider_account?: string;
-                readonly server?: string;
-                readonly limit?: components["parameters"]["limit"];
+    benches_list: {
+        parameters: {
+            query?: {
+                provider_account?: string;
+                server?: string;
+                limit?: components["parameters"]["limit"];
                 /** @description Opaque cursor from a previous page's `next_cursor`. */
-                readonly cursor?: components["parameters"]["cursor"];
+                cursor?: components["parameters"]["cursor"];
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Page of benches */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["BenchPage"];
+                    "application/json": components["schemas"]["BenchPage"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly benches_get: {
-        readonly parameters: {
-            readonly query: {
-                readonly bench: string;
+    benches_get: {
+        parameters: {
+            query: {
+                bench: string;
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Bench detail */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["BenchDetail"];
+                    "application/json": components["schemas"]["BenchDetail"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly metrics_series: {
-        readonly parameters: {
-            readonly query: {
-                readonly server: string;
-                readonly metric: components["schemas"]["MetricName"];
-                readonly from: string;
-                readonly to: string;
+    metrics_series: {
+        parameters: {
+            query: {
+                server: string;
+                metric: components["schemas"]["MetricName"];
+                from: string;
+                to: string;
                 /** @description Defaults to the coarsest resolution that keeps the series under 1,000 points. */
-                readonly resolution?: components["schemas"]["Resolution"];
+                resolution?: components["schemas"]["Resolution"];
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Metric series */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["MetricSeries"];
+                    "application/json": components["schemas"]["MetricSeries"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["CapabilityMissing"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["CapabilityMissing"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly playbooks_list: {
-        readonly parameters: {
-            readonly query?: {
-                readonly target_doctype?: components["schemas"]["TargetDoctype"];
+    playbooks_list: {
+        parameters: {
+            query?: {
+                target_doctype?: components["schemas"]["TargetDoctype"];
                 /** @description When given, only playbooks whose `required_capability` this target supports are returned. */
-                readonly target_name?: string;
+                target_name?: string;
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Playbooks (not paginated; the catalogue is small) */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["PlaybookList"];
+                    "application/json": components["schemas"]["PlaybookList"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly jobs_run: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    jobs_run: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["JobRunRequest"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobRunRequest"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description The queued job */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["JobEnvelope"];
+                    "application/json": components["schemas"]["JobEnvelope"];
                 };
             };
-            readonly 400: components["responses"]["ValidationOrConfirmation"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["CapabilityMissing"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationOrConfirmation"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["CapabilityMissing"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly jobs_cancel: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    jobs_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["JobRef"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobRef"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description The job after the cancel request (status `Cancelled`, or still `Running` until the worker observes the flag) */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["JobEnvelope"];
+                    "application/json": components["schemas"]["JobEnvelope"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["InvalidState"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly jobs_retry: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    jobs_retry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["JobRef"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobRef"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description The new job (`retry_of` points at the original) */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["JobEnvelope"];
+                    "application/json": components["schemas"]["JobEnvelope"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["InvalidState"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly jobs_list: {
-        readonly parameters: {
-            readonly query?: {
-                readonly status?: components["schemas"]["JobStatus"];
-                readonly playbook?: string;
-                readonly target_doctype?: components["schemas"]["TargetDoctype"];
-                readonly target_name?: string;
-                readonly bulk_operation?: string;
-                readonly limit?: components["parameters"]["limit"];
+    jobs_list: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["JobStatus"];
+                playbook?: string;
+                target_doctype?: components["schemas"]["TargetDoctype"];
+                target_name?: string;
+                bulk_operation?: string;
+                limit?: components["parameters"]["limit"];
                 /** @description Opaque cursor from a previous page's `next_cursor`. */
-                readonly cursor?: components["parameters"]["cursor"];
+                cursor?: components["parameters"]["cursor"];
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Page of jobs (without steps) */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["JobPage"];
+                    "application/json": components["schemas"]["JobPage"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly jobs_get: {
-        readonly parameters: {
-            readonly query: {
-                readonly job: string;
+    jobs_get: {
+        parameters: {
+            query: {
+                job: string;
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Job detail */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["JobDetail"];
+                    "application/json": components["schemas"]["JobDetail"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly bulk_create: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    bulk_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["BulkCreateRequest"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCreateRequest"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description The created bulk operation */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["BulkEnvelope"];
+                    "application/json": components["schemas"]["BulkEnvelope"];
                 };
             };
-            readonly 400: components["responses"]["ValidationOrConfirmation"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["CapabilityMissing"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationOrConfirmation"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["CapabilityMissing"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly bulk_pause: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    bulk_pause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["BulkRef"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkRef"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Bulk operation (status `Paused` once the current batch completes) */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["BulkEnvelope"];
+                    "application/json": components["schemas"]["BulkEnvelope"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["InvalidState"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly bulk_resume: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    bulk_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["BulkRef"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkRef"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Bulk operation */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["BulkEnvelope"];
+                    "application/json": components["schemas"]["BulkEnvelope"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["InvalidState"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly bulk_cancel: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    bulk_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["BulkRef"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkRef"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Bulk operation (status `Cancelled` once the current target completes) */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["BulkEnvelope"];
+                    "application/json": components["schemas"]["BulkEnvelope"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["InvalidState"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly bulk_get: {
-        readonly parameters: {
-            readonly query: {
-                readonly bulk: string;
+    bulk_get: {
+        parameters: {
+            query: {
+                bulk: string;
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Bulk operation detail */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["BulkOperationDetail"];
+                    "application/json": components["schemas"]["BulkOperationDetail"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly alerts_list: {
-        readonly parameters: {
-            readonly query?: {
-                readonly status?: components["schemas"]["AlertStatus"];
-                readonly severity?: components["schemas"]["Severity"];
-                readonly target_doctype?: components["schemas"]["TargetDoctype"];
-                readonly target_name?: string;
-                readonly limit?: components["parameters"]["limit"];
+    alerts_list: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["AlertStatus"];
+                severity?: components["schemas"]["Severity"];
+                target_doctype?: components["schemas"]["TargetDoctype"];
+                target_name?: string;
+                limit?: components["parameters"]["limit"];
                 /** @description Opaque cursor from a previous page's `next_cursor`. */
-                readonly cursor?: components["parameters"]["cursor"];
+                cursor?: components["parameters"]["cursor"];
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Page of alerts */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["AlertPage"];
+                    "application/json": components["schemas"]["AlertPage"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly alerts_ack: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    alerts_ack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly alert: string;
+        requestBody: {
+            content: {
+                "application/json": {
+                    alert: string;
                 };
             };
         };
-        readonly responses: {
+        responses: {
             /** @description The acknowledged alert */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["AlertEnvelope"];
+                    "application/json": components["schemas"]["AlertEnvelope"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["InvalidState"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly alert_rules_list: {
-        readonly parameters: {
-            readonly query?: {
-                readonly limit?: components["parameters"]["limit"];
+    alert_rules_list: {
+        parameters: {
+            query?: {
+                limit?: components["parameters"]["limit"];
                 /** @description Opaque cursor from a previous page's `next_cursor`. */
-                readonly cursor?: components["parameters"]["cursor"];
+                cursor?: components["parameters"]["cursor"];
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Page of alert rules */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["AlertRulePage"];
+                    "application/json": components["schemas"]["AlertRulePage"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly alert_rules_get: {
-        readonly parameters: {
-            readonly query: {
-                readonly rule: string;
+    alert_rules_get: {
+        parameters: {
+            query: {
+                rule: string;
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Alert rule */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["AlertRule"];
+                    "application/json": components["schemas"]["AlertRule"];
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly alert_rules_create: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    alert_rules_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["AlertRuleInput"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertRuleInput"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Created rule */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["AlertRuleEnvelope"];
+                    "application/json": components["schemas"]["AlertRuleEnvelope"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly alert_rules_update: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    alert_rules_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["AlertRuleUpdate"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertRuleUpdate"];
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Updated rule */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["AlertRuleEnvelope"];
+                    "application/json": components["schemas"]["AlertRuleEnvelope"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly alert_rules_delete: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    alert_rules_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly rule: string;
+        requestBody: {
+            content: {
+                "application/json": {
+                    rule: string;
                 };
             };
         };
-        readonly responses: {
+        responses: {
             /** @description Deleted */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": {
-                        readonly rule: string;
+                    "application/json": {
+                        rule: string;
                         /** @constant */
-                        readonly deleted: true;
+                        deleted: true;
                     };
                 };
             };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-            readonly 409: components["responses"]["InvalidState"];
-            readonly 429: components["responses"]["RateLimited"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly audit_list: {
-        readonly parameters: {
-            readonly query?: {
-                readonly user?: string;
-                readonly action?: string;
-                readonly target_doctype?: components["schemas"]["TargetDoctype"];
-                readonly target_name?: string;
-                readonly from?: string;
-                readonly to?: string;
-                readonly limit?: components["parameters"]["limit"];
+    audit_list: {
+        parameters: {
+            query?: {
+                user?: string;
+                action?: string;
+                target_doctype?: components["schemas"]["TargetDoctype"];
+                target_name?: string;
+                from?: string;
+                to?: string;
+                limit?: components["parameters"]["limit"];
                 /** @description Opaque cursor from a previous page's `next_cursor`. */
-                readonly cursor?: components["parameters"]["cursor"];
+                cursor?: components["parameters"]["cursor"];
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Page of audit entries */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["AuditPage"];
+                    "application/json": components["schemas"]["AuditPage"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
-    readonly search_query: {
-        readonly parameters: {
-            readonly query: {
-                readonly q: string;
-                readonly limit?: number;
+    search_query: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
             };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        readonly requestBody?: never;
-        readonly responses: {
+        requestBody?: never;
+        responses: {
             /** @description Ranked results */
-            readonly 200: {
+            200: {
                 headers: {
-                    readonly [name: string]: unknown;
+                    [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["SearchResults"];
+                    "application/json": components["schemas"]["SearchResults"];
                 };
             };
-            readonly 400: components["responses"]["ValidationError"];
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 429: components["responses"]["RateLimited"];
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
         };
     };
 }

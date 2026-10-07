@@ -42,6 +42,29 @@ def test_resolve_assets_walks_static_imports_only() -> None:
 	assert assets.preloads == ("/assets/infra_control/frontend/assets/vendor-Ghi789.js",)
 
 
+def test_resolve_assets_accepts_the_entry_key_vite_really_emits() -> None:
+	"""Live gate: the default build (index.html input) keys the entry chunk "index.html"."""
+	real = {
+		"index.html": {
+			"file": "assets/index-DxVwq0nk.js",
+			"name": "index",
+			"src": "index.html",
+			"isEntry": True,
+			"imports": ["_components-Cv-EN6uo.js"],
+			"css": ["assets/index-bJbK9LwN.css"],
+		},
+		"_components-Cv-EN6uo.js": {"file": "assets/components-Cv-EN6uo.js"},
+	}
+	assets = spa.resolve_assets(real)
+	assert assets.entry == "/assets/infra_control/frontend/assets/index-DxVwq0nk.js"
+	assert assets.preloads == ("/assets/infra_control/frontend/assets/components-Cv-EN6uo.js",)
+	other = {"app.ts": {"file": "assets/app-1.js", "isEntry": True}}
+	assert spa.resolve_assets(other).entry.endswith("assets/app-1.js")
+	two = {"a.ts": {"file": "a.js", "isEntry": True}, "b.ts": {"file": "b.js", "isEntry": True}}
+	with pytest.raises(spa.SpaNotBuiltError):
+		spa.resolve_assets(two)
+
+
 def test_resolve_assets_base_gets_trailing_slash() -> None:
 	assets = spa.resolve_assets(MANIFEST, base="/x")
 	assert assets.entry.startswith("/x/assets/")

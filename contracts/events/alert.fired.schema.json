@@ -14,7 +14,7 @@
       "additionalProperties": false,
       "required": ["target_doctype", "target_name"],
       "properties": {
-        "target_doctype": { "type": "string", "enum": ["Server", "Site", "Provider Account"] },
+        "target_doctype": { "type": "string", "enum": ["Server", "Site", "Bench", "Provider Account"] },
         "target_name": { "type": "string" }
       }
     },

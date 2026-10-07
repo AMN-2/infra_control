@@ -80,7 +80,11 @@ docstring-code-format = true
 python_version = "3.11"
 strict = true
 files = ["infra_control"]
-exclude = ["infra_control/infra_control/doctype/.*/test_.*\\.py$"]
+# Frappe integration tests subclass the untyped FrappeTestCase; they run under bench, not mypy.
+exclude = [
+    "infra_control/infra_control/doctype/.*/test_.*\\.py$",
+    "infra_control/infra_control/tests/.*\\.py$",
+]
 warn_unreachable = true
 show_error_codes = true
 pretty = true

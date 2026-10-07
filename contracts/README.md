@@ -25,6 +25,26 @@ section 6.1 is present, validates every example against its schema and checks th
 - Lists: `?limit=50&cursor=...` -> `{ "items": [...], "next_cursor": string | null }`.
 - Timestamps: RFC 3339 UTC with `Z`. Statuses: unified enums from plan section 5.
 - `jobs.run`, `jobs.cancel`, `jobs.retry` return `{ "job": Job }`; bulk and alert mutations follow the same envelope pattern.
+- Creation flows: `server.provision` targets a `Provider Account`, `site.create` targets a `Bench`; the
+  new entity's fields go in `params`, and `Job.created` links to the new document on success
+  (`docs/adr/0001-creation-playbooks-target-the-parent.md`).
+- Capabilities are provider-level. The actions for a target come from `playbooks.list`, never from
+  `capabilities` alone.
+- High-risk confirmation: `confirm` = target name for `jobs.run`; `"<playbook key>:<target count>"`
+  for `bulk.create`.
+- Any endpoint may return `429 rate_limited` with `Retry-After`.
+
+## Auth failures (verified on Frappe v15.98, `infra_control/infra_control/tests/test_auth_shape.py`)
+
+| Situation | Status | Body |
+|---|---|---|
+| Invalid `Authorization: token` | 401 | Frappe shape, `exc_type: AuthenticationError` |
+| No session, or expired / invalid `sid` cookie | 403 | Frappe shape, `exc_type: PermissionError`, **no** `error` key |
+| Logged in, role lacks the right | 403 | `{ "error": { "code": "permission_denied", ... } }` |
+| Stale CSRF token on POST | 400 | Frappe shape, `exc_type: CSRFTokenError` |
+
+Client rule: `reauthenticate = status === 401 || (status === 403 && !("error" in body))`;
+on `CSRFTokenError` reload the boot data (`window.infra_boot.csrf_token`) and retry once.
 
 ## Realtime transport
 

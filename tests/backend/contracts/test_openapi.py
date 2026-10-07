@@ -13,7 +13,8 @@ pytestmark = pytest.mark.contract
 
 BASE = "/api/method/infra_control.api."
 
-# Plan section 6.1, verbatim.
+# Plan section 6.1, plus the reviewer's additions from the PR #4 contracts review
+# (benches.list, benches.get, bulk.cancel).
 REQUIRED_ENDPOINTS: dict[str, str] = {
 	"overview.summary": "get",
 	"inventory.topology": "get",
@@ -21,6 +22,8 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	"servers.get": "get",
 	"sites.list": "get",
 	"sites.get": "get",
+	"benches.list": "get",
+	"benches.get": "get",
 	"metrics.series": "get",
 	"playbooks.list": "get",
 	"jobs.run": "post",
@@ -31,6 +34,7 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	"bulk.create": "post",
 	"bulk.pause": "post",
 	"bulk.resume": "post",
+	"bulk.cancel": "post",
 	"bulk.get": "get",
 	"alerts.list": "get",
 	"alerts.ack": "post",
@@ -99,7 +103,7 @@ def test_every_plan_endpoint_exists_with_the_right_method(spec: dict[str, Any]) 
 
 def test_no_endpoint_outside_the_plan(spec: dict[str, Any]) -> None:
 	extra = {p.removeprefix(BASE) for p in spec["paths"]} - set(REQUIRED_ENDPOINTS)
-	assert extra == set(), f"endpoints not in plan section 6.1: {sorted(extra)}"
+	assert extra == set(), f"endpoints not in plan section 6.1 or the review: {sorted(extra)}"
 
 
 def test_every_operation_has_id_tag_and_json_200(spec: dict[str, Any]) -> None:
@@ -113,6 +117,9 @@ def test_every_operation_has_id_tag_and_json_200(spec: dict[str, Any]) -> None:
 		assert "application/json" in op["responses"]["200"]["content"]
 		assert "401" in op["responses"] and "403" in op["responses"], (
 			f"{method} {path} must document 401 and 403"
+		)
+		assert op["responses"].get("429", {}).get("$ref", "").endswith("RateLimited"), (
+			f"{method} {path} must document 429 rate_limited"
 		)
 		if method == "post":
 			assert op.get("requestBody", {}).get("required") is True, (
@@ -231,3 +238,82 @@ def test_every_component_schema_is_referenced(spec: dict[str, Any]) -> None:
 	text = yaml.safe_dump(spec)
 	for name in spec["components"]["schemas"]:
 		assert f"#/components/schemas/{name}" in text, f"schema {name} is never referenced"
+
+
+# ----- PR #4 review items ---------------------------------------------------------------
+
+
+def test_creation_flows_are_explicit(spec: dict[str, Any]) -> None:
+	s = spec["components"]["schemas"]
+	assert s["TargetDoctype"]["enum"] == ["Server", "Site", "Bench", "Provider Account"]
+	assert "created" in s["Job"]["required"] and "cancel_requested" in s["Job"]["required"]
+	assert "creates" in s["Playbook"]["required"]
+	playbooks = {p["key"]: p for p in spec["components"]["examples"]["PlaybookList"]["value"]["items"]}
+	assert playbooks["server.provision"]["target_doctype"] == "Provider Account"
+	assert playbooks["server.provision"]["creates"] == "Server"
+	assert playbooks["site.create"]["target_doctype"] == "Bench"
+	assert playbooks["site.create"]["creates"] == "Site"
+	run_examples = spec["paths"][BASE + "jobs.run"]["post"]["requestBody"]["content"]["application/json"][
+		"examples"
+	]
+	assert {"provision_server", "create_site"} <= set(run_examples)
+
+
+def test_alert_rule_kinds_cover_every_builtin_rule(spec: dict[str, Any]) -> None:
+	s = spec["components"]["schemas"]
+	assert s["AlertRuleKind"]["enum"] == ["metric", "heartbeat", "ssl_expiry", "drift", "contract"]
+	rules = spec["components"]["examples"]["AlertRulePage"]["value"]["items"]
+	assert {r["kind"] for r in rules} == set(s["AlertRuleKind"]["enum"]), "one example per kind"
+	validator = _validator(spec, {"$ref": "#/components/schemas/AlertRule"})
+	for rule in rules:
+		assert not list(validator.iter_errors(rule)), rule["name"]
+	# The conditions bite: a heartbeat rule with a metric is invalid; a user-created builtin is invalid.
+	bad = dict(next(r for r in rules if r["kind"] == "heartbeat"), metric="cpu")
+	assert list(validator.iter_errors(bad))
+	bad = dict(next(r for r in rules if r["kind"] == "metric"), builtin=True)
+	assert list(validator.iter_errors(bad))
+	# Only metric rules are creatable.
+	assert s["AlertRuleInput"]["properties"]["kind"]["const"] == "metric"
+
+
+def test_server_has_hostname_used_for_labels(spec: dict[str, Any]) -> None:
+	s = spec["components"]["schemas"]
+	assert "hostname" in s["Server"]["required"]
+	assert "hostname" in s["TopologyNode"]["properties"]["label"]["description"]
+	assert "hostname" in s["SearchResult"]["properties"]["title"]["description"]
+	ex = spec["components"]["examples"]
+	servers = {x["name"]: x["hostname"] for x in ex["ServerPage"]["value"]["items"]}
+	for node in ex["Topology"]["value"]["nodes"]:
+		if node["type"] == "server":
+			assert node["label"] == servers[node["ref"]]
+
+
+def test_auth_failure_shapes_are_distinguishable(spec: dict[str, Any]) -> None:
+	forbidden = spec["components"]["responses"]["Forbidden"]["content"]["application/json"]
+	examples = {k: v["value"] for k, v in forbidden["examples"].items()}
+	assert "error" in examples["permission_denied"] and "error" not in examples["reauthenticate"]
+	assert examples["reauthenticate"]["exc_type"] == "PermissionError"
+	unauthorized = spec["components"]["responses"]["Unauthorized"]["content"]["application/json"]
+	assert unauthorized["example"]["exc_type"] == "AuthenticationError"
+	fw = spec["components"]["schemas"]["FrappeFrameworkError"]
+	assert set(fw["properties"]["exc_type"]["enum"]) == {
+		"AuthenticationError",
+		"PermissionError",
+		"CSRFTokenError",
+	}
+
+
+def test_benches_include_frappe_cloud_with_null_server(spec: dict[str, Any]) -> None:
+	ex = spec["components"]["examples"]
+	assert any(b["server"] is None for b in ex["BenchPage"]["value"]["items"])
+	assert ex["BenchDetail"]["value"]["server"] is None
+
+
+def test_bulk_cancel_and_overview_unresolved(spec: dict[str, Any]) -> None:
+	cancel = spec["paths"][BASE + "bulk.cancel"]["post"]
+	assert cancel["responses"]["409"]["$ref"].endswith("InvalidState")
+	assert "Cancelled" in spec["components"]["schemas"]["BulkStatus"]["enum"]
+	alerts = spec["components"]["schemas"]["OverviewSummary"]["properties"]["alerts"]
+	assert "unresolved" in alerts["required"] and "firing" not in alerts["properties"]
+	bulk_confirm = spec["components"]["schemas"]["BulkCreateRequest"]["properties"]["confirm"]["description"]
+	assert "<playbook key>:<number of targets>" in bulk_confirm

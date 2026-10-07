@@ -46,10 +46,27 @@ files that the earlier "green" had missed (commit `5213f05` on `agent-b/B1.2-app
 2. **Still needs the reviewer:** approval of the design system from `/infra/_design` (sections
    Surfaces..Motion from B0.2, Components from B1.1).
 
-## In progress
+## In progress: Phase 2
 
-Nothing. Do not start Phase 2 (A2.x providers, B2.x screens) before the reviewer approves the
-design system (gate half 2) and merges the stack.
+Started 2026-10-07 on the reviewer's instruction. After the Phase 1 report (gate half 1 passed,
+design approval pending) the reviewer answered "continue the work" twice; this is recorded as
+the gate decision in docs/QUESTIONS.md Q10, and the reviewer can still object to the design
+system from `/infra/_design`.
+
+| Task | State | Branch | PR |
+|---|---|---|---|
+| B2.1 Overview + Topology | done, full local CI green | `agent-b/B2.1-overview-topology` (on B1.2) | #18 |
+| B2.2 Server detail + Site detail | next | | |
+| B2.3 Job viewer + run-playbook dialog | | | |
+| A2.1 DigitalOcean client + adapter | | | |
+| A2.2 Ansible roles, server.provision, service.control | | | |
+| A2.3 Site playbooks on DO | | | |
+| A2.4 Frappe Cloud client + adapter | blocked on Q7/Q8 (staging team) | | |
+| A2.5 inventory.sync | | | |
+
+Preview for the reviewer: `http://<host>:5180/infra/` (Vite + Prism mock + realtime replay,
+session 3; dies with the session). Phase 2 exit gate needs a real DigitalOcean staging token
+(`Provider Account` with `is_staging = 1`).
 
 ## Open questions (docs/QUESTIONS.md)
 

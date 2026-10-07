@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { api } from "@/api/client";
 import type { components } from "@/api/schema";
 import { onEvent } from "@/realtime";
-import { unwrap, useAsyncState } from "./_async";
+import { trailing, unwrap, useAsyncState } from "./_async";
 
 type S = components["schemas"];
 export type Server = S["Server"];
@@ -107,6 +107,9 @@ export const useInventoryStore = defineStore("inventory", () => {
 	const heartbeats = ref<Record<string, { ts: string; cpu: number; ram: number; disk: number }>>(
 		{}
 	);
+	/** The most recent heartbeat, with a sequence so a watcher fires on every beat. */
+	const lastBeat = ref<{ server: string; ts: string; seq: number } | null>(null);
+	const refetchTopology = trailing(() => void fetchTopology(), 1500);
 
 	let subscribed = false;
 	function subscribe(): void {
@@ -114,6 +117,7 @@ export const useInventoryStore = defineStore("inventory", () => {
 		subscribed = true;
 		onEvent("infra:server.heartbeat", (e) => {
 			heartbeats.value[e.server] = { ts: e.ts, cpu: e.cpu, ram: e.ram, disk: e.disk };
+			lastBeat.value = { server: e.server, ts: e.ts, seq: (lastBeat.value?.seq ?? 0) + 1 };
 			const s = serverByName.value.get(e.server);
 			if (s) {
 				s.status = e.status;
@@ -143,10 +147,10 @@ export const useInventoryStore = defineStore("inventory", () => {
 			void fetchTopology();
 		});
 		onEvent("infra:job.updated", (e) => {
-			const t = topology.value;
-			if (!t) return;
-			// A job's node glows while it runs; we only know the job name here, so refresh lazily on terminal states.
-			if (e.status !== "Running" && e.status !== "Queued") void fetchTopology();
+			if (!topology.value) return;
+			// Nodes glow while their job runs (`has_running_job`); the event carries only the job
+			// name, so the graph is refreshed once per burst when a job starts or ends.
+			if (e.status !== "Running") refetchTopology();
 		});
 	}
 
@@ -159,6 +163,7 @@ export const useInventoryStore = defineStore("inventory", () => {
 		siteDetails,
 		benchDetails,
 		heartbeats,
+		lastBeat,
 		loading,
 		error,
 		fetchServers,

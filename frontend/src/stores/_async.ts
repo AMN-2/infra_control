@@ -35,3 +35,18 @@ export function unwrap<T>(result: { data?: T }): T {
 		throw new ApiError(0, { code: "empty_response", message: "Empty response" });
 	return result.data;
 }
+
+/**
+ * Trailing-edge debounce for refetches triggered by bursts of realtime events: many events in
+ * `ms` milliseconds cause one request after the burst, so a replayed job never floods the API.
+ */
+export function trailing(fn: () => void, ms: number): () => void {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	return () => {
+		if (timer !== undefined) clearTimeout(timer);
+		timer = setTimeout(() => {
+			timer = undefined;
+			fn();
+		}, ms);
+	};
+}

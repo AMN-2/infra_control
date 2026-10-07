@@ -59,8 +59,8 @@ system from `/infra/_design`.
 | B2.2 Servers/Sites lists, Server detail, Site detail, capability actions, run-playbook dialog | done, full local CI green | `agent-b/B2.2-detail-screens` (on B2.1) | #19 |
 | B2.3 Jobs list + Job viewer with live terminal, cancel/retry | done, full local CI green | `agent-b/B2.3-job-viewer` (on B2.2) | #20 |
 | A2.1 DigitalOcean client + adapter | done, 166 unit tests; not verified live (no staging token) | `agent-a/A2.1-digitalocean` (on #17), worktree `/home/frappe/worktrees/infra_control-agent-a` | #21 |
-| A2.2 Ansible roles, server.provision, service.control | | | |
-| A2.3 Site playbooks on DO | | | |
+| A2.2 Ansible roles, server.provision, service.control | done; Molecule converge + idempotence + verify green, 181 unit tests | `agent-a/A2.2-ansible-roles` (on #21) | #22 |
+| A2.3 Site playbooks on DO | next | | |
 | A2.4 Frappe Cloud client + adapter | blocked on Q7/Q8 (staging team) | | |
 | A2.5 inventory.sync | | | |
 

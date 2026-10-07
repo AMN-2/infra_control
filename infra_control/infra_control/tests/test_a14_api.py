@@ -50,6 +50,7 @@ class TestA14Api(FrappeTestCase):
 		self.assertEqual(response.get_json()["error"]["code"], "validation_error")
 
 	def test_guest_gets_frappe_shaped_403(self) -> None:
-		response = self.client.get(f"{BASE}overview.summary", headers=self.host)
+		# A fresh client: the shared one may carry the sid cookie of an earlier login.
+		response = get_test_client(use_cookies=False).get(f"{BASE}overview.summary", headers=self.host)
 		self.assertEqual(response.status_code, 403)
 		self.assertNotIn("error", response.get_json())

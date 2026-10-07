@@ -1,0 +1,16 @@
+{
+  "name": "bulk-halted",
+  "description": "Bulk site.migrate BULK-0009 whose canary fails: the operation halts and no other target runs (plan section 9.3).",
+  "steps": [
+    { "delay_ms": 300, "event": "infra:bulk.updated", "payload": { "bulk": "BULK-0009", "status": "Running", "done": 0, "total": 3, "current_batch": 0 } },
+    { "delay_ms": 400, "event": "infra:job.updated", "payload": { "job": "JOB-00070", "status": "Running", "progress": 0 } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00070", "idx": 0, "title": "Backup database and files", "status": "Running" } },
+    { "delay_ms": 1000, "event": "infra:job.step", "payload": { "job": "JOB-00070", "idx": 0, "title": "Backup database and files", "status": "Success" } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00070", "idx": 1, "title": "bench migrate", "status": "Running" } },
+    { "delay_ms": 1200, "event": "infra:job.log", "payload": { "job": "JOB-00070", "idx": 1, "chunk": "frappe.exceptions.ValidationError: Custom Field 'Sales Invoice-custom_tax_id' conflicts with a standard field\n" } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00070", "idx": 1, "title": "bench migrate", "status": "Failed" } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00070", "idx": 2, "title": "Health check", "status": "Skipped" } },
+    { "delay_ms": 100, "event": "infra:job.updated", "payload": { "job": "JOB-00070", "status": "Failed", "progress": 50 } },
+    { "delay_ms": 200, "event": "infra:bulk.updated", "payload": { "bulk": "BULK-0009", "status": "Halted", "done": 1, "total": 3, "current_batch": 0 } }
+  ]
+}

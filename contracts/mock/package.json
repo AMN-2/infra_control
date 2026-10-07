@@ -1,0 +1,25 @@
+{
+  "name": "infra-control-mock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prism mock of contracts/openapi.yaml plus a Socket.IO replay server for realtime scenarios (plan section 6.3).",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "mock": "prism mock ../openapi.yaml --host 0.0.0.0 --port 4010 --cors --errors",
+    "realtime": "node realtime.js",
+    "dev": "concurrently -n prism,realtime -c blue,magenta \"npm run mock\" \"npm run realtime\"",
+    "smoke": "node smoke.mjs"
+  },
+  "dependencies": {
+    "@stoplight/prism-cli": "^5.14.2",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "concurrently": "^9.1.2",
+    "socket.io": "^4.8.1",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.1"
+  }
+}

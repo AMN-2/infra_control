@@ -1,0 +1,32 @@
+{
+  "name": "failing-migrate",
+  "description": "site.migrate on demo.smartchoice-iq.com: backup succeeds, bench migrate fails, remaining step skipped, job Failed, site marked Broken.",
+  "steps": [
+    { "delay_ms": 300, "event": "infra:job.updated", "payload": { "job": "JOB-00051", "status": "Queued", "progress": 0 } },
+    { "delay_ms": 600, "event": "infra:job.updated", "payload": { "job": "JOB-00051", "status": "Running", "progress": 0 } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00051", "idx": 0, "title": "Acquire server lock", "status": "Running" } },
+    { "delay_ms": 200, "event": "infra:job.log", "payload": { "job": "JOB-00051", "idx": 0, "chunk": "lock infra:lock:server:SRV-0001 acquired (ttl 3600s)\n" } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00051", "idx": 0, "title": "Acquire server lock", "status": "Success" } },
+    { "delay_ms": 100, "event": "infra:job.updated", "payload": { "job": "JOB-00051", "status": "Running", "progress": 20 } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00051", "idx": 1, "title": "Backup database and files", "status": "Running" } },
+    { "delay_ms": 900, "event": "infra:job.log", "payload": { "job": "JOB-00051", "idx": 1, "chunk": "bench --site demo.smartchoice-iq.com backup --with-files\n" } },
+    { "delay_ms": 1600, "event": "infra:job.log", "payload": { "job": "JOB-00051", "idx": 1, "chunk": "Backup Summary for demo.smartchoice-iq.com at 2026-10-07 09:45:10\nDatabase: 20261007_094510-demo_smartchoice_iq_com-database.sql.gz 96.3MiB\nPublic Files: 20261007_094510-demo_smartchoice_iq_com-files.tar 212.0MiB\n" } },
+    { "delay_ms": 1200, "event": "infra:job.log", "payload": { "job": "JOB-00051", "idx": 1, "chunk": "uploaded 2 files to spaces://scq-backups/demo.smartchoice-iq.com/\n" } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00051", "idx": 1, "title": "Backup database and files", "status": "Success" } },
+    { "delay_ms": 100, "event": "infra:job.updated", "payload": { "job": "JOB-00051", "status": "Running", "progress": 40 } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00051", "idx": 2, "title": "Enable maintenance mode", "status": "Running" } },
+    { "delay_ms": 400, "event": "infra:job.log", "payload": { "job": "JOB-00051", "idx": 2, "chunk": "bench --site demo.smartchoice-iq.com set-maintenance-mode on\n" } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00051", "idx": 2, "title": "Enable maintenance mode", "status": "Success" } },
+    { "delay_ms": 100, "event": "infra:inventory.changed", "payload": { "doctype": "Site", "name": "demo.smartchoice-iq.com", "change": "updated" } },
+    { "delay_ms": 100, "event": "infra:job.updated", "payload": { "job": "JOB-00051", "status": "Running", "progress": 60 } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00051", "idx": 3, "title": "bench migrate", "status": "Running" } },
+    { "delay_ms": 700, "event": "infra:job.log", "payload": { "job": "JOB-00051", "idx": 3, "chunk": "Migrating demo.smartchoice-iq.com\nExecuting erpnext.patches.v15_0.update_payment_terms #2026-09-30 in demo.smartchoice-iq.com (_8f3a2c1d9e)\n" } },
+    { "delay_ms": 1400, "event": "infra:job.log", "payload": { "job": "JOB-00051", "idx": 3, "chunk": "Traceback (most recent call last):\n  File \"apps/frappe/frappe/migrate.py\", line 162, in run_migration\n    frappe.modules.patch_handler.run_all(skip_failing)\n  File \"apps/frappe/frappe/modules/patch_handler.py\", line 95, in run_all\n    run_patch(patch)\npymysql.err.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')\n" } },
+    { "delay_ms": 300, "event": "infra:job.log", "payload": { "job": "JOB-00051", "idx": 3, "chunk": "db credentials: user=_8f3a2c1d9e password=******** (masked)\n" } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00051", "idx": 3, "title": "bench migrate", "status": "Failed" } },
+    { "delay_ms": 100, "event": "infra:job.step", "payload": { "job": "JOB-00051", "idx": 4, "title": "Disable maintenance mode", "status": "Skipped" } },
+    { "delay_ms": 100, "event": "infra:inventory.changed", "payload": { "doctype": "Site", "name": "demo.smartchoice-iq.com", "change": "updated" } },
+    { "delay_ms": 100, "event": "infra:job.updated", "payload": { "job": "JOB-00051", "status": "Failed", "progress": 60 } },
+    { "delay_ms": 500, "event": "infra:alert.fired", "payload": { "alert": "ALERT-00019", "rule": "RULE-0005", "target": { "target_doctype": "Site", "target_name": "demo.smartchoice-iq.com" }, "severity": "critical" } }
+  ]
+}

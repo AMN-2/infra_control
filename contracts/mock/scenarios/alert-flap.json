@@ -1,0 +1,12 @@
+{
+  "name": "alert-flap",
+  "description": "SRV-0002 loses its heartbeat (Down, critical alert fired) and recovers (alert resolved).",
+  "steps": [
+    { "delay_ms": 300, "event": "infra:server.heartbeat", "payload": { "server": "SRV-0002", "status": "Down", "cpu": 0, "ram": 0, "disk": 88.4, "ts": "2026-10-07T09:58:00Z" } },
+    { "delay_ms": 300, "event": "infra:inventory.changed", "payload": { "doctype": "Server", "name": "SRV-0002", "change": "updated" } },
+    { "delay_ms": 300, "event": "infra:alert.fired", "payload": { "alert": "ALERT-00020", "rule": "RULE-0001", "target": { "target_doctype": "Server", "target_name": "SRV-0002" }, "severity": "critical" } },
+    { "delay_ms": 4000, "event": "infra:server.heartbeat", "payload": { "server": "SRV-0002", "status": "Active", "cpu": 31.0, "ram": 72.5, "disk": 88.4, "ts": "2026-10-07T10:01:00Z" } },
+    { "delay_ms": 300, "event": "infra:inventory.changed", "payload": { "doctype": "Server", "name": "SRV-0002", "change": "updated" } },
+    { "delay_ms": 300, "event": "infra:alert.resolved", "payload": { "alert": "ALERT-00020", "rule": "RULE-0001", "target": { "target_doctype": "Server", "target_name": "SRV-0002" }, "severity": "critical" } }
+  ]
+}

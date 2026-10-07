@@ -1,7 +1,7 @@
 # Agent A status
 
 Resume file for the next Agent A session. Update before every session ends.
-Last update: 2026-10-07 (session 2, after the PR #4 contracts review).
+Last update: 2026-10-07 (session 2; single agent owns backend and frontend since this session).
 
 ## Phase 0 tasks
 
@@ -21,24 +21,24 @@ after each merge GitHub retargets the next PR to `main`.
 Contracts approved by the reviewer on 2026-10-07 (in chat, after `25ddf00`), with the instruction to
 start Phase 1. Merging #3-#7 on GitHub and enabling Actions remain the reviewer's.
 
+## Phase 1 (complete on both sides, gate pending)
+
+Backend: A1.1 (#8), A1.3 (#9), A1.2 (#10), A1.4 (#11), A1.5 (#12). Frontend (same agent since
+2026-10-07): B0 foundation rebased (#13, supersedes #1/#2), B1.1 components (#14), B1.3 realtime
++ stores (#15), B1.2 app shell (#16). Merge order: #3..#7, #8..#12, #13..#16, top-down.
+
+Verified locally: backend ruff/mypy strict/145 pytest; frontend format/lint/vue-tsc/54 vitest/
+build (132 KB gz initial)/13 Playwright; the built SPA connects to the mock realtime server and
+validates every replayed event (see docs/runbooks/frontend_build.md, "Mock session").
+
+**Exit gate, still needs the reviewer:** (1) the dummy playbook run on a staging server with
+steps arriving over Socket.IO: needs a control-plane site with the `infra` worker
+(docs/QUESTIONS.md Q9); (2) approval of the design system from `/infra/_design` (sections
+Surfaces..Motion from B0.2, Components from B1.1).
+
 ## In progress
 
-Phase 1 in order A1.1 -> A1.3 -> A1.2 -> A1.4 (A1.3 before A1.2 because the job engine
-resolves providers through the registry). A1.1 is on `agent-a/A1.1-doctypes` (PR #8), A1.3 on
-`agent-a/A1.3-provider-base` (PR #9). A1.2 job engine on `agent-a/A1.2-job-engine` (PR #10), A1.4 read API on `agent-a/A1.4-read-api` (PR #11). Agent A's Phase 1 tasks are all implemented; the Phase 1 exit gate needs the dummy playbook run on a staging server over Socket.IO (needs a control-plane site with the `infra` worker, see docs/runbooks/job_engine.md) and the human's design-system approval (Agent B). Previously: the PR #4 contracts review (6 blocking + 5 non-blocking items) is fully addressed in
-`25ddf00` on `agent-a/A0.2-contracts`; the mock follows in `2028632` on `agent-a/A0.4-mock-server`.
-ADR 0001 (`docs/adr/`) records the creation-playbook target decision. The stack was rebased and
-force-pushed. Phase 0 exit gate is waiting on the human: approve `contracts/` and merge #3–#7.
-
-**Blocker for the reviewer:** GitHub Actions has never run on this repository (zero workflow
-runs, on Agent B's PRs #1–#2 as well; only the Sourcery app reports). Enable Actions under
-Settings → Actions → General (the PAT used by `gh` cannot change it). Until then "both CI
-pipelines green" can only be shown locally; all A0.x checks pass locally as listed above.
-
-**Exact next step for the next session:** once Actions is on, check `gh pr checks <n>
---repo AMN-2/infra_control` for #3–#7 and fix anything red (the `bench-tests` job is the only
-place the `/infra` integration test runs). Then wait for contract approval. Do not start
-Phase 1 (A1.x) until the reviewer approves the contracts.
+Nothing. Do not start Phase 2 (A2.x providers, B2.x screens) before the Phase 1 exit gate.
 
 ## Open questions (docs/QUESTIONS.md)
 

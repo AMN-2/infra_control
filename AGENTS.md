@@ -5,6 +5,10 @@ is the short operational version. If they disagree, the plan wins.
 
 ## Ownership
 
+> Since 2026-10-07 a single agent owns both sides (reviewer decision). The split below still
+> defines branch prefixes and the CI path guard: backend work goes on `agent-a/*` branches,
+> frontend work on `agent-b/*` branches, and a change that needs both is two stacked branches.
+
 | Agent | Owns | Must not edit |
 |---|---|---|
 | **A — Platform** | `infra_control/` (Python), `ansible/`, `tests/backend/`, `docs/providers/`, `docs/runbooks/`, authors `contracts/` | `frontend/`, `tests/frontend/`, `docs/design/` |

@@ -44,6 +44,13 @@ class FakeRedis:
 		return 0
 
 
+class _Response(dict):  # type: ignore[type-arg]
+	"""frappe._dict-like: attribute access returns None for missing keys."""
+
+	def __getattr__(self, item: str) -> Any:
+		return self.get(item)
+
+
 class FakeDoc:
 	def __init__(self, frappe: FakeFrappe, data: dict[str, Any]) -> None:
 		object.__setattr__(self, "_frappe", frappe)
@@ -124,6 +131,12 @@ class _Db:
 	def commit(self) -> None:
 		pass
 
+	def count(self, doctype: str, filters: dict[str, Any] | None = None) -> int:
+		return len(self.f._rows(doctype, filters))
+
+	def rollback(self) -> None:
+		self.f.rollbacks += 1
+
 
 class FakeFrappe:
 	def __init__(self, user: str = "admin@example.com", roles: tuple[str, ...] = ("Infra Admin",)) -> None:
@@ -138,6 +151,8 @@ class FakeFrappe:
 		self.enqueued: list[dict[str, Any]] = []
 		self.errors: list[str] = []
 		self.conf: dict[str, Any] = {}
+		self.rollbacks = 0
+		self.local = SimpleNamespace(response=_Response({"docs": []}))
 		self.clock = datetime(2026, 10, 7, 12, 0, 0, tzinfo=UTC).replace(tzinfo=None)
 
 	# --- time -------------------------------------------------------------------------
@@ -160,6 +175,36 @@ class FakeFrappe:
 		except KeyError:
 			raise self.DoesNotExistError(f"{doctype} {name} not found") from None
 
+	@staticmethod
+	def _match(doc: FakeDoc, key: str, cond: Any) -> bool:
+		value = doc.get(key)
+		if isinstance(cond, list | tuple) and len(cond) == 2 and isinstance(cond[0], str):
+			op, arg = cond
+			if op == "in":
+				return value in arg
+			if op == "not in":
+				return value not in arg
+			if op == "!=":
+				return value != arg
+			if value is None:
+				return False
+			return {
+				">": value > arg,
+				">=": value >= arg,
+				"<": value < arg,
+				"<=": value <= arg,
+				"=": value == arg,
+				"like": str(arg).strip("%") in str(value),
+			}[op]
+		return value == cond
+
+	def _rows(self, doctype: str, filters: dict[str, Any] | None) -> list[FakeDoc]:
+		return [
+			d
+			for d in self.store.get(doctype, {}).values()
+			if all(self._match(d, k, v) for k, v in (filters or {}).items())
+		]
+
 	def get_all(
 		self,
 		doctype: str,
@@ -169,16 +214,21 @@ class FakeFrappe:
 		limit: int | None = None,
 		**kw: Any,
 	) -> list[dict[str, Any]]:
-		rows = [
-			d
-			for d in self.store.get(doctype, {}).values()
-			if all(d.get(k) == v for k, v in (filters or {}).items())
-		]
-		if order_by:
-			field, _, direction = order_by.partition(" ")
-			rows.sort(key=lambda d: d.get(field) or 0, reverse=direction.strip().lower() == "desc")
+		rows = self._rows(doctype, filters)
+		for clause in reversed([c.strip() for c in order_by.split(",") if c.strip()]):
+			field, _, direction = clause.partition(" ")
+			rows.sort(
+				key=lambda d, f=field: (d.get(f) is None, d.get(f) if d.get(f) is not None else 0),
+				reverse=direction.strip().lower() == "desc",
+			)
 		out = [{f: d.get(f) for f in (fields or ["name"])} for d in rows]
 		return out[:limit] if limit else out
+
+	def add_child(self, parent: FakeDoc, child_doctype: str, **data: Any) -> FakeDoc:
+		siblings = [d for d in self.store.get(child_doctype, {}).values() if d.get("parent") == parent.name]
+		return self.add(
+			child_doctype, parent=parent.name, parenttype=parent.doctype, idx=len(siblings) + 1, **data
+		)
 
 	# --- services ---------------------------------------------------------------------
 	def cache(self) -> FakeRedis:

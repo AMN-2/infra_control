@@ -16,7 +16,12 @@ test.describe("design showcase", () => {
 
 	test("overview numbers land on their final values", async ({ page }) => {
 		await page.goto("./_design");
-		await expect(page.getByTestId("stat-value")).toHaveText(["18", "142", "3", "1"]);
+		await expect(page.locator("#moments").getByTestId("stat-value")).toHaveText([
+			"18",
+			"142",
+			"3",
+			"1",
+		]);
 	});
 
 	test("reduced motion applies instantly and is reflected on <html>", async ({ page }) => {

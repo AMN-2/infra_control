@@ -217,3 +217,8 @@
 .ic-state-layer[aria-disabled="true"]::before {
 	opacity: 0;
 }
+
+/* Skeleton placeholders breathe (opacity only); .ic-live pauses them when the tab is hidden. */
+.ic-skeleton {
+	animation: ic-breathe var(--ic-pulse-period) ease-in-out infinite alternate;
+}

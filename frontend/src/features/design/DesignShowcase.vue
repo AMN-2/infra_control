@@ -8,6 +8,7 @@ import TypeSection from "./sections/TypeSection.vue";
 import SpaceSection from "./sections/SpaceSection.vue";
 import MotionSection from "./sections/MotionSection.vue";
 import MomentsSection from "./sections/MomentsSection.vue";
+import ComponentsSection from "./sections/ComponentsSection.vue";
 
 const sections = [
 	{ id: "moments", label: "Signature moments" },
@@ -17,6 +18,7 @@ const sections = [
 	{ id: "type", label: "Type" },
 	{ id: "space", label: "Space & radius" },
 	{ id: "motion", label: "Motion" },
+	{ id: "components", label: "Components" },
 ] as const;
 
 type Mode = "system" | "full" | "reduce";
@@ -93,6 +95,7 @@ function setMode(value: Mode): void {
 				<TypeSection />
 				<SpaceSection />
 				<MotionSection />
+				<ComponentsSection />
 			</main>
 		</div>
 	</div>

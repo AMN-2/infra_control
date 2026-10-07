@@ -2,7 +2,7 @@
 import { onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
 import { animate } from "motion";
 import ShowcaseSection from "../ShowcaseSection.vue";
-import Sparkline from "../Sparkline.vue";
+import { IcSparkline as Sparkline } from "@/design/components";
 import { countUp, duration, ease, isTabHidden, reducedMotion, transitions } from "@/design/motion";
 import { spaceUnitPx } from "@/design/tokens";
 import type { Tone } from "@/design/status";

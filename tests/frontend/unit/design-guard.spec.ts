@@ -9,7 +9,15 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const SRC = fileURLToPath(new URL("../../../frontend/src", import.meta.url));
-const EXEMPT = ["design/", "api/schema.d.ts"];
+// Only the token sources may hold raw values; design/components are checked like any feature.
+const EXEMPT = [
+	"design/tokens.css",
+	"design/theme.css",
+	"design/base.css",
+	"design/motion.ts",
+	"design/color.ts",
+	"api/schema.d.ts",
+];
 
 function walk(dir: string): string[] {
 	return readdirSync(dir).flatMap((name) => {

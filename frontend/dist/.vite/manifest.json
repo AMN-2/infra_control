@@ -1,15 +1,24 @@
 {
+  "_runtime-core.esm-bundler-BZo0nlbj.js": {
+    "file": "assets/runtime-core.esm-bundler-BZo0nlbj.js",
+    "name": "runtime-core.esm-bundler"
+  },
   "index.html": {
-    "file": "assets/index-AC6VD4X8.js",
+    "file": "assets/index-DHfahrsx.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
+    "imports": [
+      "_runtime-core.esm-bundler-BZo0nlbj.js"
+    ],
     "dynamicImports": [
+      "node_modules/@xterm/xterm/lib/xterm.mjs",
+      "node_modules/@xterm/addon-fit/lib/addon-fit.mjs",
       "src/features/home/HomeView.vue",
       "src/features/design/DesignShowcase.vue"
     ],
     "css": [
-      "assets/index-hvB91y5-.css"
+      "assets/index-K2x9d-em.css"
     ],
     "assets": [
       "assets/space-grotesk-vietnamese-wght-normal-D0rl6rjA.woff2",
@@ -54,12 +63,29 @@
     "file": "assets/space-grotesk-vietnamese-wght-normal-D0rl6rjA.woff2",
     "src": "node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-vietnamese-wght-normal.woff2"
   },
+  "node_modules/@xterm/addon-fit/lib/addon-fit.mjs": {
+    "file": "assets/addon-fit-DIOBYJe3.js",
+    "name": "addon-fit",
+    "src": "node_modules/@xterm/addon-fit/lib/addon-fit.mjs",
+    "isDynamicEntry": true
+  },
+  "node_modules/@xterm/xterm/css/xterm.css": {
+    "file": "assets/xterm-B1njb2Cr.css",
+    "src": "node_modules/@xterm/xterm/css/xterm.css"
+  },
+  "node_modules/@xterm/xterm/lib/xterm.mjs": {
+    "file": "assets/xterm-ScmBfeDI.js",
+    "name": "xterm",
+    "src": "node_modules/@xterm/xterm/lib/xterm.mjs",
+    "isDynamicEntry": true
+  },
   "src/features/design/DesignShowcase.vue": {
-    "file": "assets/DesignShowcase-BhOENAF-.js",
+    "file": "assets/DesignShowcase-BPtYtgD1.js",
     "name": "DesignShowcase",
     "src": "src/features/design/DesignShowcase.vue",
     "isDynamicEntry": true,
     "imports": [
+      "_runtime-core.esm-bundler-BZo0nlbj.js",
       "index.html"
     ],
     "css": [
@@ -67,12 +93,12 @@
     ]
   },
   "src/features/home/HomeView.vue": {
-    "file": "assets/HomeView-DdTMLwaN.js",
+    "file": "assets/HomeView-C7vT_F_l.js",
     "name": "HomeView",
     "src": "src/features/home/HomeView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "index.html"
+      "_runtime-core.esm-bundler-BZo0nlbj.js"
     ]
   }
 }

@@ -1,2 +1,0 @@
-import{C as e,E as t,_ as n,b as r}from"./index-AC6VD4X8.js";var i={class:`grid min-h-dvh place-items-center`},a=e({__name:`HomeView`,setup(e){return(e,a)=>(t(),r(`main`,i,[...a[0]||=[n(`h1`,{"data-testid":`app-title`},`Infra Control`,-1)]]))}});export{a as default};
-//# sourceMappingURL=HomeView-DdTMLwaN.js.map

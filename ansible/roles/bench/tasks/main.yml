@@ -48,11 +48,65 @@
   environment:
     PATH: "{{ bench_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin"
 
-- name: Production setup (supervisor and nginx for the bench)
+# Production wiring done piece by piece. `bench setup production` was tried in the live gate and
+# fails: it pip-installs Ansible into bench's own venv and then cannot find it for its fail2ban
+# role. SSH is already restricted to the controller by the managed firewall.
+- name: Generate the bench supervisor config
   when: bench_init | bool
+  become: true
+  become_user: "{{ bench_user }}"
   ansible.builtin.command:
-    cmd: "{{ bench_home }}/.local/bin/bench setup production {{ bench_user }} --yes"
+    cmd: "{{ bench_home }}/.local/bin/bench setup supervisor --yes --user {{ bench_user }}"
     chdir: "{{ bench_home }}/{{ bench_name }}"
-    creates: "/etc/supervisor/conf.d/{{ bench_name }}.conf"
+    creates: "{{ bench_home }}/{{ bench_name }}/config/supervisor.conf"
   environment:
-    PATH: "{{ bench_home }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    PATH: "{{ bench_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+- name: Enable the bench in supervisor
+  when: bench_init | bool
+  ansible.builtin.file:
+    src: "{{ bench_home }}/{{ bench_name }}/config/supervisor.conf"
+    dest: "/etc/supervisor/conf.d/{{ bench_name }}.conf"
+    state: link
+  register: bench_supervisor_link
+
+- name: Load the bench processes
+  when: bench_init | bool and bench_supervisor_link is changed
+  ansible.builtin.command: supervisorctl update
+  changed_when: true
+
+- name: Generate the bench nginx config
+  when: bench_init | bool
+  become: true
+  become_user: "{{ bench_user }}"
+  ansible.builtin.command:
+    cmd: "{{ bench_home }}/.local/bin/bench setup nginx --yes"
+    chdir: "{{ bench_home }}/{{ bench_name }}"
+    creates: "{{ bench_home }}/{{ bench_name }}/config/nginx.conf"
+  environment:
+    PATH: "{{ bench_home }}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+- name: Enable the bench in nginx
+  when: bench_init | bool
+  ansible.builtin.file:
+    src: "{{ bench_home }}/{{ bench_name }}/config/nginx.conf"
+    dest: "/etc/nginx/conf.d/{{ bench_name }}.conf"
+    state: link
+  register: bench_nginx_link
+
+- name: nginx can read the bench
+  when: bench_init | bool
+  ansible.builtin.file:
+    path: "{{ bench_home }}"
+    mode: "0755"
+
+- name: Validate nginx with the bench config
+  when: bench_init | bool and bench_nginx_link is changed
+  ansible.builtin.command: nginx -t
+  changed_when: false
+
+- name: Reload nginx for the bench
+  when: bench_init | bool and bench_nginx_link is changed
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded

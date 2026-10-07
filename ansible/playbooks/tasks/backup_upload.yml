@@ -23,7 +23,7 @@
   ansible.builtin.set_fact:
     backup_files:
       database: "{{ backup_found.files | map(attribute='path') | select('search', '-database\\.sql\\.gz$') | first | default('') }}"
-      public: "{{ backup_found.files | map(attribute='path') | select('search', '[0-9]-files\\.tar$') | reject('search', 'private-files') | first | default('') }}"
+      public: "{{ backup_found.files | map(attribute='path') | select('search', '-files\\.tar$') | reject('search', '-private-files\\.tar$') | first | default('') }}"
       private: "{{ backup_found.files | map(attribute='path') | select('search', '-private-files\\.tar$') | first | default('') }}"
 
 - name: The database dump exists

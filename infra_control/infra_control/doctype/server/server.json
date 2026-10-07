@@ -1,0 +1,190 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "hostname",
+  "status",
+  "provider_account",
+  "provider",
+  "provider_ref",
+  "cb1",
+  "public_ip",
+  "private_ip",
+  "role",
+  "region",
+  "size",
+  "sb2",
+  "ssh_user",
+  "ssh_port",
+  "last_heartbeat",
+  "sb3",
+  "tags"
+ ],
+ "fields": [
+  {
+   "fieldname": "hostname",
+   "fieldtype": "Data",
+   "label": "Hostname",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "Display name (the droplet name)"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Provisioning\nActive\nDegraded\nDown\nArchived",
+   "default": "Provisioning",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "provider_account",
+   "fieldtype": "Link",
+   "label": "Provider Account",
+   "options": "Provider Account",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Select",
+   "label": "Provider",
+   "options": "digitalocean\nfrappe_cloud",
+   "fetch_from": "provider_account.provider",
+   "read_only": 1
+  },
+  {
+   "fieldname": "provider_ref",
+   "fieldtype": "Data",
+   "label": "Provider Ref",
+   "description": "Droplet id",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "public_ip",
+   "fieldtype": "Data",
+   "label": "Public IP",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "private_ip",
+   "fieldtype": "Data",
+   "label": "Private IP"
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Select",
+   "label": "Role",
+   "options": "app\ndb\nproxy\nall",
+   "default": "all",
+   "reqd": 1
+  },
+  {
+   "fieldname": "region",
+   "fieldtype": "Data",
+   "label": "Region",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "size",
+   "fieldtype": "Data",
+   "label": "Size"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break",
+   "label": "Access"
+  },
+  {
+   "fieldname": "ssh_user",
+   "fieldtype": "Data",
+   "label": "SSH user",
+   "default": "frappe"
+  },
+  {
+   "fieldname": "ssh_port",
+   "fieldtype": "Int",
+   "label": "SSH port",
+   "default": "22"
+  },
+  {
+   "fieldname": "last_heartbeat",
+   "fieldtype": "Datetime",
+   "label": "Last Heartbeat",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb3",
+   "fieldtype": "Section Break",
+   "label": "Tags"
+  },
+  {
+   "fieldname": "tags",
+   "fieldtype": "Table",
+   "label": "Tags",
+   "options": "Server Tag"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Infra Control",
+ "name": "Server",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Infra Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Operator",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Viewer",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "SRV-.####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "hostname"
+}

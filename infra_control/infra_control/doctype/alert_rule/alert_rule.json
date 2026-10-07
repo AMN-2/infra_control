@@ -1,0 +1,174 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "kind",
+  "target_doctype",
+  "enabled",
+  "builtin",
+  "cb1",
+  "severity",
+  "channels",
+  "sb2",
+  "metric",
+  "operator",
+  "cb2",
+  "threshold",
+  "for_minutes"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "kind",
+   "fieldtype": "Select",
+   "label": "Kind",
+   "options": "metric\nheartbeat\nssl_expiry\ndrift\ncontract",
+   "default": "metric",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "target_doctype",
+   "fieldtype": "Select",
+   "label": "Target Doctype",
+   "options": "Server\nSite\nProvider Account",
+   "default": "Server",
+   "reqd": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "builtin",
+   "fieldtype": "Check",
+   "label": "Builtin",
+   "default": "0",
+   "read_only": 1,
+   "description": "Created on install; cannot be deleted"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "label": "Severity",
+   "options": "info\nwarning\ncritical",
+   "default": "warning",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "channels",
+   "fieldtype": "Table",
+   "label": "Channels",
+   "options": "Alert Rule Channel"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break",
+   "label": "Condition"
+  },
+  {
+   "fieldname": "metric",
+   "fieldtype": "Select",
+   "label": "Metric",
+   "options": "\ncpu\nram\ndisk\nload1\nqueue_backlog",
+   "depends_on": "eval:doc.kind=='metric'"
+  },
+  {
+   "fieldname": "operator",
+   "fieldtype": "Select",
+   "label": "Operator",
+   "options": "\ngt\ngte\nlt\nlte\neq",
+   "depends_on": "eval:doc.kind=='metric'"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "threshold",
+   "fieldtype": "Float",
+   "label": "Threshold",
+   "description": "Metric value, or days before SSL expiry",
+   "depends_on": "eval:['metric','ssl_expiry'].includes(doc.kind)"
+  },
+  {
+   "fieldname": "for_minutes",
+   "fieldtype": "Int",
+   "label": "For (minutes)",
+   "description": "Metric: sustained duration (0 = immediate). Heartbeat: minutes without heartbeat.",
+   "depends_on": "eval:['metric','heartbeat'].includes(doc.kind)"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Infra Control",
+ "name": "Alert Rule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Infra Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Operator",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Viewer",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "RULE-.####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "title"
+}

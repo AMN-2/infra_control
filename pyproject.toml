@@ -95,6 +95,11 @@ module = ["frappe", "frappe.*", "ansible_runner", "ansible_runner.*", "rq", "rq.
 ignore_missing_imports = true
 follow_imports = "skip"
 
+# DocType controllers subclass frappe's untyped Document; everything else in them stays strict.
+[[tool.mypy.overrides]]
+module = ["infra_control.infra_control.doctype.*"]
+disallow_subclassing_any = false
+
 # ---------------------------------------------------------------------------
 # pytest (unit + contract tests; Frappe site integration tests run via bench)
 # ---------------------------------------------------------------------------

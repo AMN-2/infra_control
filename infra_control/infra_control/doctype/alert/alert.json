@@ -1,0 +1,190 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "rule",
+  "rule_title",
+  "kind",
+  "severity",
+  "status",
+  "cb1",
+  "target_doctype",
+  "target_name",
+  "metric",
+  "value",
+  "sb2",
+  "message",
+  "fired_at",
+  "cb2",
+  "acknowledged_by",
+  "acknowledged_at",
+  "resolved_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "rule",
+   "fieldtype": "Link",
+   "label": "Rule",
+   "options": "Alert Rule",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "rule_title",
+   "fieldtype": "Data",
+   "label": "Rule Title",
+   "fetch_from": "rule.title",
+   "read_only": 1
+  },
+  {
+   "fieldname": "kind",
+   "fieldtype": "Select",
+   "label": "Kind",
+   "options": "metric\nheartbeat\nssl_expiry\ndrift\ncontract",
+   "fetch_from": "rule.kind",
+   "read_only": 1
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "label": "Severity",
+   "options": "info\nwarning\ncritical",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "firing\nacknowledged\nresolved",
+   "default": "firing",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_doctype",
+   "fieldtype": "Link",
+   "label": "Target Doctype",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "target_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Target Name",
+   "options": "target_doctype",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "metric",
+   "fieldtype": "Select",
+   "label": "Metric",
+   "options": "\ncpu\nram\ndisk\nload1\nqueue_backlog"
+  },
+  {
+   "fieldname": "value",
+   "fieldtype": "Float",
+   "label": "Value"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Small Text",
+   "label": "Message",
+   "reqd": 1
+  },
+  {
+   "fieldname": "fired_at",
+   "fieldtype": "Datetime",
+   "label": "Fired At",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "acknowledged_by",
+   "fieldtype": "Link",
+   "label": "Acknowledged By",
+   "options": "User"
+  },
+  {
+   "fieldname": "acknowledged_at",
+   "fieldtype": "Datetime",
+   "label": "Acknowledged At"
+  },
+  {
+   "fieldname": "resolved_at",
+   "fieldtype": "Datetime",
+   "label": "Resolved At"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Infra Control",
+ "name": "Alert",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Infra Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Operator",
+   "read": 1,
+   "write": 1,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Viewer",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "ALERT-.#####",
+ "naming_rule": "Expression (old style)"
+}

@@ -1,0 +1,118 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "controller_ip",
+  "job_heartbeat_timeout_minutes",
+  "sb_telegram",
+  "telegram_bot_token",
+  "telegram_chat_id",
+  "sb_spaces",
+  "spaces_bucket",
+  "spaces_region",
+  "cb_spaces",
+  "spaces_key",
+  "spaces_secret"
+ ],
+ "fields": [
+  {
+   "fieldname": "controller_ip",
+   "fieldtype": "Data",
+   "label": "Controller IP",
+   "description": "Public IP of this control plane; managed servers allow SSH only from it."
+  },
+  {
+   "fieldname": "job_heartbeat_timeout_minutes",
+   "fieldtype": "Int",
+   "label": "Job heartbeat timeout (minutes)",
+   "default": "5",
+   "description": "Running jobs without a worker heartbeat for this long are failed and their locks released."
+  },
+  {
+   "fieldname": "sb_telegram",
+   "fieldtype": "Section Break",
+   "label": "Telegram"
+  },
+  {
+   "fieldname": "telegram_bot_token",
+   "fieldtype": "Password",
+   "label": "Telegram bot token"
+  },
+  {
+   "fieldname": "telegram_chat_id",
+   "fieldtype": "Data",
+   "label": "Telegram chat id"
+  },
+  {
+   "fieldname": "sb_spaces",
+   "fieldtype": "Section Break",
+   "label": "DigitalOcean Spaces (offsite backups)"
+  },
+  {
+   "fieldname": "spaces_bucket",
+   "fieldtype": "Data",
+   "label": "Spaces Bucket"
+  },
+  {
+   "fieldname": "spaces_region",
+   "fieldtype": "Data",
+   "label": "Spaces Region"
+  },
+  {
+   "fieldname": "cb_spaces",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "spaces_key",
+   "fieldtype": "Password",
+   "label": "Spaces Key"
+  },
+  {
+   "fieldname": "spaces_secret",
+   "fieldtype": "Password",
+   "label": "Spaces Secret"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Infra Control",
+ "name": "Infra Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Infra Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Operator",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "issingle": 1
+}

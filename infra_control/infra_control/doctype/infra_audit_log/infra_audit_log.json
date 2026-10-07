@@ -1,0 +1,145 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "ts",
+  "user",
+  "action",
+  "result",
+  "cb1",
+  "target_doctype",
+  "target_name",
+  "job",
+  "params_hash"
+ ],
+ "fields": [
+  {
+   "fieldname": "ts",
+   "fieldtype": "Datetime",
+   "label": "Timestamp",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "action",
+   "fieldtype": "Data",
+   "label": "Action",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "e.g. jobs.run:site.migrate"
+  },
+  {
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "label": "Result",
+   "options": "success\nfailed\ndenied",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_doctype",
+   "fieldtype": "Link",
+   "label": "Target Doctype",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "target_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Target Name",
+   "options": "target_doctype",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "job",
+   "fieldtype": "Link",
+   "label": "Job",
+   "options": "Infra Job",
+   "read_only": 1
+  },
+  {
+   "fieldname": "params_hash",
+   "fieldtype": "Data",
+   "label": "Params Hash",
+   "reqd": 1,
+   "read_only": 1,
+   "description": "SHA-256 of the canonical params JSON; params themselves are never stored here"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Infra Control",
+ "name": "Infra Audit Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Infra Admin",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Operator",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Viewer",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0,
+ "autoname": "AUD-.######",
+ "naming_rule": "Expression (old style)",
+ "in_create": 1
+}

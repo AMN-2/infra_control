@@ -1,0 +1,235 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "playbook",
+  "playbook_title",
+  "status",
+  "phase",
+  "cb1",
+  "failure_policy",
+  "batch_size",
+  "triggered_by",
+  "cancel_requested",
+  "sb2",
+  "canary_doctype",
+  "canary_name",
+  "sb3",
+  "total",
+  "done",
+  "failed",
+  "cb3",
+  "current_batch",
+  "batches_total",
+  "started_at",
+  "ended_at",
+  "sb4",
+  "params",
+  "targets"
+ ],
+ "fields": [
+  {
+   "fieldname": "playbook",
+   "fieldtype": "Link",
+   "label": "Playbook",
+   "options": "Playbook",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "playbook_title",
+   "fieldtype": "Data",
+   "label": "Playbook Title",
+   "fetch_from": "playbook.title",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Queued\nRunning\nPaused\nHalted\nSuccess\nFailed\nCancelled",
+   "default": "Queued",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "phase",
+   "fieldtype": "Select",
+   "label": "Phase",
+   "options": "backup\ncanary\nbatches\ndone",
+   "default": "backup",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "failure_policy",
+   "fieldtype": "Select",
+   "label": "Failure Policy",
+   "options": "halt\ncontinue",
+   "default": "halt",
+   "reqd": 1
+  },
+  {
+   "fieldname": "batch_size",
+   "fieldtype": "Int",
+   "label": "Batch Size",
+   "default": "5",
+   "reqd": 1
+  },
+  {
+   "fieldname": "triggered_by",
+   "fieldtype": "Data",
+   "label": "Triggered By",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cancel_requested",
+   "fieldtype": "Check",
+   "label": "Cancel Requested",
+   "default": "0"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break",
+   "label": "Canary"
+  },
+  {
+   "fieldname": "canary_doctype",
+   "fieldtype": "Link",
+   "label": "Canary Doctype",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "canary_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Canary Name",
+   "options": "canary_doctype",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sb3",
+   "fieldtype": "Section Break",
+   "label": "Progress"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Int",
+   "label": "Total",
+   "default": "0"
+  },
+  {
+   "fieldname": "done",
+   "fieldtype": "Int",
+   "label": "Done",
+   "default": "0"
+  },
+  {
+   "fieldname": "failed",
+   "fieldtype": "Int",
+   "label": "Failed",
+   "default": "0"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "current_batch",
+   "fieldtype": "Int",
+   "label": "Current Batch",
+   "default": "0"
+  },
+  {
+   "fieldname": "batches_total",
+   "fieldtype": "Int",
+   "label": "Batches Total",
+   "default": "0"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At"
+  },
+  {
+   "fieldname": "ended_at",
+   "fieldtype": "Datetime",
+   "label": "Ended At"
+  },
+  {
+   "fieldname": "sb4",
+   "fieldtype": "Section Break",
+   "label": "Targets"
+  },
+  {
+   "fieldname": "params",
+   "fieldtype": "JSON",
+   "label": "Params"
+  },
+  {
+   "fieldname": "targets",
+   "fieldtype": "Table",
+   "label": "Targets",
+   "options": "Bulk Operation Target"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Infra Control",
+ "name": "Bulk Operation",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Infra Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Operator",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Viewer",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "BULK-.####",
+ "naming_rule": "Expression (old style)"
+}

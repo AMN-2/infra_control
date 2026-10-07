@@ -11,8 +11,10 @@ app_license = "mit"
 # Every sub-path renders the same page so the SPA router owns /infra/* (Q-B2, SPA fallback).
 website_route_rules = [{"from_route": "/infra/<path:app_path>", "to_route": "infra"}]
 
-# Roles and fixtures are added in Phase 1 (A1.1).
-# fixtures = ["Role"]
+# Roles (Infra Admin / Operator / Viewer) and the built-in alert rules are created in code so the
+# install is idempotent (A1.1).
+after_install = "infra_control.install.after_install"
+after_migrate = "infra_control.install.after_migrate"
 
 # Scheduled tasks are added in Phase 1 (crash recovery) and Phase 3 (collector, rollups, alerts).
 # scheduler_events = {

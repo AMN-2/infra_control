@@ -1,0 +1,245 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "playbook",
+  "playbook_title",
+  "status",
+  "progress",
+  "target_doctype",
+  "target_name",
+  "cb1",
+  "triggered_by",
+  "bulk_operation",
+  "retry_of",
+  "cancel_requested",
+  "sb2",
+  "params",
+  "op_ref",
+  "steps_done",
+  "steps_total",
+  "cb2",
+  "started_at",
+  "ended_at",
+  "worker_heartbeat",
+  "lock_key",
+  "error",
+  "sb3",
+  "created_doctype",
+  "created_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "playbook",
+   "fieldtype": "Link",
+   "label": "Playbook",
+   "options": "Playbook",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "playbook_title",
+   "fieldtype": "Data",
+   "label": "Playbook Title",
+   "fetch_from": "playbook.title",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Queued\nRunning\nSuccess\nFailed\nCancelled",
+   "default": "Queued",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "progress",
+   "fieldtype": "Int",
+   "label": "Progress",
+   "default": "0"
+  },
+  {
+   "fieldname": "target_doctype",
+   "fieldtype": "Link",
+   "label": "Target Doctype",
+   "options": "DocType",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "target_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Target Name",
+   "options": "target_doctype",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "triggered_by",
+   "fieldtype": "Data",
+   "label": "Triggered By",
+   "reqd": 1,
+   "description": "User id, or scheduler"
+  },
+  {
+   "fieldname": "bulk_operation",
+   "fieldtype": "Link",
+   "label": "Bulk Operation",
+   "options": "Bulk Operation"
+  },
+  {
+   "fieldname": "retry_of",
+   "fieldtype": "Link",
+   "label": "Retry Of",
+   "options": "Infra Job"
+  },
+  {
+   "fieldname": "cancel_requested",
+   "fieldtype": "Check",
+   "label": "Cancel Requested",
+   "default": "0"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break",
+   "label": "Execution"
+  },
+  {
+   "fieldname": "params",
+   "fieldtype": "JSON",
+   "label": "Params",
+   "description": "Masked; secrets never stored here"
+  },
+  {
+   "fieldname": "op_ref",
+   "fieldtype": "JSON",
+   "label": "Op ref",
+   "description": "Provider operation reference (provider, kind, external_id)"
+  },
+  {
+   "fieldname": "steps_done",
+   "fieldtype": "Int",
+   "label": "Steps Done",
+   "default": "0"
+  },
+  {
+   "fieldname": "steps_total",
+   "fieldtype": "Int",
+   "label": "Steps Total",
+   "default": "0"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At"
+  },
+  {
+   "fieldname": "ended_at",
+   "fieldtype": "Datetime",
+   "label": "Ended At"
+  },
+  {
+   "fieldname": "worker_heartbeat",
+   "fieldtype": "Datetime",
+   "label": "Worker Heartbeat",
+   "description": "Updated by the worker; stale jobs are failed by crash recovery"
+  },
+  {
+   "fieldname": "lock_key",
+   "fieldtype": "Data",
+   "label": "Lock Key",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error",
+   "description": "Short masked failure reason"
+  },
+  {
+   "fieldname": "sb3",
+   "fieldtype": "Section Break",
+   "label": "Created document"
+  },
+  {
+   "fieldname": "created_doctype",
+   "fieldtype": "Link",
+   "label": "Created Doctype",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "created_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Created Name",
+   "options": "created_doctype",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Infra Control",
+ "name": "Infra Job",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Infra Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Operator",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  },
+  {
+   "role": "Infra Viewer",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "JOB-.#####",
+ "naming_rule": "Expression (old style)"
+}

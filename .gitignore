@@ -13,3 +13,6 @@ __pycache__
 coverage.xml
 .coverage
 contracts/mock/.prism/
+# Built SPA copied from frontend/dist (docs/runbooks/frontend_build.md); never committed.
+infra_control/public/frontend/*
+!infra_control/public/frontend/.gitkeep

@@ -7,8 +7,9 @@ app_description = (
 app_email = "amen562aff@gmail.com"
 app_license = "mit"
 
-# The Vue SPA (owned by Agent B) is served at /infra. Wiring is added in Phase 1 (A1.4 / B1.2).
-# website_route_rules = [{"from_route": "/infra/<path:app_path>", "to_route": "infra"}]
+# The Vue SPA (owned by Agent B) is served at /infra by infra_control/www/infra.{py,html}.
+# Every sub-path renders the same page so the SPA router owns /infra/* (Q-B2, SPA fallback).
+website_route_rules = [{"from_route": "/infra/<path:app_path>", "to_route": "infra"}]
 
 # Roles and fixtures are added in Phase 1 (A1.1).
 # fixtures = ["Role"]

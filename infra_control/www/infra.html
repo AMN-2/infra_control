@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="color-scheme" content="dark" />
+		<meta name="robots" content="noindex" />
+		<title>{{ title }}</title>
+		<script>
+			window.csrf_token = {{ csrf_token | tojson }};
+			window.infra_boot = {{ boot | tojson }};
+		</script>
+		{% if assets %}
+			{% for href in assets.styles %}
+				<link rel="stylesheet" href="{{ href }}" />
+			{% endfor %}
+			{% for href in assets.preloads %}
+				<link rel="modulepreload" href="{{ href }}" />
+			{% endfor %}
+		{% endif %}
+	</head>
+	<body>
+		{% if assets %}
+			<div id="app"></div>
+			<script type="module" src="{{ assets.entry }}"></script>
+		{% else %}
+			<main style="font-family: system-ui, sans-serif; max-inline-size: 40rem; margin: 4rem auto; padding: 0 1rem">
+				<h1>Infra Control is not built</h1>
+				<p>The frontend bundle is missing. See <code>docs/runbooks/frontend_build.md</code>.</p>
+				{% if not_built_reason %}<pre>{{ not_built_reason }}</pre>{% endif %}
+			</main>
+		{% endif %}
+	</body>
+</html>

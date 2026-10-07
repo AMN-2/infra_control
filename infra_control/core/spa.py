@@ -23,8 +23,23 @@ from typing import Any
 # `/assets/<app>/x`, so the SPA must be built with `INFRA_UI_BASE` equal to this value.
 ASSET_BASE = "/assets/infra_control/frontend/"
 
-# The Vite entry as written in frontend/index.html.
+# The Vite entry. With `index.html` as the build input (the default), Vite keys the entry chunk
+# by "index.html"; a build with `src/main.ts` as rollup input keys it by that. Both are accepted,
+# then any single chunk marked `isEntry` (the live gate found the page looking only for
+# "src/main.ts" while the real build emitted "index.html").
 ENTRY = "src/main.ts"
+ENTRY_CANDIDATES = ("index.html", "src/main.ts")
+
+
+def find_entry(manifest: dict[str, Any]) -> str:
+	for key in ENTRY_CANDIDATES:
+		if key in manifest:
+			return key
+	entries = [k for k, v in manifest.items() if isinstance(v, dict) and v.get("isEntry")]
+	if len(entries) == 1:
+		return entries[0]
+	raise SpaNotBuiltError(f"no entry in Vite manifest (keys: {sorted(manifest)[:5]}...)")
+
 
 MANIFEST_CANDIDATES = (".vite/manifest.json", "manifest.json")
 
@@ -58,11 +73,14 @@ def find_manifest(frontend_dir: Path) -> Path | None:
 	return None
 
 
-def resolve_assets(manifest: dict[str, Any], *, base: str = ASSET_BASE, entry: str = ENTRY) -> SpaAssets:
+def resolve_assets(
+	manifest: dict[str, Any], *, base: str = ASSET_BASE, entry: str | None = None
+) -> SpaAssets:
 	"""Walk the Vite manifest from `entry`, collecting its CSS and statically imported chunks.
 
 	Dynamic imports are left to the browser (they are lazy by design, plan section 10.4).
 	"""
+	entry = entry or find_entry(manifest)
 	if entry not in manifest:
 		raise SpaNotBuiltError(f"entry {entry!r} not in Vite manifest (keys: {sorted(manifest)[:5]}...)")
 	if not base.endswith("/"):

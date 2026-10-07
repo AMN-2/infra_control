@@ -1,0 +1,1979 @@
+openapi: 3.1.0
+info:
+  title: Infra Control API
+  version: 1.0.0
+  summary: REST contract between the Infra Control backend (Agent A) and the Vue SPA (Agent B).
+  description: |
+    Binding contract from `ORCHESTRATOR_IMPLEMENTATION_PLAN.md` section 6.1. A change to this file
+    requires a PR touching only `contracts/`, approved by the human reviewer and merged before either
+    agent implements it.
+
+    ## Conventions
+    - Base path: `/api/method/infra_control.api.<module>.<fn>` (Frappe whitelisted methods).
+    - `GET` endpoints take query parameters. `POST` endpoints take a JSON body.
+    - Success bodies are the payload at the top level (no `message` wrapper).
+    - Errors are `{ "error": { "code", "message", "details" } }` with a meaningful HTTP status.
+      Only framework-level failures before the handler runs (no session, CSRF) keep Frappe's native
+      shape; they are documented as `FrappeFrameworkError`.
+    - Lists are cursor-paginated: `?limit=50&cursor=...` -> `{ "items": [...], "next_cursor": string | null }`.
+      `cursor` is opaque; clients must not parse it.
+    - Timestamps are RFC 3339 strings in UTC (`2026-10-07T09:30:00Z`).
+    - Every `name` is the Frappe document name (stable id). Status strings are the unified enums of
+      plan section 5; provider-specific strings never reach this API.
+    - Capabilities: controls for a capability that is absent from `capabilities` must not be rendered.
+      Calling such an action yields `409 capability_missing`.
+    - High-risk playbooks require `confirm` to equal the target name, else `400 confirmation_required`.
+    - Realtime events are delivered over Frappe Socket.IO (namespace `/<site>`, path `/socket.io`);
+      payload schemas live in `contracts/events/`.
+  contact:
+    name: Agent A (Platform)
+  license:
+    name: MIT
+
+servers:
+  - url: /
+    description: Same origin as the Frappe site that serves the SPA.
+
+security:
+  - sessionCookie: []
+  - apiToken: []
+
+tags:
+  - name: overview
+  - name: inventory
+  - name: servers
+  - name: sites
+  - name: metrics
+  - name: playbooks
+  - name: jobs
+  - name: bulk
+  - name: alerts
+  - name: alert_rules
+  - name: audit
+  - name: search
+
+x-realtime-events:
+  - infra:job.updated
+  - infra:job.step
+  - infra:job.log
+  - infra:bulk.updated
+  - infra:server.heartbeat
+  - infra:alert.fired
+  - infra:alert.resolved
+  - infra:inventory.changed
+
+paths:
+  # ---------------------------------------------------------------------------
+  # overview
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.overview.summary:
+    get:
+      tags: [overview]
+      operationId: overview_summary
+      summary: Counts by status, running jobs, firing alerts
+      responses:
+        "200":
+          description: Overview summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OverviewSummary" }
+              examples:
+                default: { $ref: "#/components/examples/OverviewSummary" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  # ---------------------------------------------------------------------------
+  # inventory
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.inventory.topology:
+    get:
+      tags: [inventory]
+      operationId: inventory_topology
+      summary: Nodes and edges for providers, servers, benches and sites
+      responses:
+        "200":
+          description: Topology graph
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Topology" }
+              examples:
+                default: { $ref: "#/components/examples/Topology" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  # ---------------------------------------------------------------------------
+  # servers
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.servers.list:
+    get:
+      tags: [servers]
+      operationId: servers_list
+      summary: List servers
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/ServerStatus" }
+        - name: provider_account
+          in: query
+          schema: { type: string }
+        - name: role
+          in: query
+          schema: { $ref: "#/components/schemas/ServerRole" }
+        - name: region
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          description: Page of servers
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerPage" }
+              examples:
+                default: { $ref: "#/components/examples/ServerPage" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/method/infra_control.api.servers.get:
+    get:
+      tags: [servers]
+      operationId: servers_get
+      summary: Server detail with capabilities, benches and latest metrics
+      parameters:
+        - name: server
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Server detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerDetail" }
+              examples:
+                default: { $ref: "#/components/examples/ServerDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ---------------------------------------------------------------------------
+  # sites
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.sites.list:
+    get:
+      tags: [sites]
+      operationId: sites_list
+      summary: List sites
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/SiteStatus" }
+        - name: provider_account
+          in: query
+          schema: { type: string }
+        - name: bench
+          in: query
+          schema: { type: string }
+        - name: server
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          description: Page of sites
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SitePage" }
+              examples:
+                default: { $ref: "#/components/examples/SitePage" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/method/infra_control.api.sites.get:
+    get:
+      tags: [sites]
+      operationId: sites_get
+      summary: Site detail with capabilities, bench and recent backups
+      parameters:
+        - name: site
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Site detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SiteDetail" }
+              examples:
+                default: { $ref: "#/components/examples/SiteDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ---------------------------------------------------------------------------
+  # metrics
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.metrics.series:
+    get:
+      tags: [metrics]
+      operationId: metrics_series
+      summary: Time series for one metric of one server
+      parameters:
+        - name: server
+          in: query
+          required: true
+          schema: { type: string }
+        - name: metric
+          in: query
+          required: true
+          schema: { $ref: "#/components/schemas/MetricName" }
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+        - name: resolution
+          in: query
+          required: false
+          description: Defaults to the coarsest resolution that keeps the series under 1,000 points.
+          schema: { $ref: "#/components/schemas/Resolution" }
+      responses:
+        "200":
+          description: Metric series
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MetricSeries" }
+              examples:
+                default: { $ref: "#/components/examples/MetricSeries" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/CapabilityMissing" }
+
+  # ---------------------------------------------------------------------------
+  # playbooks
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.playbooks.list:
+    get:
+      tags: [playbooks]
+      operationId: playbooks_list
+      summary: Playbooks applicable to a target type, filtered by the target's capabilities
+      parameters:
+        - name: target_doctype
+          in: query
+          required: false
+          schema: { $ref: "#/components/schemas/TargetDoctype" }
+        - name: target_name
+          in: query
+          required: false
+          description: When given, only playbooks whose `required_capability` this target supports are returned.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Playbooks (not paginated; the catalogue is small)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlaybookList" }
+              examples:
+                default: { $ref: "#/components/examples/PlaybookList" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ---------------------------------------------------------------------------
+  # jobs
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.jobs.run:
+    post:
+      tags: [jobs]
+      operationId: jobs_run
+      summary: Validate, audit, create an Infra Job and enqueue it
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/JobRunRequest" }
+            examples:
+              migrate:
+                value:
+                  playbook: site.migrate
+                  target_doctype: Site
+                  target_name: demo.smartchoice-iq.com
+                  params: {}
+              high_risk:
+                value:
+                  playbook: server.reboot
+                  target_doctype: Server
+                  target_name: SRV-0001
+                  params: {}
+                  confirm: SRV-0001
+      responses:
+        "200":
+          description: The queued job
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JobEnvelope" }
+              examples:
+                default: { $ref: "#/components/examples/JobEnvelope" }
+        "400": { $ref: "#/components/responses/ValidationOrConfirmation" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/CapabilityMissing" }
+
+  /api/method/infra_control.api.jobs.cancel:
+    post:
+      tags: [jobs]
+      operationId: jobs_cancel
+      summary: Cancel a queued or running job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/JobRef" }
+      responses:
+        "200":
+          description: The job after the cancel request (status `Cancelled`, or still `Running` until the worker observes the flag)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JobEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+
+  /api/method/infra_control.api.jobs.retry:
+    post:
+      tags: [jobs]
+      operationId: jobs_retry
+      summary: Create a new job linked to a failed one, resuming from its first failed step
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/JobRef" }
+      responses:
+        "200":
+          description: The new job (`retry_of` points at the original)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JobEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+
+  /api/method/infra_control.api.jobs.list:
+    get:
+      tags: [jobs]
+      operationId: jobs_list
+      summary: List jobs, newest first
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/JobStatus" }
+        - name: playbook
+          in: query
+          schema: { type: string }
+        - name: target_doctype
+          in: query
+          schema: { $ref: "#/components/schemas/TargetDoctype" }
+        - name: target_name
+          in: query
+          schema: { type: string }
+        - name: bulk_operation
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          description: Page of jobs (without steps)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JobPage" }
+              examples:
+                default: { $ref: "#/components/examples/JobPage" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/method/infra_control.api.jobs.get:
+    get:
+      tags: [jobs]
+      operationId: jobs_get
+      summary: Job with its steps and masked output
+      parameters:
+        - name: job
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Job detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JobDetail" }
+              examples:
+                default: { $ref: "#/components/examples/JobDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ---------------------------------------------------------------------------
+  # bulk
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.bulk.create:
+    post:
+      tags: [bulk]
+      operationId: bulk_create
+      summary: Create and start a bulk operation (backup, canary, batches)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BulkCreateRequest" }
+            examples:
+              migrate:
+                value:
+                  playbook: site.migrate
+                  targets:
+                    - { target_doctype: Site, target_name: demo.smartchoice-iq.com }
+                    - { target_doctype: Site, target_name: erp.client-a.iq }
+                    - { target_doctype: Site, target_name: erp.client-b.iq }
+                  canary_target: { target_doctype: Site, target_name: demo.smartchoice-iq.com }
+                  batch_size: 2
+                  failure_policy: halt
+                  params: {}
+      responses:
+        "200":
+          description: The created bulk operation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkEnvelope" }
+              examples:
+                default: { $ref: "#/components/examples/BulkEnvelope" }
+        "400": { $ref: "#/components/responses/ValidationOrConfirmation" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/CapabilityMissing" }
+
+  /api/method/infra_control.api.bulk.pause:
+    post:
+      tags: [bulk]
+      operationId: bulk_pause
+      summary: Pause after the current batch finishes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BulkRef" }
+      responses:
+        "200":
+          description: Bulk operation (status `Paused` once the current batch completes)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+
+  /api/method/infra_control.api.bulk.resume:
+    post:
+      tags: [bulk]
+      operationId: bulk_resume
+      summary: Resume a paused or halted bulk operation with the remaining targets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BulkRef" }
+      responses:
+        "200":
+          description: Bulk operation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+
+  /api/method/infra_control.api.bulk.get:
+    get:
+      tags: [bulk]
+      operationId: bulk_get
+      summary: Bulk operation with per-target progress
+      parameters:
+        - name: bulk
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Bulk operation detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkOperationDetail" }
+              examples:
+                default: { $ref: "#/components/examples/BulkOperationDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ---------------------------------------------------------------------------
+  # alerts
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.alerts.list:
+    get:
+      tags: [alerts]
+      operationId: alerts_list
+      summary: List alerts, firing first then newest
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/AlertStatus" }
+        - name: severity
+          in: query
+          schema: { $ref: "#/components/schemas/Severity" }
+        - name: target_doctype
+          in: query
+          schema: { $ref: "#/components/schemas/TargetDoctype" }
+        - name: target_name
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          description: Page of alerts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlertPage" }
+              examples:
+                default: { $ref: "#/components/examples/AlertPage" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/method/infra_control.api.alerts.ack:
+    post:
+      tags: [alerts]
+      operationId: alerts_ack
+      summary: Acknowledge a firing alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [alert]
+              properties:
+                alert: { type: string }
+      responses:
+        "200":
+          description: The acknowledged alert
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlertEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+
+  # ---------------------------------------------------------------------------
+  # alert_rules
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.alert_rules.list:
+    get:
+      tags: [alert_rules]
+      operationId: alert_rules_list
+      summary: List alert rules
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          description: Page of alert rules
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlertRulePage" }
+              examples:
+                default: { $ref: "#/components/examples/AlertRulePage" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/method/infra_control.api.alert_rules.get:
+    get:
+      tags: [alert_rules]
+      operationId: alert_rules_get
+      summary: One alert rule
+      parameters:
+        - name: rule
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Alert rule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlertRule" }
+              examples:
+                default: { $ref: "#/components/examples/AlertRule" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/method/infra_control.api.alert_rules.create:
+    post:
+      tags: [alert_rules]
+      operationId: alert_rules_create
+      summary: Create an alert rule (Infra Admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AlertRuleInput" }
+      responses:
+        "200":
+          description: Created rule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlertRuleEnvelope" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/method/infra_control.api.alert_rules.update:
+    post:
+      tags: [alert_rules]
+      operationId: alert_rules_update
+      summary: Update an alert rule (Infra Admin); omitted fields keep their value
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AlertRuleUpdate" }
+      responses:
+        "200":
+          description: Updated rule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlertRuleEnvelope" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/method/infra_control.api.alert_rules.delete:
+    post:
+      tags: [alert_rules]
+      operationId: alert_rules_delete
+      summary: Delete an alert rule (Infra Admin); its historical alerts are kept
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [rule]
+              properties:
+                rule: { type: string }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [rule, deleted]
+                properties:
+                  rule: { type: string }
+                  deleted: { type: boolean, const: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ---------------------------------------------------------------------------
+  # audit
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.audit.list:
+    get:
+      tags: [audit]
+      operationId: audit_list
+      summary: Paginated immutable audit log, newest first
+      parameters:
+        - name: user
+          in: query
+          schema: { type: string }
+        - name: action
+          in: query
+          schema: { type: string }
+        - name: target_doctype
+          in: query
+          schema: { $ref: "#/components/schemas/TargetDoctype" }
+        - name: target_name
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          description: Page of audit entries
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuditPage" }
+              examples:
+                default: { $ref: "#/components/examples/AuditPage" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  # ---------------------------------------------------------------------------
+  # search
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.search.query:
+    get:
+      tags: [search]
+      operationId: search_query
+      summary: Command palette search across servers, sites, benches, playbooks, jobs and alerts
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Ranked results
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SearchResults" }
+              examples:
+                default: { $ref: "#/components/examples/SearchResults" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+# =============================================================================
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sid
+      description: Frappe session cookie. POST requests must also send the `X-Frappe-CSRF-Token` header.
+    apiToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "`token <api_key>:<api_secret>` of a Frappe user with an Infra role."
+
+  parameters:
+    limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    cursor:
+      name: cursor
+      in: query
+      description: Opaque cursor from a previous page's `next_cursor`.
+      schema: { type: string }
+
+  responses:
+    Unauthorized:
+      description: No valid session or token (Frappe framework shape)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/FrappeFrameworkError" }
+    Forbidden:
+      description: Role lacks permission
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: permission_denied, message: "Role Infra Viewer cannot run playbooks", details: {} }
+    NotFound:
+      description: Target does not exist
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: not_found, message: "Server SRV-9999 not found", details: { doctype: Server, name: SRV-9999 } }
+    ValidationError:
+      description: Invalid parameters or body
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: validation_error, message: "params.apps must be an array", details: { field: params.apps } }
+    ValidationOrConfirmation:
+      description: Invalid input, or a high-risk playbook without `confirm` equal to the target name
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            confirmation_required:
+              value:
+                error: { code: confirmation_required, message: "Type the server name to confirm", details: { expected: SRV-0001 } }
+            validation_error:
+              value:
+                error: { code: validation_error, message: "params.apps must be an array", details: { field: params.apps } }
+    CapabilityMissing:
+      description: The target's provider does not support the required capability
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: capability_missing, message: "Provider frappe_cloud lacks capability service_control", details: { capability: service_control, provider: frappe_cloud } }
+    InvalidState:
+      description: The entity is not in a state that allows this action
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          example:
+            error: { code: invalid_state, message: "Job JOB-00042 is already Success", details: { status: Success } }
+
+  # ---------------------------------------------------------------------------
+  schemas:
+    # ----- errors -------------------------------------------------------------
+    ErrorCode:
+      type: string
+      enum:
+        - validation_error
+        - permission_denied
+        - not_found
+        - confirmation_required
+        - capability_missing
+        - invalid_state
+        - invalid_cursor
+        - rate_limited
+        - provider_error
+        - internal_error
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message, details]
+      properties:
+        code: { $ref: "#/components/schemas/ErrorCode" }
+        message: { type: string }
+        details:
+          type: object
+          description: Machine-readable context; keys depend on `code`.
+          additionalProperties: true
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error: { $ref: "#/components/schemas/Error" }
+    FrappeFrameworkError:
+      type: object
+      description: Emitted by Frappe before the handler runs (expired session, CSRF). Clients treat any 401 as "re-authenticate".
+      additionalProperties: true
+      properties:
+        exc_type: { type: string }
+        exception: { type: string }
+        _server_messages: { type: string }
+
+    # ----- enums (plan section 5) ----------------------------------------------
+    Provider:
+      type: string
+      enum: [digitalocean, frappe_cloud]
+    Capability:
+      type: string
+      enum: [site, bench, server, ssh, snapshot, service_control, metrics, custom_playbook, managed_backup, managed_update]
+    ServerStatus:
+      type: string
+      enum: [Provisioning, Active, Degraded, Down, Archived]
+    SiteStatus:
+      type: string
+      enum: [Pending, Active, Maintenance, Suspended, Broken, Archived]
+    JobStatus:
+      type: string
+      enum: [Queued, Running, Success, Failed, Cancelled]
+    StepStatus:
+      type: string
+      enum: [Queued, Running, Success, Failed, Cancelled, Skipped]
+    BulkStatus:
+      type: string
+      enum: [Queued, Running, Paused, Halted, Success, Failed, Cancelled]
+    BulkPhase:
+      type: string
+      enum: [backup, canary, batches, done]
+    BulkTargetStatus:
+      type: string
+      enum: [Pending, Running, Success, Failed, Skipped]
+    AlertStatus:
+      type: string
+      enum: [firing, acknowledged, resolved]
+    Severity:
+      type: string
+      enum: [info, warning, critical]
+    Risk:
+      type: string
+      enum: [low, medium, high]
+    TargetDoctype:
+      type: string
+      enum: [Server, Site, Provider Account]
+    ServerRole:
+      type: string
+      enum: [app, db, proxy, all]
+    MetricName:
+      type: string
+      enum: [cpu, ram, disk, load1, queue_backlog]
+    Resolution:
+      type: string
+      enum: [1m, 1h, 1d]
+    FailurePolicy:
+      type: string
+      enum: [halt, continue]
+    Operator:
+      type: string
+      enum: [gt, gte, lt, lte, eq]
+    AlertChannel:
+      type: string
+      enum: [telegram, email]
+    BackupKind:
+      type: string
+      enum: [db, files, snapshot]
+    AuditResult:
+      type: string
+      enum: [success, failed, denied]
+    SearchResultType:
+      type: string
+      enum: [server, site, bench, playbook, job, alert]
+
+    # ----- shared --------------------------------------------------------------
+    TargetRef:
+      type: object
+      additionalProperties: false
+      required: [target_doctype, target_name]
+      properties:
+        target_doctype: { $ref: "#/components/schemas/TargetDoctype" }
+        target_name: { type: string }
+    JobRef:
+      type: object
+      additionalProperties: false
+      required: [job]
+      properties:
+        job: { type: string }
+    BulkRef:
+      type: object
+      additionalProperties: false
+      required: [bulk]
+      properties:
+        bulk: { type: string }
+    NextCursor:
+      type: [string, "null"]
+      description: Pass as `cursor` to fetch the next page; `null` when there is none.
+    InstalledApp:
+      type: object
+      additionalProperties: false
+      required: [app, version, branch]
+      properties:
+        app: { type: string }
+        version: { type: [string, "null"] }
+        branch: { type: [string, "null"] }
+
+    # ----- inventory -----------------------------------------------------------
+    Server:
+      type: object
+      # Extended via allOf (see *Detail); the derived schema closes it with unevaluatedProperties.
+      required: [name, provider, provider_account, provider_ref, public_ip, private_ip, role, region, size, tags, status, last_heartbeat, capabilities, bench_count, site_count]
+      properties:
+        name: { type: string }
+        provider: { $ref: "#/components/schemas/Provider" }
+        provider_account: { type: string }
+        provider_ref: { type: string, description: Droplet id }
+        public_ip: { type: [string, "null"] }
+        private_ip: { type: [string, "null"] }
+        role: { $ref: "#/components/schemas/ServerRole" }
+        region: { type: string }
+        size: { type: string }
+        tags: { type: array, items: { type: string } }
+        status: { $ref: "#/components/schemas/ServerStatus" }
+        last_heartbeat: { type: [string, "null"], format: date-time }
+        capabilities: { type: array, items: { $ref: "#/components/schemas/Capability" } }
+        bench_count: { type: integer, minimum: 0 }
+        site_count: { type: integer, minimum: 0 }
+    ServerPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Server" } }
+        next_cursor: { $ref: "#/components/schemas/NextCursor" }
+    MetricSnapshot:
+      type: object
+      additionalProperties: false
+      required: [ts, cpu, ram, disk, load1, queue_backlog]
+      properties:
+        ts: { type: string, format: date-time }
+        cpu: { type: number, minimum: 0, maximum: 100, description: percent }
+        ram: { type: number, minimum: 0, maximum: 100, description: percent }
+        disk: { type: number, minimum: 0, maximum: 100, description: percent }
+        load1: { type: number, minimum: 0 }
+        queue_backlog: { type: integer, minimum: 0 }
+    ServerDetail:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/Server"
+        - type: object
+          required: [benches, latest_metrics, running_job]
+          properties:
+            benches: { type: array, items: { $ref: "#/components/schemas/Bench" } }
+            latest_metrics:
+              oneOf:
+                - $ref: "#/components/schemas/MetricSnapshot"
+                - type: "null"
+            running_job: { type: [string, "null"], description: Name of the job currently holding this server's lock }
+    Bench:
+      type: object
+      additionalProperties: false
+      required: [name, provider, provider_account, provider_ref, server, path, frappe_version, apps, site_count]
+      properties:
+        name: { type: string }
+        provider: { $ref: "#/components/schemas/Provider" }
+        provider_account: { type: string }
+        provider_ref: { type: string }
+        server: { type: [string, "null"], description: "`null` for Frappe Cloud benches" }
+        path: { type: [string, "null"] }
+        frappe_version: { type: [string, "null"] }
+        apps: { type: array, items: { $ref: "#/components/schemas/InstalledApp" } }
+        site_count: { type: integer, minimum: 0 }
+    Site:
+      type: object
+      # Extended via allOf (see *Detail); the derived schema closes it with unevaluatedProperties.
+      required: [name, domain, provider, provider_account, provider_ref, bench, server, status, plan, ssl_expiry, db_size_mb, last_backup, custom_domains, capabilities]
+      properties:
+        name: { type: string }
+        domain: { type: string }
+        provider: { $ref: "#/components/schemas/Provider" }
+        provider_account: { type: string }
+        provider_ref: { type: string }
+        bench: { type: string }
+        server: { type: [string, "null"] }
+        status: { $ref: "#/components/schemas/SiteStatus" }
+        plan: { type: [string, "null"] }
+        ssl_expiry: { type: [string, "null"], format: date-time }
+        db_size_mb: { type: [number, "null"], minimum: 0 }
+        last_backup: { type: [string, "null"], format: date-time }
+        custom_domains: { type: array, items: { type: string } }
+        capabilities: { type: array, items: { $ref: "#/components/schemas/Capability" } }
+    SitePage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Site" } }
+        next_cursor: { $ref: "#/components/schemas/NextCursor" }
+    Backup:
+      type: object
+      additionalProperties: false
+      required: [name, site, kind, location, size_mb, created_at, last_restore_test, restore_test_ok]
+      properties:
+        name: { type: string }
+        site: { type: string }
+        kind: { $ref: "#/components/schemas/BackupKind" }
+        location: { type: string, description: Storage path or provider reference, never a signed URL }
+        size_mb: { type: number, minimum: 0 }
+        created_at: { type: string, format: date-time }
+        last_restore_test: { type: [string, "null"], format: date-time }
+        restore_test_ok: { type: [boolean, "null"] }
+    SiteDetail:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/Site"
+        - type: object
+          required: [bench_info, backups, running_job]
+          properties:
+            bench_info: { $ref: "#/components/schemas/Bench" }
+            backups: { type: array, maxItems: 10, items: { $ref: "#/components/schemas/Backup" }, description: Most recent first }
+            running_job: { type: [string, "null"] }
+
+    # ----- topology / overview -------------------------------------------------
+    TopologyNodeType:
+      type: string
+      enum: [provider, server, bench, site]
+    TopologyNode:
+      type: object
+      additionalProperties: false
+      required: [id, type, ref, label, status, provider, has_running_job]
+      properties:
+        id: { type: string, description: "`<type>:<ref>`, unique in the graph" }
+        type: { $ref: "#/components/schemas/TopologyNodeType" }
+        ref: { type: string, description: Document name (Provider Account, Server, Bench or Site) }
+        label: { type: string }
+        status: { type: [string, "null"], description: Unified status for servers and sites; `null` for providers and benches }
+        provider: { $ref: "#/components/schemas/Provider" }
+        has_running_job: { type: boolean }
+    TopologyEdge:
+      type: object
+      additionalProperties: false
+      required: [id, source, target]
+      properties:
+        id: { type: string }
+        source: { type: string }
+        target: { type: string }
+    Topology:
+      type: object
+      additionalProperties: false
+      required: [nodes, edges, generated_at]
+      properties:
+        nodes: { type: array, items: { $ref: "#/components/schemas/TopologyNode" } }
+        edges: { type: array, items: { $ref: "#/components/schemas/TopologyEdge" } }
+        generated_at: { type: string, format: date-time }
+    ServerStatusCounts:
+      type: object
+      additionalProperties: false
+      required: [Provisioning, Active, Degraded, Down, Archived]
+      properties:
+        Provisioning: { type: integer, minimum: 0 }
+        Active: { type: integer, minimum: 0 }
+        Degraded: { type: integer, minimum: 0 }
+        Down: { type: integer, minimum: 0 }
+        Archived: { type: integer, minimum: 0 }
+    SiteStatusCounts:
+      type: object
+      additionalProperties: false
+      required: [Pending, Active, Maintenance, Suspended, Broken, Archived]
+      properties:
+        Pending: { type: integer, minimum: 0 }
+        Active: { type: integer, minimum: 0 }
+        Maintenance: { type: integer, minimum: 0 }
+        Suspended: { type: integer, minimum: 0 }
+        Broken: { type: integer, minimum: 0 }
+        Archived: { type: integer, minimum: 0 }
+    OverviewSummary:
+      type: object
+      additionalProperties: false
+      required: [servers, sites, jobs, alerts, running_jobs, recent_alerts, generated_at]
+      properties:
+        servers:
+          type: object
+          additionalProperties: false
+          required: [total, by_status]
+          properties:
+            total: { type: integer, minimum: 0 }
+            by_status: { $ref: "#/components/schemas/ServerStatusCounts" }
+        sites:
+          type: object
+          additionalProperties: false
+          required: [total, by_status]
+          properties:
+            total: { type: integer, minimum: 0 }
+            by_status: { $ref: "#/components/schemas/SiteStatusCounts" }
+        jobs:
+          type: object
+          additionalProperties: false
+          required: [queued, running, success_24h, failed_24h]
+          properties:
+            queued: { type: integer, minimum: 0 }
+            running: { type: integer, minimum: 0 }
+            success_24h: { type: integer, minimum: 0 }
+            failed_24h: { type: integer, minimum: 0 }
+        alerts:
+          type: object
+          additionalProperties: false
+          required: [firing, info, warning, critical]
+          properties:
+            firing: { type: integer, minimum: 0, description: All unresolved alerts (firing + acknowledged) }
+            info: { type: integer, minimum: 0 }
+            warning: { type: integer, minimum: 0 }
+            critical: { type: integer, minimum: 0 }
+        running_jobs: { type: array, items: { $ref: "#/components/schemas/Job" } }
+        recent_alerts: { type: array, maxItems: 10, items: { $ref: "#/components/schemas/Alert" } }
+        generated_at: { type: string, format: date-time }
+
+    # ----- metrics -------------------------------------------------------------
+    MetricPoint:
+      type: object
+      additionalProperties: false
+      required: [ts, value]
+      properties:
+        ts: { type: string, format: date-time }
+        value: { type: [number, "null"], description: "`null` marks a gap (no reading)" }
+    MetricSeries:
+      type: object
+      additionalProperties: false
+      required: [server, metric, resolution, from, to, points]
+      properties:
+        server: { type: string }
+        metric: { $ref: "#/components/schemas/MetricName" }
+        resolution: { $ref: "#/components/schemas/Resolution" }
+        from: { type: string, format: date-time }
+        to: { type: string, format: date-time }
+        points: { type: array, maxItems: 1000, items: { $ref: "#/components/schemas/MetricPoint" } }
+
+    # ----- playbooks -----------------------------------------------------------
+    Playbook:
+      type: object
+      additionalProperties: false
+      required: [key, title, description, target_doctype, risk, required_capability, params_schema]
+      properties:
+        key: { type: string, description: "e.g. `site.migrate`" }
+        title: { type: string }
+        description: { type: string }
+        target_doctype: { $ref: "#/components/schemas/TargetDoctype" }
+        risk: { $ref: "#/components/schemas/Risk" }
+        required_capability:
+          oneOf:
+            - $ref: "#/components/schemas/Capability"
+            - type: "null"
+        params_schema:
+          type: object
+          description: JSON Schema (draft 2020-12) for `params`. The UI renders the form from it.
+          additionalProperties: true
+    PlaybookList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Playbook" } }
+
+    # ----- jobs ----------------------------------------------------------------
+    Job:
+      type: object
+      # Extended via allOf (see *Detail); the derived schema closes it with unevaluatedProperties.
+      required: [name, playbook, playbook_title, target_doctype, target_name, params, status, progress, steps_done, steps_total, triggered_by, bulk_operation, retry_of, created_at, started_at, ended_at, error]
+      properties:
+        name: { type: string }
+        playbook: { type: string }
+        playbook_title: { type: string }
+        target_doctype: { $ref: "#/components/schemas/TargetDoctype" }
+        target_name: { type: string }
+        params: { type: object, additionalProperties: true, description: Masked; secrets never appear }
+        status: { $ref: "#/components/schemas/JobStatus" }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        steps_done: { type: integer, minimum: 0 }
+        steps_total: { type: integer, minimum: 0, description: 0 while unknown }
+        triggered_by: { type: string, description: User id, or `scheduler` }
+        bulk_operation: { type: [string, "null"] }
+        retry_of: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+        started_at: { type: [string, "null"], format: date-time }
+        ended_at: { type: [string, "null"], format: date-time }
+        error: { type: [string, "null"], description: Short masked failure reason }
+    JobStep:
+      type: object
+      additionalProperties: false
+      required: [idx, title, status, output, started_at, ended_at]
+      properties:
+        idx: { type: integer, minimum: 0 }
+        title: { type: string }
+        status: { $ref: "#/components/schemas/StepStatus" }
+        output: { type: string, description: Masked, may be truncated to the last 64 KB }
+        started_at: { type: [string, "null"], format: date-time }
+        ended_at: { type: [string, "null"], format: date-time }
+    JobDetail:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/Job"
+        - type: object
+          required: [steps]
+          properties:
+            steps: { type: array, items: { $ref: "#/components/schemas/JobStep" } }
+    JobPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Job" } }
+        next_cursor: { $ref: "#/components/schemas/NextCursor" }
+    JobEnvelope:
+      type: object
+      additionalProperties: false
+      required: [job]
+      properties:
+        job: { $ref: "#/components/schemas/Job" }
+    JobRunRequest:
+      type: object
+      additionalProperties: false
+      required: [playbook, target_doctype, target_name]
+      properties:
+        playbook: { type: string }
+        target_doctype: { $ref: "#/components/schemas/TargetDoctype" }
+        target_name: { type: string }
+        params: { type: object, additionalProperties: true, default: {} }
+        confirm: { type: string, description: Must equal `target_name` for high-risk playbooks }
+
+    # ----- bulk ----------------------------------------------------------------
+    BulkOperation:
+      type: object
+      # Extended via allOf (see *Detail); the derived schema closes it with unevaluatedProperties.
+      required: [name, playbook, playbook_title, status, phase, failure_policy, batch_size, canary_target, total, done, failed, current_batch, batches_total, triggered_by, created_at, started_at, ended_at]
+      properties:
+        name: { type: string }
+        playbook: { type: string }
+        playbook_title: { type: string }
+        status: { $ref: "#/components/schemas/BulkStatus" }
+        phase: { $ref: "#/components/schemas/BulkPhase" }
+        failure_policy: { $ref: "#/components/schemas/FailurePolicy" }
+        batch_size: { type: integer, minimum: 1 }
+        canary_target: { $ref: "#/components/schemas/TargetRef" }
+        total: { type: integer, minimum: 0, description: Number of targets including the canary }
+        done: { type: integer, minimum: 0, description: Targets in a terminal state }
+        failed: { type: integer, minimum: 0 }
+        current_batch: { type: integer, minimum: 0, description: 0 = canary }
+        batches_total: { type: integer, minimum: 0 }
+        triggered_by: { type: string }
+        created_at: { type: string, format: date-time }
+        started_at: { type: [string, "null"], format: date-time }
+        ended_at: { type: [string, "null"], format: date-time }
+    BulkTarget:
+      type: object
+      additionalProperties: false
+      required: [target_doctype, target_name, status, job, batch]
+      properties:
+        target_doctype: { $ref: "#/components/schemas/TargetDoctype" }
+        target_name: { type: string }
+        status: { $ref: "#/components/schemas/BulkTargetStatus" }
+        job: { type: [string, "null"] }
+        batch: { type: integer, minimum: 0, description: 0 = canary }
+    BulkOperationDetail:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/BulkOperation"
+        - type: object
+          required: [targets]
+          properties:
+            targets: { type: array, items: { $ref: "#/components/schemas/BulkTarget" } }
+    BulkEnvelope:
+      type: object
+      additionalProperties: false
+      required: [bulk]
+      properties:
+        bulk: { $ref: "#/components/schemas/BulkOperation" }
+    BulkCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [playbook, targets, canary_target]
+      properties:
+        playbook: { type: string }
+        targets: { type: array, minItems: 1, items: { $ref: "#/components/schemas/TargetRef" } }
+        canary_target: { $ref: "#/components/schemas/TargetRef", description: Must be one of `targets` }
+        batch_size: { type: integer, minimum: 1, maximum: 50, default: 5 }
+        failure_policy: { $ref: "#/components/schemas/FailurePolicy", default: halt }
+        params: { type: object, additionalProperties: true, default: {} }
+        confirm: { type: string, description: Must equal the bulk operation's playbook key for high-risk playbooks }
+
+    # ----- alerts --------------------------------------------------------------
+    Alert:
+      type: object
+      additionalProperties: false
+      required: [name, rule, rule_title, severity, status, target, metric, value, message, fired_at, acknowledged_by, acknowledged_at, resolved_at]
+      properties:
+        name: { type: string }
+        rule: { type: string }
+        rule_title: { type: string }
+        severity: { $ref: "#/components/schemas/Severity" }
+        status: { $ref: "#/components/schemas/AlertStatus" }
+        target: { $ref: "#/components/schemas/TargetRef" }
+        metric: { type: [string, "null"], description: Metric name, or `null` for non-metric alerts (heartbeat, drift, contract) }
+        value: { type: [number, "null"] }
+        message: { type: string }
+        fired_at: { type: string, format: date-time }
+        acknowledged_by: { type: [string, "null"] }
+        acknowledged_at: { type: [string, "null"], format: date-time }
+        resolved_at: { type: [string, "null"], format: date-time }
+    AlertPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Alert" } }
+        next_cursor: { $ref: "#/components/schemas/NextCursor" }
+    AlertEnvelope:
+      type: object
+      additionalProperties: false
+      required: [alert]
+      properties:
+        alert: { $ref: "#/components/schemas/Alert" }
+    AlertRuleInput:
+      type: object
+      # Extended via allOf (see *Detail); the derived schema closes it with unevaluatedProperties.
+      required: [title, target_doctype, metric, operator, threshold, for_minutes, severity, channels]
+      properties:
+        title: { type: string, minLength: 1 }
+        target_doctype:
+          type: string
+          enum: [Server, Site]
+        metric: { $ref: "#/components/schemas/MetricName" }
+        operator: { $ref: "#/components/schemas/Operator" }
+        threshold: { type: number }
+        for_minutes: { type: integer, minimum: 0, maximum: 1440 }
+        severity: { $ref: "#/components/schemas/Severity" }
+        channels: { type: array, items: { $ref: "#/components/schemas/AlertChannel" }, uniqueItems: true }
+        enabled: { type: boolean, default: true }
+    AlertRule:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/AlertRuleInput"
+        - type: object
+          required: [name, enabled, modified_at]
+          properties:
+            name: { type: string }
+            enabled: { type: boolean }
+            modified_at: { type: string, format: date-time }
+    AlertRuleUpdate:
+      type: object
+      additionalProperties: false
+      required: [rule]
+      properties:
+        rule: { type: string }
+        title: { type: string, minLength: 1 }
+        metric: { $ref: "#/components/schemas/MetricName" }
+        operator: { $ref: "#/components/schemas/Operator" }
+        threshold: { type: number }
+        for_minutes: { type: integer, minimum: 0, maximum: 1440 }
+        severity: { $ref: "#/components/schemas/Severity" }
+        channels: { type: array, items: { $ref: "#/components/schemas/AlertChannel" }, uniqueItems: true }
+        enabled: { type: boolean }
+    AlertRulePage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/AlertRule" } }
+        next_cursor: { $ref: "#/components/schemas/NextCursor" }
+    AlertRuleEnvelope:
+      type: object
+      additionalProperties: false
+      required: [rule]
+      properties:
+        rule: { $ref: "#/components/schemas/AlertRule" }
+
+    # ----- audit ---------------------------------------------------------------
+    AuditEntry:
+      type: object
+      additionalProperties: false
+      required: [name, ts, user, action, target, params_hash, job, result]
+      properties:
+        name: { type: string }
+        ts: { type: string, format: date-time }
+        user: { type: string }
+        action: { type: string, description: "e.g. `jobs.run:site.migrate`, `alerts.ack`, `alert_rules.update`" }
+        target:
+          oneOf:
+            - $ref: "#/components/schemas/TargetRef"
+            - type: "null"
+        params_hash: { type: string, description: SHA-256 of the canonical params JSON; params themselves are never stored here }
+        job: { type: [string, "null"] }
+        result: { $ref: "#/components/schemas/AuditResult" }
+    AuditPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/AuditEntry" } }
+        next_cursor: { $ref: "#/components/schemas/NextCursor" }
+
+    # ----- search --------------------------------------------------------------
+    SearchResult:
+      type: object
+      additionalProperties: false
+      required: [type, id, title, subtitle, status, provider]
+      properties:
+        type: { $ref: "#/components/schemas/SearchResultType" }
+        id: { type: string, description: Document name or playbook key }
+        title: { type: string }
+        subtitle: { type: [string, "null"] }
+        status: { type: [string, "null"] }
+        provider:
+          oneOf:
+            - $ref: "#/components/schemas/Provider"
+            - type: "null"
+    SearchResults:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/SearchResult" } }
+
+  # ---------------------------------------------------------------------------
+  # Examples (also served by the Prism mock). Keep ids consistent across examples.
+  # ---------------------------------------------------------------------------
+  examples:
+    OverviewSummary:
+      value:
+        servers: { total: 3, by_status: { Provisioning: 0, Active: 2, Degraded: 1, Down: 0, Archived: 0 } }
+        sites: { total: 5, by_status: { Pending: 0, Active: 4, Maintenance: 1, Suspended: 0, Broken: 0, Archived: 0 } }
+        jobs: { queued: 1, running: 1, success_24h: 12, failed_24h: 1 }
+        alerts: { firing: 2, info: 0, warning: 1, critical: 1 }
+        running_jobs:
+          - name: JOB-00042
+            playbook: site.migrate
+            playbook_title: Migrate site
+            target_doctype: Site
+            target_name: demo.smartchoice-iq.com
+            params: {}
+            status: Running
+            progress: 40
+            steps_done: 2
+            steps_total: 5
+            triggered_by: ameen@smartchoice-iq.com
+            bulk_operation: null
+            retry_of: null
+            created_at: "2026-10-07T09:30:00Z"
+            started_at: "2026-10-07T09:30:04Z"
+            ended_at: null
+            error: null
+        recent_alerts:
+          - name: ALERT-00017
+            rule: RULE-0003
+            rule_title: Disk above 85%
+            severity: warning
+            status: firing
+            target: { target_doctype: Server, target_name: SRV-0002 }
+            metric: disk
+            value: 88.4
+            message: "Disk usage 88.4% on SRV-0002 for 10 minutes"
+            fired_at: "2026-10-07T09:12:00Z"
+            acknowledged_by: null
+            acknowledged_at: null
+            resolved_at: null
+        generated_at: "2026-10-07T09:31:00Z"
+    Topology:
+      value:
+        nodes:
+          - { id: "provider:DO-STAGING", type: provider, ref: DO-STAGING, label: DigitalOcean (staging), status: null, provider: digitalocean, has_running_job: false }
+          - { id: "provider:FC-STAGING", type: provider, ref: FC-STAGING, label: Frappe Cloud (staging), status: null, provider: frappe_cloud, has_running_job: false }
+          - { id: "server:SRV-0001", type: server, ref: SRV-0001, label: app-01.fra1, status: Active, provider: digitalocean, has_running_job: true }
+          - { id: "server:SRV-0002", type: server, ref: SRV-0002, label: app-02.fra1, status: Degraded, provider: digitalocean, has_running_job: false }
+          - { id: "bench:BENCH-0001", type: bench, ref: BENCH-0001, label: v15-prod, status: null, provider: digitalocean, has_running_job: false }
+          - { id: "bench:BENCH-0002", type: bench, ref: BENCH-0002, label: v15-staging, status: null, provider: digitalocean, has_running_job: false }
+          - { id: "bench:BENCH-FC-01", type: bench, ref: BENCH-FC-01, label: fc-bench-01, status: null, provider: frappe_cloud, has_running_job: false }
+          - { id: "site:demo.smartchoice-iq.com", type: site, ref: demo.smartchoice-iq.com, label: demo.smartchoice-iq.com, status: Maintenance, provider: digitalocean, has_running_job: true }
+          - { id: "site:erp.client-a.iq", type: site, ref: erp.client-a.iq, label: erp.client-a.iq, status: Active, provider: digitalocean, has_running_job: false }
+          - { id: "site:erp.client-b.iq", type: site, ref: erp.client-b.iq, label: erp.client-b.iq, status: Active, provider: digitalocean, has_running_job: false }
+          - { id: "site:staging.client-c.frappe.cloud", type: site, ref: staging.client-c.frappe.cloud, label: staging.client-c.frappe.cloud, status: Active, provider: frappe_cloud, has_running_job: false }
+        edges:
+          - { id: "provider:DO-STAGING->server:SRV-0001", source: "provider:DO-STAGING", target: "server:SRV-0001" }
+          - { id: "provider:DO-STAGING->server:SRV-0002", source: "provider:DO-STAGING", target: "server:SRV-0002" }
+          - { id: "server:SRV-0001->bench:BENCH-0001", source: "server:SRV-0001", target: "bench:BENCH-0001" }
+          - { id: "server:SRV-0002->bench:BENCH-0002", source: "server:SRV-0002", target: "bench:BENCH-0002" }
+          - { id: "bench:BENCH-0001->site:demo.smartchoice-iq.com", source: "bench:BENCH-0001", target: "site:demo.smartchoice-iq.com" }
+          - { id: "bench:BENCH-0001->site:erp.client-a.iq", source: "bench:BENCH-0001", target: "site:erp.client-a.iq" }
+          - { id: "bench:BENCH-0002->site:erp.client-b.iq", source: "bench:BENCH-0002", target: "site:erp.client-b.iq" }
+          - { id: "provider:FC-STAGING->bench:BENCH-FC-01", source: "provider:FC-STAGING", target: "bench:BENCH-FC-01" }
+          - { id: "bench:BENCH-FC-01->site:staging.client-c.frappe.cloud", source: "bench:BENCH-FC-01", target: "site:staging.client-c.frappe.cloud" }
+        generated_at: "2026-10-07T09:31:00Z"
+    ServerPage:
+      value:
+        items:
+          - name: SRV-0001
+            provider: digitalocean
+            provider_account: DO-STAGING
+            provider_ref: "412345678"
+            public_ip: 164.92.10.11
+            private_ip: 10.114.0.2
+            role: all
+            region: fra1
+            size: s-4vcpu-8gb
+            tags: [staging, app]
+            status: Active
+            last_heartbeat: "2026-10-07T09:30:40Z"
+            capabilities: [site, bench, server, ssh, snapshot, service_control, metrics, custom_playbook]
+            bench_count: 1
+            site_count: 2
+          - name: SRV-0002
+            provider: digitalocean
+            provider_account: DO-STAGING
+            provider_ref: "412345679"
+            public_ip: 164.92.10.12
+            private_ip: 10.114.0.3
+            role: all
+            region: fra1
+            size: s-2vcpu-4gb
+            tags: [staging]
+            status: Degraded
+            last_heartbeat: "2026-10-07T09:30:38Z"
+            capabilities: [site, bench, server, ssh, snapshot, service_control, metrics, custom_playbook]
+            bench_count: 1
+            site_count: 1
+        next_cursor: null
+    ServerDetail:
+      value:
+        name: SRV-0001
+        provider: digitalocean
+        provider_account: DO-STAGING
+        provider_ref: "412345678"
+        public_ip: 164.92.10.11
+        private_ip: 10.114.0.2
+        role: all
+        region: fra1
+        size: s-4vcpu-8gb
+        tags: [staging, app]
+        status: Active
+        last_heartbeat: "2026-10-07T09:30:40Z"
+        capabilities: [site, bench, server, ssh, snapshot, service_control, metrics, custom_playbook]
+        bench_count: 1
+        site_count: 2
+        benches:
+          - name: BENCH-0001
+            provider: digitalocean
+            provider_account: DO-STAGING
+            provider_ref: "SRV-0001:/home/frappe/v15-prod"
+            server: SRV-0001
+            path: /home/frappe/v15-prod
+            frappe_version: 15.98.1
+            apps:
+              - { app: frappe, version: 15.98.1, branch: version-15 }
+              - { app: erpnext, version: 15.95.2, branch: version-15 }
+            site_count: 2
+        latest_metrics: { ts: "2026-10-07T09:30:40Z", cpu: 23.5, ram: 61.2, disk: 54.0, load1: 0.82, queue_backlog: 3 }
+        running_job: JOB-00042
+    SitePage:
+      value:
+        items:
+          - name: demo.smartchoice-iq.com
+            domain: demo.smartchoice-iq.com
+            provider: digitalocean
+            provider_account: DO-STAGING
+            provider_ref: "SRV-0001:/home/frappe/v15-prod:demo.smartchoice-iq.com"
+            bench: BENCH-0001
+            server: SRV-0001
+            status: Maintenance
+            plan: null
+            ssl_expiry: "2026-12-20T00:00:00Z"
+            db_size_mb: 812.4
+            last_backup: "2026-10-07T02:00:11Z"
+            custom_domains: [demo.smartchoice.iq]
+            capabilities: [site, bench, server, ssh, snapshot, service_control, metrics, custom_playbook]
+          - name: staging.client-c.frappe.cloud
+            domain: staging.client-c.frappe.cloud
+            provider: frappe_cloud
+            provider_account: FC-STAGING
+            provider_ref: staging.client-c.frappe.cloud
+            bench: BENCH-FC-01
+            server: null
+            status: Active
+            plan: USD 25
+            ssl_expiry: "2026-11-30T00:00:00Z"
+            db_size_mb: 120.0
+            last_backup: "2026-10-07T01:15:00Z"
+            custom_domains: []
+            capabilities: [site, bench, managed_backup, managed_update]
+        next_cursor: null
+    SiteDetail:
+      value:
+        name: demo.smartchoice-iq.com
+        domain: demo.smartchoice-iq.com
+        provider: digitalocean
+        provider_account: DO-STAGING
+        provider_ref: "SRV-0001:/home/frappe/v15-prod:demo.smartchoice-iq.com"
+        bench: BENCH-0001
+        server: SRV-0001
+        status: Maintenance
+        plan: null
+        ssl_expiry: "2026-12-20T00:00:00Z"
+        db_size_mb: 812.4
+        last_backup: "2026-10-07T02:00:11Z"
+        custom_domains: [demo.smartchoice.iq]
+        capabilities: [site, bench, server, ssh, snapshot, service_control, metrics, custom_playbook]
+        bench_info:
+          name: BENCH-0001
+          provider: digitalocean
+          provider_account: DO-STAGING
+          provider_ref: "SRV-0001:/home/frappe/v15-prod"
+          server: SRV-0001
+          path: /home/frappe/v15-prod
+          frappe_version: 15.98.1
+          apps:
+            - { app: frappe, version: 15.98.1, branch: version-15 }
+            - { app: erpnext, version: 15.95.2, branch: version-15 }
+          site_count: 2
+        backups:
+          - name: BKP-000311
+            site: demo.smartchoice-iq.com
+            kind: db
+            location: "spaces://scq-backups/demo.smartchoice-iq.com/20261007_020011-database.sql.gz"
+            size_mb: 96.3
+            created_at: "2026-10-07T02:00:11Z"
+            last_restore_test: "2026-09-15T03:00:00Z"
+            restore_test_ok: true
+        running_job: JOB-00042
+    MetricSeries:
+      value:
+        server: SRV-0001
+        metric: cpu
+        resolution: 1m
+        from: "2026-10-07T09:25:00Z"
+        to: "2026-10-07T09:30:00Z"
+        points:
+          - { ts: "2026-10-07T09:25:00Z", value: 18.2 }
+          - { ts: "2026-10-07T09:26:00Z", value: 21.0 }
+          - { ts: "2026-10-07T09:27:00Z", value: null }
+          - { ts: "2026-10-07T09:28:00Z", value: 35.7 }
+          - { ts: "2026-10-07T09:29:00Z", value: 24.1 }
+          - { ts: "2026-10-07T09:30:00Z", value: 23.5 }
+    PlaybookList:
+      value:
+        items:
+          - key: site.migrate
+            title: Migrate site
+            description: Takes a backup, then runs bench migrate. Fails if the backup fails.
+            target_doctype: Site
+            risk: medium
+            required_capability: site
+            params_schema: { type: object, additionalProperties: false, properties: { skip_search_index: { type: boolean, default: false } } }
+          - key: site.backup
+            title: Backup site
+            description: Database and files backup, uploaded offsite.
+            target_doctype: Site
+            risk: low
+            required_capability: site
+            params_schema: { type: object, additionalProperties: false, properties: { with_files: { type: boolean, default: true } } }
+          - key: server.reboot
+            title: Reboot server
+            description: Reboots the droplet. Requires typed confirmation.
+            target_doctype: Server
+            risk: high
+            required_capability: server
+            params_schema: { type: object, additionalProperties: false, properties: {} }
+    JobEnvelope:
+      value:
+        job:
+          name: JOB-00043
+          playbook: site.migrate
+          playbook_title: Migrate site
+          target_doctype: Site
+          target_name: demo.smartchoice-iq.com
+          params: {}
+          status: Queued
+          progress: 0
+          steps_done: 0
+          steps_total: 0
+          triggered_by: ameen@smartchoice-iq.com
+          bulk_operation: null
+          retry_of: null
+          created_at: "2026-10-07T09:32:00Z"
+          started_at: null
+          ended_at: null
+          error: null
+    JobPage:
+      value:
+        items:
+          - name: JOB-00042
+            playbook: site.migrate
+            playbook_title: Migrate site
+            target_doctype: Site
+            target_name: demo.smartchoice-iq.com
+            params: {}
+            status: Running
+            progress: 40
+            steps_done: 2
+            steps_total: 5
+            triggered_by: ameen@smartchoice-iq.com
+            bulk_operation: null
+            retry_of: null
+            created_at: "2026-10-07T09:30:00Z"
+            started_at: "2026-10-07T09:30:04Z"
+            ended_at: null
+            error: null
+          - name: JOB-00041
+            playbook: site.backup
+            playbook_title: Backup site
+            target_doctype: Site
+            target_name: erp.client-a.iq
+            params: { with_files: true }
+            status: Failed
+            progress: 60
+            steps_done: 3
+            steps_total: 5
+            triggered_by: scheduler
+            bulk_operation: null
+            retry_of: null
+            created_at: "2026-10-07T02:00:00Z"
+            started_at: "2026-10-07T02:00:02Z"
+            ended_at: "2026-10-07T02:04:30Z"
+            error: "Upload to Spaces failed: 503 Service Unavailable"
+        next_cursor: "eyJjIjoiMjAyNi0xMC0wN1QwMjowMDowMFoiLCJuIjoiSk9CLTAwMDQxIn0"
+    JobDetail:
+      value:
+        name: JOB-00042
+        playbook: site.migrate
+        playbook_title: Migrate site
+        target_doctype: Site
+        target_name: demo.smartchoice-iq.com
+        params: {}
+        status: Running
+        progress: 40
+        steps_done: 2
+        steps_total: 5
+        triggered_by: ameen@smartchoice-iq.com
+        bulk_operation: null
+        retry_of: null
+        created_at: "2026-10-07T09:30:00Z"
+        started_at: "2026-10-07T09:30:04Z"
+        ended_at: null
+        error: null
+        steps:
+          - { idx: 0, title: Acquire server lock, status: Success, output: "lock infra:lock:server:SRV-0001 acquired", started_at: "2026-10-07T09:30:04Z", ended_at: "2026-10-07T09:30:04Z" }
+          - { idx: 1, title: Backup database and files, status: Success, output: "Backup saved: 20261007_093010-demo_smartchoice_iq_com-database.sql.gz (96.3 MB)\nUploaded to spaces://scq-backups/...", started_at: "2026-10-07T09:30:05Z", ended_at: "2026-10-07T09:31:20Z" }
+          - { idx: 2, title: Enable maintenance mode, status: Running, output: "", started_at: "2026-10-07T09:31:21Z", ended_at: null }
+          - { idx: 3, title: bench migrate, status: Queued, output: "", started_at: null, ended_at: null }
+          - { idx: 4, title: Disable maintenance mode, status: Queued, output: "", started_at: null, ended_at: null }
+    BulkEnvelope:
+      value:
+        bulk:
+          name: BULK-0007
+          playbook: site.migrate
+          playbook_title: Migrate site
+          status: Queued
+          phase: backup
+          failure_policy: halt
+          batch_size: 2
+          canary_target: { target_doctype: Site, target_name: demo.smartchoice-iq.com }
+          total: 3
+          done: 0
+          failed: 0
+          current_batch: 0
+          batches_total: 1
+          triggered_by: ameen@smartchoice-iq.com
+          created_at: "2026-10-07T09:40:00Z"
+          started_at: null
+          ended_at: null
+    BulkOperationDetail:
+      value:
+        name: BULK-0007
+        playbook: site.migrate
+        playbook_title: Migrate site
+        status: Running
+        phase: batches
+        failure_policy: halt
+        batch_size: 2
+        canary_target: { target_doctype: Site, target_name: demo.smartchoice-iq.com }
+        total: 3
+        done: 1
+        failed: 0
+        current_batch: 1
+        batches_total: 1
+        triggered_by: ameen@smartchoice-iq.com
+        created_at: "2026-10-07T09:40:00Z"
+        started_at: "2026-10-07T09:40:03Z"
+        ended_at: null
+        targets:
+          - { target_doctype: Site, target_name: demo.smartchoice-iq.com, status: Success, job: JOB-00044, batch: 0 }
+          - { target_doctype: Site, target_name: erp.client-a.iq, status: Running, job: JOB-00045, batch: 1 }
+          - { target_doctype: Site, target_name: erp.client-b.iq, status: Running, job: JOB-00046, batch: 1 }
+    AlertPage:
+      value:
+        items:
+          - name: ALERT-00018
+            rule: RULE-0001
+            rule_title: Server heartbeat missing
+            severity: critical
+            status: firing
+            target: { target_doctype: Server, target_name: SRV-0002 }
+            metric: null
+            value: null
+            message: "No heartbeat from SRV-0002 for 3 minutes"
+            fired_at: "2026-10-07T09:20:00Z"
+            acknowledged_by: null
+            acknowledged_at: null
+            resolved_at: null
+          - name: ALERT-00017
+            rule: RULE-0003
+            rule_title: Disk above 85%
+            severity: warning
+            status: acknowledged
+            target: { target_doctype: Server, target_name: SRV-0002 }
+            metric: disk
+            value: 88.4
+            message: "Disk usage 88.4% on SRV-0002 for 10 minutes"
+            fired_at: "2026-10-07T09:12:00Z"
+            acknowledged_by: ameen@smartchoice-iq.com
+            acknowledged_at: "2026-10-07T09:15:00Z"
+            resolved_at: null
+        next_cursor: null
+    AlertRule:
+      value:
+        name: RULE-0003
+        title: Disk above 85%
+        target_doctype: Server
+        metric: disk
+        operator: gt
+        threshold: 85
+        for_minutes: 10
+        severity: warning
+        channels: [telegram, email]
+        enabled: true
+        modified_at: "2026-09-01T10:00:00Z"
+    AlertRulePage:
+      value:
+        items:
+          - name: RULE-0002
+            title: CPU above 90%
+            target_doctype: Server
+            metric: cpu
+            operator: gt
+            threshold: 90
+            for_minutes: 5
+            severity: critical
+            channels: [telegram]
+            enabled: true
+            modified_at: "2026-09-01T10:00:00Z"
+          - name: RULE-0003
+            title: Disk above 85%
+            target_doctype: Server
+            metric: disk
+            operator: gt
+            threshold: 85
+            for_minutes: 10
+            severity: warning
+            channels: [telegram, email]
+            enabled: true
+            modified_at: "2026-09-01T10:00:00Z"
+        next_cursor: null
+    AuditPage:
+      value:
+        items:
+          - name: AUD-000912
+            ts: "2026-10-07T09:30:00Z"
+            user: ameen@smartchoice-iq.com
+            action: "jobs.run:site.migrate"
+            target: { target_doctype: Site, target_name: demo.smartchoice-iq.com }
+            params_hash: "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+            job: JOB-00042
+            result: success
+          - name: AUD-000911
+            ts: "2026-10-07T09:15:00Z"
+            user: ameen@smartchoice-iq.com
+            action: alerts.ack
+            target: { target_doctype: Server, target_name: SRV-0002 }
+            params_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            job: null
+            result: success
+        next_cursor: null
+    SearchResults:
+      value:
+        items:
+          - { type: site, id: demo.smartchoice-iq.com, title: demo.smartchoice-iq.com, subtitle: "BENCH-0001 on SRV-0001", status: Maintenance, provider: digitalocean }
+          - { type: server, id: SRV-0001, title: app-01.fra1, subtitle: "164.92.10.11 · fra1", status: Active, provider: digitalocean }
+          - { type: playbook, id: site.migrate, title: Migrate site, subtitle: "Site · medium risk", status: null, provider: null }
+          - { type: job, id: JOB-00042, title: "Migrate site · demo.smartchoice-iq.com", subtitle: "Running · 40%", status: Running, provider: null }

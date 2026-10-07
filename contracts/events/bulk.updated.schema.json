@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra-control.smartchoice-iq.com/events/bulk.updated.schema.json",
+  "title": "infra:bulk.updated",
+  "description": "Emitted after every target of a bulk operation reaches a terminal state and on every status change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bulk", "status", "done", "total", "current_batch"],
+  "properties": {
+    "bulk": { "type": "string" },
+    "status": { "type": "string", "enum": ["Queued", "Running", "Paused", "Halted", "Success", "Failed", "Cancelled"] },
+    "done": { "type": "integer", "minimum": 0 },
+    "total": { "type": "integer", "minimum": 0 },
+    "current_batch": { "type": "integer", "minimum": 0, "description": "0 = canary" }
+  },
+  "examples": [
+    { "bulk": "BULK-0007", "status": "Running", "done": 1, "total": 3, "current_batch": 1 },
+    { "bulk": "BULK-0007", "status": "Halted", "done": 1, "total": 3, "current_batch": 0 }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra-control.smartchoice-iq.com/events/inventory.changed.schema.json",
+  "title": "infra:inventory.changed",
+  "description": "Emitted when a Server, Bench or Site document is created, updated or deleted, including by inventory sync. Clients refetch the affected entity or the topology.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["doctype", "name", "change"],
+  "properties": {
+    "doctype": { "type": "string", "enum": ["Server", "Bench", "Site", "Provider Account"] },
+    "name": { "type": "string" },
+    "change": { "type": "string", "enum": ["created", "updated", "deleted"] }
+  },
+  "examples": [
+    { "doctype": "Site", "name": "demo.smartchoice-iq.com", "change": "updated" }
+  ]
+}

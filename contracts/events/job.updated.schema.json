@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra-control.smartchoice-iq.com/events/job.updated.schema.json",
+  "title": "infra:job.updated",
+  "description": "Emitted whenever an Infra Job changes status or progress. Terminal statuses (Success, Failed, Cancelled) are emitted exactly once.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["job", "status", "progress"],
+  "properties": {
+    "job": { "type": "string", "description": "Infra Job name" },
+    "status": { "type": "string", "enum": ["Queued", "Running", "Success", "Failed", "Cancelled"] },
+    "progress": { "type": "integer", "minimum": 0, "maximum": 100 }
+  },
+  "examples": [
+    { "job": "JOB-00042", "status": "Running", "progress": 40 },
+    { "job": "JOB-00042", "status": "Success", "progress": 100 }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra-control.smartchoice-iq.com/events/job.log.schema.json",
+  "title": "infra:job.log",
+  "description": "One masked output chunk for a step. Chunks arrive in order per (job, idx); the client appends them. Max 4 KB per event.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["job", "idx", "chunk"],
+  "properties": {
+    "job": { "type": "string" },
+    "idx": { "type": "integer", "minimum": 0 },
+    "chunk": { "type": "string", "maxLength": 4096 }
+  },
+  "examples": [
+    { "job": "JOB-00042", "idx": 1, "chunk": "Backup saved: 20261007_093010-demo_smartchoice_iq_com-database.sql.gz (96.3 MB)\n" }
+  ]
+}

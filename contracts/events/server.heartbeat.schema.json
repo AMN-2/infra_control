@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra-control.smartchoice-iq.com/events/server.heartbeat.schema.json",
+  "title": "infra:server.heartbeat",
+  "description": "Emitted once per collector run (every minute) per server. cpu, ram and disk are percentages.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["server", "status", "cpu", "ram", "disk", "ts"],
+  "properties": {
+    "server": { "type": "string" },
+    "status": { "type": "string", "enum": ["Provisioning", "Active", "Degraded", "Down", "Archived"] },
+    "cpu": { "type": "number", "minimum": 0, "maximum": 100 },
+    "ram": { "type": "number", "minimum": 0, "maximum": 100 },
+    "disk": { "type": "number", "minimum": 0, "maximum": 100 },
+    "ts": { "type": "string", "format": "date-time" }
+  },
+  "examples": [
+    { "server": "SRV-0001", "status": "Active", "cpu": 23.5, "ram": 61.2, "disk": 54.0, "ts": "2026-10-07T09:30:40Z" }
+  ]
+}

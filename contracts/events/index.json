@@ -1,0 +1,13 @@
+{
+  "$comment": "Maps every realtime event name to its payload schema. Transport: Frappe Socket.IO, namespace /<site>, path /socket.io, no room join needed (docs/QUESTIONS.md Q3).",
+  "events": {
+    "infra:job.updated": "job.updated.schema.json",
+    "infra:job.step": "job.step.schema.json",
+    "infra:job.log": "job.log.schema.json",
+    "infra:bulk.updated": "bulk.updated.schema.json",
+    "infra:server.heartbeat": "server.heartbeat.schema.json",
+    "infra:alert.fired": "alert.fired.schema.json",
+    "infra:alert.resolved": "alert.resolved.schema.json",
+    "infra:inventory.changed": "inventory.changed.schema.json"
+  }
+}

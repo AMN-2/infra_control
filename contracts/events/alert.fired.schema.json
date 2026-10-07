@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra-control.smartchoice-iq.com/events/alert.fired.schema.json",
+  "title": "infra:alert.fired",
+  "description": "Emitted once when an alert starts firing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["alert", "rule", "target", "severity"],
+  "properties": {
+    "alert": { "type": "string" },
+    "rule": { "type": "string" },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_doctype", "target_name"],
+      "properties": {
+        "target_doctype": { "type": "string", "enum": ["Server", "Site", "Provider Account"] },
+        "target_name": { "type": "string" }
+      }
+    },
+    "severity": { "type": "string", "enum": ["info", "warning", "critical"] }
+  },
+  "examples": [
+    { "alert": "ALERT-00018", "rule": "RULE-0001", "target": { "target_doctype": "Server", "target_name": "SRV-0002" }, "severity": "critical" }
+  ]
+}

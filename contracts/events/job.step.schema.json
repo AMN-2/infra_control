@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra-control.smartchoice-iq.com/events/job.step.schema.json",
+  "title": "infra:job.step",
+  "description": "Emitted when a step of a job is created or changes status. Steps are ordered by idx.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["job", "idx", "title", "status"],
+  "properties": {
+    "job": { "type": "string" },
+    "idx": { "type": "integer", "minimum": 0 },
+    "title": { "type": "string" },
+    "status": { "type": "string", "enum": ["Queued", "Running", "Success", "Failed", "Cancelled", "Skipped"] }
+  },
+  "examples": [
+    { "job": "JOB-00042", "idx": 2, "title": "Enable maintenance mode", "status": "Running" }
+  ]
+}

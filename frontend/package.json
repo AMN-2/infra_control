@@ -1,0 +1,55 @@
+{
+	"name": "infra-control-ui",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"engines": {
+		"node": ">=20.19.0"
+	},
+	"scripts": {
+		"dev": "vite",
+		"build": "vue-tsc --build && vite build",
+		"preview": "vite preview",
+		"lint": "eslint . --max-warnings=0 && cd ../tests/frontend && eslint . --max-warnings=0",
+		"typecheck": "vue-tsc --build",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:e2e": "playwright test",
+		"gen:api": "node scripts/gen-api.mjs",
+		"check:api": "node scripts/gen-api.mjs --check",
+		"check:size": "node scripts/check-bundle-size.mjs",
+		"postinstall": "node scripts/link-tests.mjs",
+		"format": "prettier --write . ../tests/frontend",
+		"format:check": "prettier --check . ../tests/frontend"
+	},
+	"dependencies": {
+		"@fontsource-variable/jetbrains-mono": "^5.3.0",
+		"@fontsource-variable/space-grotesk": "^5.3.0",
+		"motion": "^14.0.0",
+		"openapi-fetch": "^0.17.0",
+		"pinia": "^4.0.3",
+		"vue": "^3.5.43",
+		"vue-router": "^5.3.1"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.63.0",
+		"@tailwindcss/vite": "^4.3.3",
+		"@types/node": "^24.0.0",
+		"@vitejs/plugin-vue": "^6.0.9",
+		"@vue/eslint-config-typescript": "^14.9.0",
+		"@vue/test-utils": "^2.5.1",
+		"@vue/tsconfig": "^0.9.1",
+		"eslint": "^10.12.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-vue": "^10.11.1",
+		"globals": "^17.13.0",
+		"jsdom": "^30.1.2",
+		"openapi-typescript": "^7.13.0",
+		"prettier": "^3.9.9",
+		"tailwindcss": "^4.3.3",
+		"typescript": "~5.9.3",
+		"vite": "^8.3.3",
+		"vitest": "^5.0.3",
+		"vue-tsc": "^3.3.12"
+	}
+}

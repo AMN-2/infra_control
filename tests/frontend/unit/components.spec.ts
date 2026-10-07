@@ -18,7 +18,9 @@ import {
 } from "@/design/components";
 import { toneFor } from "@/design/status";
 
-afterEach(() => clearToasts());
+afterEach(() => {
+	clearToasts();
+});
 
 describe("IcButton", () => {
 	it("blocks clicks while loading and keeps its label (no spinner)", () => {
@@ -90,17 +92,17 @@ describe("IcConfirmDialog", () => {
 		await nextTick();
 		const input = document.querySelector<HTMLInputElement>('[data-testid="confirm-input"]');
 		const submit = document.querySelector<HTMLButtonElement>('[data-testid="confirm-submit"]');
-		expect(input && submit).toBeTruthy();
-		expect(submit?.disabled).toBe(true);
-		input!.value = "SRV-000";
-		input!.dispatchEvent(new Event("input"));
+		if (!input || !submit) throw new Error("confirm dialog did not render its controls");
+		expect(submit.disabled).toBe(true);
+		input.value = "SRV-000";
+		input.dispatchEvent(new Event("input"));
 		await nextTick();
-		expect(submit?.disabled).toBe(true);
-		input!.value = "SRV-0001";
-		input!.dispatchEvent(new Event("input"));
+		expect(submit.disabled).toBe(true);
+		input.value = "SRV-0001";
+		input.dispatchEvent(new Event("input"));
 		await nextTick();
-		expect(submit?.disabled).toBe(false);
-		submit!.click();
+		expect(submit.disabled).toBe(false);
+		submit.click();
 		expect(w.emitted("confirm")?.[0]).toEqual(["SRV-0001"]);
 		w.unmount();
 	});
@@ -158,8 +160,10 @@ describe("toasts", () => {
 	it("pushes, caps at five and dismisses", () => {
 		for (let i = 0; i < 7; i++) pushToast({ title: `t${i}`, timeout: 0 });
 		expect(toasts.items).toHaveLength(5);
-		expect(toasts.items[0]?.title).toBe("t6");
-		dismissToast(toasts.items[0]!.id);
+		const newest = toasts.items[0];
+		if (!newest) throw new Error("toast list is empty");
+		expect(newest.title).toBe("t6");
+		dismissToast(newest.id);
 		expect(toasts.items[0]?.title).toBe("t5");
 	});
 });
@@ -169,7 +173,9 @@ describe("log buffer", () => {
 		const flushed: string[] = [];
 		const scheduled: (() => void)[] = [];
 		const buf = createLogBuffer(
-			(t) => flushed.push(t),
+			(t) => {
+				flushed.push(t);
+			},
 			50,
 			(fn) => {
 				scheduled.push(fn);
@@ -181,7 +187,9 @@ describe("log buffer", () => {
 		buf.push("c");
 		expect(scheduled).toHaveLength(1);
 		expect(flushed).toEqual([]);
-		scheduled[0]!();
+		const flush = scheduled[0];
+		if (!flush) throw new Error("no flush was scheduled");
+		flush();
 		expect(flushed).toEqual(["abc"]);
 		buf.push("d");
 		expect(scheduled).toHaveLength(2);

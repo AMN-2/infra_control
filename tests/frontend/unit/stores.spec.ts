@@ -99,7 +99,9 @@ describe("jobs store", () => {
 		GET.mockResolvedValueOnce({ data: { ...job("JOB-1", "Success"), steps: [] } });
 		injectEvent("infra:job.updated", { job: "JOB-1", status: "Success", progress: 100 });
 		expect(store.items[0]?.status).toBe("Success");
-		await vi.waitFor(() => expect(GET).toHaveBeenCalledTimes(3));
+		await vi.waitFor(() => {
+			expect(GET).toHaveBeenCalledTimes(3);
+		});
 	});
 
 	it("runPlaybook posts the contract body and prepends the job", async () => {
@@ -171,9 +173,9 @@ describe("inventory store", () => {
 			data: { nodes: [], edges: [], generated_at: "2026-10-07T09:30:00Z" },
 		});
 		injectEvent("infra:inventory.changed", { doctype: "Bench", name: "B", change: "updated" });
-		await vi.waitFor(() =>
-			expect(GET.mock.calls.some((c) => String(c[0]).endsWith("benches.list"))).toBe(true)
-		);
+		await vi.waitFor(() => {
+			expect(GET.mock.calls.some((c) => String(c[0]).endsWith("benches.list"))).toBe(true);
+		});
 	});
 });
 

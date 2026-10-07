@@ -7,8 +7,8 @@ export { expect } from "@playwright/test";
  * no such page, so every e2e test injects an admin session before the app boots.
  */
 /** For tests that create their own context: `await injectBoot(page)` before the first goto. */
-export function injectBoot(page: Page): Promise<void> {
-	return page.addInitScript(() => {
+export async function injectBoot(page: Page): Promise<void> {
+	await page.addInitScript(() => {
 		window.infra_boot = {
 			csrf_token: "e2e",
 			site_name: "e2e.localhost",
@@ -23,17 +23,7 @@ export function injectBoot(page: Page): Promise<void> {
 
 export const test = base.extend({
 	page: async ({ page }, use) => {
-		await page.addInitScript(() => {
-			window.infra_boot = {
-				csrf_token: "e2e",
-				site_name: "e2e.localhost",
-				session_user: "e2e@localhost",
-				roles: ["Infra Admin", "Infra Operator", "Infra Viewer"],
-				base_path: "/infra/",
-				api_base: "/api/method/infra_control.api.",
-				socketio_path: "/socket.io",
-			};
-		});
+		await injectBoot(page);
 		await use(page);
 	},
 });

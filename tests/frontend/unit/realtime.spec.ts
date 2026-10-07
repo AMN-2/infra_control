@@ -27,7 +27,9 @@ function fakeSocket(): SocketLike & { emit: (event: string, payload?: unknown) =
 	};
 }
 
-beforeEach(() => _resetForTests());
+beforeEach(() => {
+	_resetForTests();
+});
 
 describe("validateEvent", () => {
 	it("accepts contract payloads and rejects anything else", () => {

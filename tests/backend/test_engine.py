@@ -464,3 +464,32 @@ def test_step_timestamps_are_stored_naive_in_the_system_timezone(ff: FakeFrappe)
 	assert engine._db_datetime(None) is None
 	naive = datetime(2026, 10, 7, 18, 40, 57)
 	assert engine._db_datetime(naive) is naive
+
+
+def test_worker_commits_progress_while_the_job_runs(ff: FakeFrappe) -> None:
+	"""Live gate JOB-00012: Frappe commits a background job only when it returns, so a 12-minute
+	provision showed `Queued` with no steps until the end and cancel was never observed. The
+	engine checkpoints: lock, Running, op_ref, every poll, and the terminal state."""
+	job = engine.create_job("site.migrate", "Site", "demo.smartchoice-iq.com")
+	before = ff.commits
+	_run(ff, job)
+	polls = 4  # the dummy migrate reports 3 steps over successive polls, then terminal
+	assert ff.commits - before >= 3 + polls
+
+
+def test_cancel_set_by_the_api_is_seen_on_the_next_poll(
+	ff: FakeFrappe, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	job = engine.create_job("site.migrate", "Site", "demo.smartchoice-iq.com")
+	seen_commits: list[int] = []
+	real_reload = ff.get_doc("Infra Job", job.name).__class__.reload
+
+	def reload_after_commit(self: Any) -> Any:
+		seen_commits.append(ff.commits)
+		return real_reload(self)
+
+	monkeypatch.setattr(ff.get_doc("Infra Job", job.name).__class__, "reload", reload_after_commit)
+	_run(ff, job)
+	# Every reload (where cancel_requested is read) happens after at least one commit in that poll.
+	assert seen_commits and all(c > 0 for c in seen_commits)
+	assert seen_commits == sorted(seen_commits)

@@ -330,6 +330,17 @@ def retry_job(job_name: str, *, user: str | None = None) -> Any:
 # ---------------------------------------------------------------------------------------
 # run_job: worker entry point (plan 9.1 steps 2-5)
 # ---------------------------------------------------------------------------------------
+def _checkpoint() -> None:
+	"""Commit what the worker wrote so far.
+
+	Frappe commits a background job's writes only when the job returns. Without checkpoints a
+	long job shows `Queued` with no steps until it ends (live gate, JOB-00012), crash recovery
+	cannot see its heartbeat, and the poll loop never sees `cancel_requested` set by the API in
+	another transaction. Each commit also starts a fresh transaction, so the next read is current.
+	"""
+	frappe.db.commit()
+
+
 def run_job(job: str) -> None:
 	doc: Any = _get_job(job)
 	if doc.status in TERMINAL_JOB_STATUSES:
@@ -345,6 +356,7 @@ def run_job(job: str) -> None:
 		enqueue_job(job)
 		return
 	doc.db_set("lock_key", key)
+	_checkpoint()
 	try:
 		_execute(doc, target)
 	except Exception as exc:
@@ -362,6 +374,7 @@ def _wait_for_lock(client: Any, key: str, token: str, doc: Any) -> bool:
 		if time.monotonic() >= deadline:
 			return False
 		doc.db_set("worker_heartbeat", now_datetime())
+		_checkpoint()
 		sleep(LOCK_WAIT_STEP_SECONDS)
 
 
@@ -420,6 +433,7 @@ def _execute(doc: Any, target: Target) -> None:
 	doc.db_set(
 		{"status": JobStatus.RUNNING, "started_at": now_datetime(), "worker_heartbeat": now_datetime()}
 	)
+	_checkpoint()
 	realtime.emit(*realtime.job_updated(doc.name, JobStatus.RUNNING, 0))
 
 	method, kwargs = _build_call(playbook, target, params)
@@ -439,12 +453,14 @@ def _execute(doc: Any, target: Target) -> None:
 		_finish(doc, JobStatus.SUCCESS)
 		return
 	doc.db_set("op_ref", json.dumps(result.to_dict()))
+	_checkpoint()
 
 	delay = POLL_INITIAL_SECONDS
 	while True:
 		status = provider.get_status(result)
 		_sync_steps(doc, status, secrets)
 		doc.db_set("worker_heartbeat", now_datetime())
+		_checkpoint()
 		if status.state.terminal:
 			break
 		doc.reload()
@@ -571,6 +587,7 @@ def _finish(
 	if status is JobStatus.SUCCESS:
 		values["progress"] = 100
 	doc.db_set(values)
+	_checkpoint()
 	redis_client().delete(_stash_key(doc.name))
 	realtime.emit(
 		*realtime.job_updated(doc.name, status, doc.progress if status is not JobStatus.SUCCESS else 100)

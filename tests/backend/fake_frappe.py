@@ -129,7 +129,7 @@ class _Db:
 		return self.f.singles.get(doctype, {}).get(field)
 
 	def commit(self) -> None:
-		pass
+		self.f.commits += 1
 
 	def count(self, doctype: str, filters: dict[str, Any] | None = None) -> int:
 		return len(self.f._rows(doctype, filters))
@@ -154,6 +154,7 @@ class FakeFrappe:
 		self.rollbacks = 0
 		self.local = SimpleNamespace(response=_Response({"docs": []}))
 		self.clock = datetime(2026, 10, 7, 12, 0, 0, tzinfo=UTC).replace(tzinfo=None)
+		self.commits = 0
 
 	# --- time -------------------------------------------------------------------------
 	def now(self) -> datetime:

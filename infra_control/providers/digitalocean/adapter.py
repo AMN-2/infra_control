@@ -19,13 +19,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from importlib import resources
-from typing import Any
+from typing import Any, Protocol
 
 from infra_control.core.enums import PROVIDER_CAPABILITIES, ServerRole, ServerStatus
 from infra_control.core.enums import Provider as ProviderName
 from infra_control.core.errors import ProviderError, ValidationError
 from infra_control.providers.base import OpRef, OpState, OpStatus, OpStep, Provider, ProviderConfig
-from infra_control.providers.digitalocean import mapping, settings
+from infra_control.providers.digitalocean import mapping, settings, spaces
 from infra_control.providers.digitalocean.client import DigitalOceanClient
 from infra_control.providers.digitalocean.runner import PlaybookRunner
 from infra_control.providers.registry import register
@@ -54,6 +54,34 @@ SITE_PLAYBOOKS: dict[str, str] = {
 SERVICE_PLAYBOOK = "service_control.yml"
 ALLOWED_SERVICES: frozenset[str] = frozenset({"nginx", "supervisor", "mariadb", "redis"})
 ALLOWED_SERVICE_ACTIONS: frozenset[str] = frozenset({"restart", "reload"})
+
+
+class Records(Protocol):
+	"""What a successful operation leaves in the DocTypes (settings.py implements it with Frappe)."""
+
+	def record_server(self, account: str, droplet: dict[str, Any]) -> str: ...
+	def record_site(self, domain: str, bench: str) -> str: ...
+	def record_backup(self, site: str, kind: str, location: str, size_mb: float, job_ref: str) -> str: ...
+	def record_domain(self, site: str, domain: str) -> None: ...
+	def load_backup_set(self, backup: str) -> dict[str, str]: ...
+	def spaces_client(self) -> spaces.SpacesClient | None: ...
+
+
+@dataclass
+class _Pending:
+	"""Work to record once an Ansible operation succeeds (kept per adapter instance)."""
+
+	kind: str
+	site: str
+	extra: dict[str, Any]
+
+
+# Files a Frappe backup produces, by Backup.kind, and the name each gets in Spaces.
+BACKUP_FILES: dict[str, tuple[str, str]] = {
+	"database": ("db", "database.sql.gz"),
+	"public": ("files", "files.tar"),
+	"private": ("files", "private-files.tar"),
+}
 
 
 @dataclass
@@ -105,6 +133,7 @@ class DigitalOceanProvider(Provider):
 		server_loader: Callable[[str], dict[str, Any]] = settings.load_server,
 		site_loader: Callable[[str], dict[str, Any]] = settings.load_site,
 		bench_loader: Callable[[str], dict[str, Any]] = settings.load_bench,
+		records: Records | None = None,
 		clock: Callable[[], float] = time.time,
 	) -> None:
 		super().__init__(config)
@@ -115,7 +144,9 @@ class DigitalOceanProvider(Provider):
 		self._site_loader = site_loader
 		self._bench_loader = bench_loader
 		self._clock = clock
+		self._records: Records = records or _SettingsRecords()
 		self._provisions: dict[str, _Provision] = {}
+		self._pending: dict[str, _Pending] = {}
 
 	# --- helpers ---------------------------------------------------------------------------
 	def _settings(self) -> settings.ControllerSettings:
@@ -142,41 +173,139 @@ class DigitalOceanProvider(Provider):
 		)
 
 	# --- site level (Ansible) --------------------------------------------------------------
+	def _spaces(self) -> spaces.SpacesClient:
+		client = self._records.spaces_client()
+		if client is None:
+			raise ProviderError(
+				"Spaces is not configured (Infra Settings): backups must leave the server",
+				{"fields": ["spaces_bucket", "spaces_region", "spaces_key", "spaces_secret"]},
+			)
+		return client
+
+	def _backup_targets(self, site: str, with_files: bool) -> tuple[dict[str, str], dict[str, str]]:
+		"""Presigned PUT URLs for the server and the spaces:// locations to record, by file."""
+		client = self._spaces()
+		stamp = datetime.fromtimestamp(self._clock(), UTC).strftime("%Y%m%d_%H%M%S")
+		names = ["database", "public", "private"] if with_files else ["database"]
+		urls: dict[str, str] = {}
+		locations: dict[str, str] = {}
+		for name in names:
+			key = f"{site}/{stamp}-{BACKUP_FILES[name][1]}"
+			urls[name] = spaces.presign_put(client, key)
+			locations[name] = spaces.location(client.config.bucket, key)
+		return urls, locations
+
+	def _start_site(
+		self, method: str, site: str, extra: dict[str, Any], pending: _Pending | None = None
+	) -> OpRef:
+		ref = self._ansible_for_site(method, site, extra)
+		if pending is not None:
+			self._pending[ref.external_id] = pending
+		return ref
+
 	def create_site(self, site: str, bench: str, apps: list[str] | None = None, **kw: Any) -> OpRef:
 		b = self._bench_loader(bench)
 		if not b.get("server"):
 			raise ProviderError("Bench has no server on DigitalOcean", {"bench": bench})
 		server = self._server(str(b["server"]))
 		extra_vars = {"site": site, "bench_path": b.get("path"), "apps": list(apps or []), **kw}
-		return self.runner.start(server, SITE_PLAYBOOKS["create_site"], extra_vars)
+		ref = self.runner.start(server, SITE_PLAYBOOKS["create_site"], extra_vars)
+		self._pending[ref.external_id] = _Pending("site", site, {"bench": bench})
+		return ref
 
 	def backup_site(self, site: str, with_files: bool = True) -> OpRef:
-		spaces = self._settings().spaces
-		extra: dict[str, Any] = {"with_files": bool(with_files)}
-		if spaces:
-			extra.update(
-				{
-					"spaces_bucket": spaces.bucket,
-					"spaces_region": spaces.region,
-					"spaces_endpoint": spaces.endpoint,
-				}
-			)
-		return self._ansible_for_site("backup_site", site, extra)
+		urls, locations = self._backup_targets(site, with_files)
+		return self._start_site(
+			"backup_site",
+			site,
+			{"with_files": bool(with_files), "backup_urls": urls},
+			_Pending("backup", site, {"locations": locations}),
+		)
 
 	def restore_site(self, site: str, backup_ref: str) -> OpRef:
-		return self._ansible_for_site("restore_site", site, {"backup_ref": backup_ref})
+		client = self._spaces()
+		files = self._records.load_backup_set(backup_ref)
+		if "db" not in files:
+			raise ProviderError("The backup has no database file", {"backup": backup_ref})
+		urls: dict[str, str] = {}
+		for location in files.values():
+			_bucket, key = spaces.parse_location(location)
+			name = next((n for n, (_k, suffix) in BACKUP_FILES.items() if key.endswith(f"-{suffix}")), None)
+			if name:
+				urls[name] = spaces.presign_get(client, key)
+		return self._start_site("restore_site", site, {"restore_urls": urls})
 
 	def update_site(self, site: str, **kw: Any) -> OpRef:
-		return self._ansible_for_site("update_site", site, dict(kw))
+		"""`site.migrate`: the playbook backs up first and fails before migrating if that fails."""
+		urls, locations = self._backup_targets(site, with_files=False)
+		return self._start_site(
+			"update_site",
+			site,
+			{**kw, "backup_urls": urls},
+			_Pending("backup", site, {"locations": locations}),
+		)
 
 	def set_maintenance(self, site: str, on: bool) -> OpRef:
-		return self._ansible_for_site("set_maintenance", site, {"maintenance_on": bool(on)})
+		return self._start_site("set_maintenance", site, {"maintenance_on": bool(on)})
 
 	def add_domain(self, site: str, domain: str) -> OpRef:
-		return self._ansible_for_site("add_domain", site, {"domain": domain})
+		s = self._site_loader(site)
+		server = self._server(str(s["server"])) if s.get("server") else {}
+		dns = self._ensure_dns(domain, str(server.get("public_ip") or ""))
+		return self._start_site(
+			"add_domain",
+			site,
+			{"domain": domain, "dns_managed": dns},
+			_Pending("domain", site, {"domain": domain}),
+		)
 
 	def suspend_site(self, site: str, suspended: bool) -> OpRef:
-		return self._ansible_for_site("suspend_site", site, {"suspended": bool(suspended)})
+		return self._start_site("suspend_site", site, {"suspended": bool(suspended)})
+
+	def _ensure_dns(self, domain: str, ip: str) -> bool:
+		"""A record for `domain` → the server, when its zone is a DigitalOcean domain on this
+		account. Returns False (and changes nothing) when the zone lives elsewhere."""
+		if not ip:
+			return False
+		zones = sorted((str(z.get("name", "")) for z in self.client.list_domains()), key=len, reverse=True)
+		zone = next((z for z in zones if z and (domain == z or domain.endswith(f".{z}"))), None)
+		if zone is None:
+			return False
+		host = "@" if domain == zone else domain[: -(len(zone) + 1)]
+		records = self.client.list_domain_records(zone, record_type="A", name=domain)
+		if any(r.get("data") == ip for r in records):
+			return True
+		for r in records:  # a stale A record for this name points somewhere else
+			self.client.delete_domain_record(zone, r["id"])
+		self.client.create_domain_record(zone, {"type": "A", "name": host, "data": ip, "ttl": 300})
+		return True
+
+	def _record(self, op: OpRef, status: OpStatus) -> None:
+		"""Leave the operation's result in the DocTypes once, on success."""
+		pending = self._pending.get(op.external_id)
+		if pending is None or status.state is not OpState.SUCCESS:
+			if status.state.terminal:
+				self._pending.pop(op.external_id, None)
+			return
+		self._pending.pop(op.external_id)
+		if pending.kind == "site":
+			self._records.record_site(pending.site, str(pending.extra["bench"]))
+		elif pending.kind == "domain":
+			self._records.record_domain(pending.site, str(pending.extra["domain"]))
+		elif pending.kind == "backup":
+			client = self._spaces()
+			for name, location in dict(pending.extra["locations"]).items():
+				_bucket, key = spaces.parse_location(location)
+				size = spaces.object_size(client, key)
+				if size is None:
+					continue  # not uploaded (e.g. a site without private files)
+				self._records.record_backup(
+					pending.site,
+					BACKUP_FILES[name][0],
+					location,
+					round(size / (1024 * 1024), 2),
+					op.external_id,
+				)
 
 	# --- servers (API + Ansible) -----------------------------------------------------------
 	def create_server(self, **kw: Any) -> OpRef:
@@ -281,7 +410,9 @@ class DigitalOceanProvider(Provider):
 		if op.kind == KIND_PROVISION:
 			return self._provision_status(op)
 		if op.kind == KIND_ANSIBLE:
-			return self.runner.status(op)
+			status = self.runner.status(op)
+			self._record(op, status)
+			return status
 		raise ProviderError("Unknown DigitalOcean operation kind", {"kind": op.kind})
 
 	def _action_status(self, op: OpRef) -> OpStatus:
@@ -391,7 +522,10 @@ class DigitalOceanProvider(Provider):
 			steps.extend(inner.steps)
 		else:
 			steps.append(OpStep("Configure server", inner.state, started_at=p.firewall_at))
-		created = ("Server", p.droplet_id) if inner.state is OpState.SUCCESS else None
+		created = None
+		if inner.state is OpState.SUCCESS:
+			self._records.record_server(self.config.account, mapping.normalize_droplet(droplet))
+			created = ("Server", p.droplet_id)
 		return OpStatus(inner.state, tuple(steps), error=inner.error, created=created)
 
 	def _ensure_firewall(self, droplet_id: int) -> str:
@@ -415,3 +549,26 @@ class DigitalOceanProvider(Provider):
 		if droplet_id not in attached:
 			self.client.add_droplets_to_firewall(fw_id, [droplet_id])
 		return fw_id
+
+
+class _SettingsRecords:
+	"""Default `Records`: the Frappe-backed functions in settings.py."""
+
+	def record_server(self, account: str, droplet: dict[str, Any]) -> str:
+		return settings.record_server(account, droplet)
+
+	def record_site(self, domain: str, bench: str) -> str:
+		return settings.record_site(domain, bench)
+
+	def record_backup(self, site: str, kind: str, location: str, size_mb: float, job_ref: str) -> str:
+		return settings.record_backup(site, kind, location, size_mb, job_ref)
+
+	def record_domain(self, site: str, domain: str) -> None:
+		settings.record_domain(site, domain)
+
+	def load_backup_set(self, backup: str) -> dict[str, str]:
+		return settings.load_backup_set(backup)
+
+	def spaces_client(self) -> spaces.SpacesClient | None:
+		client: spaces.SpacesClient | None = settings.spaces_client()
+		return client

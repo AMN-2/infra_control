@@ -321,8 +321,56 @@ SERVER = {
 }
 
 
+class FakeS3Presign(_FakeS3):
+	def generate_presigned_url(self, method: str, Params: dict[str, str], ExpiresIn: int) -> str:
+		return f"https://signed/{method}/{Params['Key']}?X-Amz-Signature=sig&expires={ExpiresIn}"
+
+	def head_object(self, Bucket: str, Key: str) -> dict[str, Any]:
+		if Key not in self.objects:
+			raise ClientError({"Error": {"Code": "404"}}, "HeadObject")
+		return {"ContentLength": self.objects[Key]}
+
+
+class FakeRecords:
+	def __init__(self, with_spaces: bool = True) -> None:
+		self.calls: list[tuple[str, tuple[Any, ...]]] = []
+		self.s3 = FakeS3Presign()
+		self.client = (
+			SpacesClient(
+				SpacesConfig(bucket="scq-backups", region="fra1", key="AK", secret="SK"), client=self.s3
+			)
+			if with_spaces
+			else None
+		)
+		self.backup_sets: dict[str, dict[str, str]] = {}
+
+	def record_server(self, account: str, droplet: dict[str, Any]) -> str:
+		self.calls.append(("server", (account, droplet["provider_ref"])))
+		return "SRV-0009"
+
+	def record_site(self, domain: str, bench: str) -> str:
+		self.calls.append(("site", (domain, bench)))
+		return domain
+
+	def record_backup(self, site: str, kind: str, location: str, size_mb: float, job_ref: str) -> str:
+		self.calls.append(("backup", (site, kind, location, size_mb)))
+		return "BKP-1"
+
+	def record_domain(self, site: str, domain: str) -> None:
+		self.calls.append(("domain", (site, domain)))
+
+	def load_backup_set(self, backup: str) -> dict[str, str]:
+		return self.backup_sets[backup]
+
+	def spaces_client(self) -> SpacesClient | None:
+		return self.client
+
+
 def adapter(
-	runner: Any = None, controller_ip: str | None = "203.0.113.10", spaces: SpacesConfig | None = None
+	runner: Any = None,
+	controller_ip: str | None = "203.0.113.10",
+	spaces: SpacesConfig | None = None,
+	records: FakeRecords | None = None,
 ) -> DigitalOceanProvider:
 	return DigitalOceanProvider(
 		CONFIG,
@@ -343,6 +391,7 @@ def adapter(
 			"path": "/home/frappe/v15",
 			"server": "SRV-0001",
 		},
+		records=records or FakeRecords(),
 		clock=lambda: 1_000_000.0,
 	)
 
@@ -425,8 +474,8 @@ def test_create_server_end_to_end_with_firewall_and_configure() -> None:
 	responses.get(url("firewalls"), json={"firewalls": [], "links": {}})
 	responses.post(url("firewalls"), json={"firewall": {"id": "fw-1", "name": FIREWALL_NAME}})
 	responses.get(url("droplets/999"), json={"droplet": {**DROPLET, "id": 999}})
-	runner = _FakeRunner()
-	a = adapter(runner)
+	runner, records = _FakeRunner(), FakeRecords()
+	a = adapter(runner, records=records)
 	ref = a.call(
 		"create_server",
 		hostname="app-03.fra1",
@@ -458,6 +507,8 @@ def test_create_server_end_to_end_with_firewall_and_configure() -> None:
 	)
 	third = a.get_status(ref)
 	assert third.state is OpState.SUCCESS and third.created == ("Server", "999")
+	# A2.3: the Server document is recorded so the engine can link the job to it (ADR 0001).
+	assert records.calls == [("server", ("DO-STAGING", "999"))]
 	assert a.cancel(ref) is True
 
 
@@ -511,11 +562,9 @@ def test_site_and_service_methods_go_through_the_runner() -> None:
 		"service_control.yml",
 	]
 	backup_vars = runner.started[0][2]
-	assert (
-		backup_vars["with_files"] is False
-		and backup_vars["spaces_bucket"] == "b"
-		and "s" not in backup_vars.values()
-	)
+	# Presigned upload URLs only: the Spaces keys never reach the server.
+	assert backup_vars["with_files"] is False and list(backup_vars["backup_urls"]) == ["database"]
+	assert "SK" not in str(backup_vars) and "AK" not in str(backup_vars)
 	assert runner.started[3][2]["apps"] == ["erpnext"]
 	with pytest.raises(ValidationError):
 		a.call("control_service", server="SRV-0001", service="sshd", action="restart")

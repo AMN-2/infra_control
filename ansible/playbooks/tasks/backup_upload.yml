@@ -1,0 +1,50 @@
+---
+# Back up a site and upload the files to Spaces through presigned PUT URLs (`backup_urls`, keyed
+# database/public/private). The Spaces keys never reach the server, and the URLs expire within
+# hours. Any failure fails the play, which is what makes site.migrate refuse to migrate.
+- name: Fresh backup directory
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: infra-backup-
+  register: backup_dir
+
+- name: Back up the site
+  ansible.builtin.command:
+    argv: "{{ ['bench', '--site', site, 'backup', '--backup-path', backup_dir.path] + (['--with-files'] if 'public' in backup_urls else []) }}"
+    chdir: "{{ bench_path }}"
+
+- name: Find the backup files
+  ansible.builtin.find:
+    paths: "{{ backup_dir.path }}"
+    patterns: ["*-database.sql.gz", "*-files.tar", "*-private-files.tar"]
+  register: backup_found
+
+- name: Map the files to their upload slots
+  ansible.builtin.set_fact:
+    backup_files:
+      database: "{{ backup_found.files | map(attribute='path') | select('search', '-database\\.sql\\.gz$') | first | default('') }}"
+      public: "{{ backup_found.files | map(attribute='path') | select('search', '[0-9]-files\\.tar$') | reject('search', 'private-files') | first | default('') }}"
+      private: "{{ backup_found.files | map(attribute='path') | select('search', '-private-files\\.tar$') | first | default('') }}"
+
+- name: The database dump exists
+  ansible.builtin.assert:
+    that: backup_files.database | length > 0
+    fail_msg: "bench backup produced no database file"
+    quiet: true
+
+- name: Upload to Spaces
+  ansible.builtin.command:
+    argv: [curl, --fail, --silent, --show-error, --retry, "3", --max-time, "3600", -T, "{{ backup_files[item] }}", "{{ backup_urls[item] }}"]
+  loop: "{{ backup_urls | list }}"
+  when: backup_files[item] | length > 0
+  no_log: true
+  changed_when: true
+
+- name: Report the uploaded files
+  ansible.builtin.debug:
+    msg: "uploaded {{ backup_files | dict2items | selectattr('value') | map(attribute='key') | select('in', backup_urls) | join(', ') }}"
+
+- name: Remove the local copy
+  ansible.builtin.file:
+    path: "{{ backup_dir.path }}"
+    state: absent

@@ -18,3 +18,52 @@
     name: mariadb
     state: started
     enabled: true
+
+- name: Directory for the database admin credentials
+  ansible.builtin.file:
+    path: "{{ mariadb_admin_cnf | dirname }}"
+    state: directory
+    owner: "{{ mariadb_admin_owner }}"
+    group: "{{ mariadb_admin_owner }}"
+    mode: "0700"
+
+- name: Generate the database admin password once
+  ansible.builtin.shell: |
+    set -eu
+    umask 077
+    printf '[client]\nuser=%s\npassword=%s\n' '{{ mariadb_admin_user }}' "$(openssl rand -hex 24)" > '{{ mariadb_admin_cnf }}'
+  args:
+    creates: "{{ mariadb_admin_cnf }}"
+    executable: /bin/bash
+  no_log: true
+
+- name: Restrict the credentials file
+  ansible.builtin.file:
+    path: "{{ mariadb_admin_cnf }}"
+    owner: "{{ mariadb_admin_owner }}"
+    group: "{{ mariadb_admin_owner }}"
+    mode: "0600"
+
+- name: Read the database admin password
+  ansible.builtin.command: "awk -F= '/^password=/{print $2}' {{ mariadb_admin_cnf }}"
+  register: mariadb_admin_password
+  changed_when: false
+  no_log: true
+
+- name: Check whether the database admin exists
+  ansible.builtin.command: >-
+    mariadb -N -e "SELECT COUNT(*) FROM mysql.user WHERE user='{{ mariadb_admin_user }}' AND host='localhost'"
+  register: mariadb_admin_exists
+  changed_when: false
+
+- name: Create the database admin
+  ansible.builtin.command:
+    argv:
+      - mariadb
+      - -e
+      - >-
+        CREATE USER '{{ mariadb_admin_user }}'@'localhost' IDENTIFIED BY '{{ mariadb_admin_password.stdout }}';
+        GRANT ALL PRIVILEGES ON *.* TO '{{ mariadb_admin_user }}'@'localhost' WITH GRANT OPTION;
+        FLUSH PRIVILEGES;
+  when: mariadb_admin_exists.stdout | trim == '0'
+  no_log: true

@@ -1,0 +1,77 @@
+---
+# site.create (plan 9.2): new site on an existing bench with the given apps, then nginx.
+# admin_password is write-only: masked in the job, never logged here.
+- name: Create site
+  hosts: all
+  become: true
+  become_user: frappe
+  gather_facts: false
+  environment:
+    PATH: "/home/frappe/.local/bin:/usr/local/bin:/usr/bin:/bin"
+  vars:
+    creating_site: true
+    db_admin_cnf: /home/frappe/.config/infra-control/db-admin.cnf
+  tasks:
+    - name: Preflight
+      ansible.builtin.include_tasks: tasks/site_preflight.yml
+
+    - name: Read the database admin credentials
+      ansible.builtin.command: "awk -F= '/^(user|password)=/{print $2}' {{ db_admin_cnf }}"
+      register: db_admin
+      changed_when: false
+      no_log: true
+
+    - name: Create the site
+      ansible.builtin.command:
+        argv:
+          - bench
+          - new-site
+          - "{{ site }}"
+          - --admin-password
+          - "{{ admin_password }}"
+          - --db-root-username
+          - "{{ db_admin.stdout_lines[0] }}"
+          - --db-root-password
+          - "{{ db_admin.stdout_lines[1] }}"
+        chdir: "{{ bench_path }}"
+        creates: "{{ bench_path }}/sites/{{ site }}/site_config.json"
+      no_log: true
+
+    - name: Install apps
+      ansible.builtin.command:
+        argv: [bench, --site, "{{ site }}", install-app, "{{ item }}"]
+        chdir: "{{ bench_path }}"
+      loop: "{{ apps | default([]) }}"
+      register: install_result
+      changed_when: "'already installed' not in (install_result.stdout | default('') + install_result.stderr | default(''))"
+      failed_when: install_result.rc != 0 and 'already installed' not in (install_result.stdout | default('') + install_result.stderr | default(''))
+
+    - name: Enable the scheduler
+      ansible.builtin.command:
+        argv: [bench, --site, "{{ site }}", enable-scheduler]
+        chdir: "{{ bench_path }}"
+      changed_when: true
+
+    - name: Regenerate the nginx config
+      ansible.builtin.command:
+        argv: [bench, setup, nginx, --yes]
+        chdir: "{{ bench_path }}"
+      changed_when: true
+
+    - name: Link the bench nginx config
+      become_user: root
+      ansible.builtin.file:
+        src: "{{ bench_path }}/config/nginx.conf"
+        dest: "/etc/nginx/conf.d/{{ bench_path | basename }}.conf"
+        state: link
+
+    - name: Validate nginx
+      become_user: root
+      ansible.builtin.command: nginx -t
+      changed_when: false
+
+    - name: Reload nginx
+      become_user: root
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded

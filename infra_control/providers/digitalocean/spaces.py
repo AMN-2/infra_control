@@ -110,3 +110,40 @@ class SpacesClient:
 		except BotoCoreError as exc:
 			raise ProviderError("Spaces head failed", {"key": key, "error": str(exc)}) from exc
 		return True
+
+
+PRESIGN_SECONDS = 6 * 3600
+"""Lifetime of the upload/download URLs handed to a server: long enough for a large backup,
+short enough that a leaked URL is useless the next day. The keys never leave the controller."""
+
+
+def _presign(client: SpacesClient, method: str, key: str, expires: int) -> str:
+	try:
+		url: Any = client._s3.generate_presigned_url(
+			method, Params={"Bucket": client.config.bucket, "Key": key}, ExpiresIn=expires
+		)
+	except (BotoCoreError, ClientError) as exc:
+		raise ProviderError("Spaces presign failed", {"key": key, "error": str(exc)}) from exc
+	return str(url)
+
+
+def presign_put(client: SpacesClient, key: str, expires: int = PRESIGN_SECONDS) -> str:
+	return _presign(client, "put_object", key, expires)
+
+
+def presign_get(client: SpacesClient, key: str, expires: int = PRESIGN_SECONDS) -> str:
+	return _presign(client, "get_object", key, expires)
+
+
+def object_size(client: SpacesClient, key: str) -> int | None:
+	"""Size in bytes, or None when the object does not exist."""
+	try:
+		head: Any = client._s3.head_object(Bucket=client.config.bucket, Key=key)
+	except ClientError as exc:
+		code = str(exc.response.get("Error", {}).get("Code", ""))
+		if code in ("404", "NoSuchKey", "NotFound"):
+			return None
+		raise ProviderError("Spaces head failed", {"key": key, "error": str(exc)}) from exc
+	except BotoCoreError as exc:
+		raise ProviderError("Spaces head failed", {"key": key, "error": str(exc)}) from exc
+	return int(head.get("ContentLength", 0))

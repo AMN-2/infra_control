@@ -77,16 +77,41 @@ returns `False` and the engine reports the job when the action ends.
 cumulative samples; RAM and disk are `1 − available / total`. `queue_backlog` needs the host and
 is added by the collector in A3.1.
 
-## 7. Gaps until later tasks
+## 7. Site operations (A2.3)
+
+| Method | Playbook | What the adapter adds | Recorded on success |
+|---|---|---|---|
+| `create_site` | `site_create.yml` | apps, bench path; `admin_password` (masked by the engine, `no_log` in the play) | `Site` (name = domain) |
+| `backup_site` | `site_backup.yml` | presigned **PUT** URLs per file (`database`, `public`, `private`) | one `Backup` per uploaded file, `Site.last_backup` |
+| `update_site` (`site.migrate`) | `site_migrate.yml` | presigned PUT URL for the database | the pre-migrate `Backup` |
+| `restore_site` | `site_restore.yml` | presigned **GET** URLs for the backup's files (found by the key prefix) | — |
+| `set_maintenance` | `site_maintenance.yml` | `maintenance_on` | — |
+| `add_domain` | `site_add_domain.yml` | an `A` record through the DO API when the zone is on the account (`dns_managed`) | the domain in `Site.custom_domains` |
+| `suspend_site` | `site_suspend.yml` | `suspended` (maintenance + scheduler paused, the same meaning as Q7 on Frappe Cloud) | — |
+
+- **Spaces keys never leave the controller.** The server gets presigned URLs that expire after
+  6 hours, and every task that touches one is `no_log` (a unit test enforces it). Without Spaces
+  configured, backups and migrations refuse to run: backups must leave the server.
+- **`site.migrate` backs up first** (plan 13.7). The backup tasks have no `ignore_errors`; a failed
+  dump or upload fails the job before maintenance mode is touched. A failed `bench migrate`
+  still switches maintenance off (`always`), then fails the job.
+- `provision` success records the `Server` (found again by `provider_ref`), so the engine links the
+  job to it (ADR 0001).
+- Recording happens once per operation in the adapter instance. If the worker restarts mid-run,
+  the job still finishes correctly but the document is not recorded; `inventory.sync` (A2.5)
+  reconciles it.
+- TLS: `site.add_domain` asks certbot only when the name already resolves to the server, so a
+  pending DNS change never fails the job; the output says to run it again.
+
+## 8. Gaps until later tasks
 
 | Gap | Closes in |
 |---|---|
-| SSH-backed calls (site playbooks, `service.control`, `custom_playbook`, the configure stage of provisioning) raise `ProviderError` from `UnavailableRunner`, never a silent no-op | A2.2 (ansible-runner, roles, Molecule) |
-| Site playbooks themselves (`site_*.yml`) | A2.3 |
 | Benches and sites in `sync_inventory()` (needs host discovery) | A2.5 |
 | Live verification against a staging DigitalOcean token | Phase 2 exit gate; needs a `Provider Account` with `is_staging = 1` and a real token |
+| Site playbooks exercised end to end (they need a real bench) | Phase 2 exit gate |
 
-## 8. Setup on the controller
+## 9. Setup on the controller
 
 1. In the DigitalOcean account used for staging, create a token with custom scopes:
    `droplet:create/read/update/delete`, `actions:read`, `firewall:create/read/update`,

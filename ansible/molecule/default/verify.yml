@@ -48,3 +48,16 @@
     - name: yarn is installed
       ansible.builtin.command: yarn --version
       changed_when: false
+
+    - name: The database admin logs in with its option file, and only frappe can read it
+      become_user: frappe
+      ansible.builtin.command: mariadb --defaults-extra-file=/home/frappe/.config/infra-control/db-admin.cnf -N -e "SELECT CURRENT_USER()"
+      register: verify_admin
+      changed_when: false
+      failed_when: "'infra_admin@localhost' not in verify_admin.stdout"
+
+    - name: Credentials file mode
+      ansible.builtin.stat:
+        path: /home/frappe/.config/infra-control/db-admin.cnf
+      register: verify_admin_cnf
+      failed_when: verify_admin_cnf.stat.mode != '0600' or verify_admin_cnf.stat.pw_name != 'frappe'

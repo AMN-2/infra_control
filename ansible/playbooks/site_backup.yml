@@ -1,0 +1,15 @@
+---
+# site.backup (plan 9.2): bench backup on the server, upload to Spaces, local copy removed.
+- name: Back up site
+  hosts: all
+  become: true
+  become_user: frappe
+  gather_facts: false
+  environment:
+    PATH: "/home/frappe/.local/bin:/usr/local/bin:/usr/bin:/bin"
+  tasks:
+    - name: Preflight
+      ansible.builtin.include_tasks: tasks/site_preflight.yml
+
+    - name: Back up and upload
+      ansible.builtin.include_tasks: tasks/backup_upload.yml

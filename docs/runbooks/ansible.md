@@ -10,7 +10,9 @@ Plan 9.1 step 3 holds: one Ansible task is one `Infra Job Step`.
 ```
 ansible/
 ├── ansible.cfg
-├── playbooks/          server_provision.yml, service_control.yml, server_apt_security.yml
+├── playbooks/          server_provision.yml, service_control.yml, server_apt_security.yml,
+│                       site_{create,backup,restore,migrate,maintenance,add_domain,suspend}.yml,
+│                       tasks/ (site_preflight, backup_upload)
 ├── roles/              base, mariadb, redis, nginx, bench (built-in modules only)
 └── molecule/default/   converge, idempotence, verify in Ubuntu 24.04 (systemd container)
 ```
@@ -18,7 +20,7 @@ ansible/
 | Role | Does |
 |---|---|
 | `base` | apt network timeouts (30 s) and 5 retries first, so a stalled mirror cannot hang a provision; packages, UTC timezone, `frappe` sudo user, sysctl file, 2 GB swap (not in containers), unattended security upgrades |
-| `mariadb` | MariaDB with utf8mb4 and InnoDB settings, bound to 127.0.0.1, root over the unix socket |
+| `mariadb` | MariaDB with utf8mb4 and InnoDB settings, bound to 127.0.0.1, root over the unix socket; a `infra_admin` database user whose password is generated on the server once and kept in `~frappe/.config/infra-control/db-admin.cnf` (0600) for `bench new-site` and `bench restore` |
 | `redis` | Redis bound to localhost, 256 MB cap |
 | `nginx` | nginx and certbot, default site removed, global limits, `nginx -t` before every reload |
 | `bench` | nodejs, npm, yarn, supervisor, wkhtmltopdf, `bench` CLI via pipx for `frappe`; `bench init` only when `bench_init: true` |

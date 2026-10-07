@@ -1,0 +1,25 @@
+---
+# site.suspend (plan 9.2): suspended = maintenance on and scheduler paused; resuming reverses
+# both. Same meaning as the Frappe Cloud mapping in docs/QUESTIONS.md Q7 (deactivate/activate).
+- name: Suspend or resume site
+  hosts: all
+  become: true
+  become_user: frappe
+  gather_facts: false
+  environment:
+    PATH: "/home/frappe/.local/bin:/usr/local/bin:/usr/bin:/bin"
+  tasks:
+    - name: Preflight
+      ansible.builtin.include_tasks: tasks/site_preflight.yml
+
+    - name: Maintenance mode
+      ansible.builtin.command:
+        argv: [bench, --site, "{{ site }}", set-maintenance-mode, "{{ 'on' if suspended | bool else 'off' }}"]
+        chdir: "{{ bench_path }}"
+      changed_when: true
+
+    - name: Scheduler
+      ansible.builtin.command:
+        argv: [bench, --site, "{{ site }}", "{{ 'disable-scheduler' if suspended | bool else 'enable-scheduler' }}"]
+        chdir: "{{ bench_path }}"
+      changed_when: true

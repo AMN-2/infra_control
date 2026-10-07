@@ -104,3 +104,119 @@ def default_runner() -> PlaybookRunner:
 	return AnsibleRunner(
 		root=ansible_root(), playbooks_dir=default_playbooks_dir(), ssh_key_path=ssh_key_path()
 	)
+
+
+# --- recorders: what a successful operation leaves in the DocTypes ----------------------------
+# Called once by the adapter when an operation reaches Success. Each is idempotent, so a repeated
+# call (a poll after a worker restart) never duplicates a document.
+
+
+def record_server(account: str, droplet: dict[str, Any]) -> str:
+	"""Create or update the Server for a provisioned droplet (`droplet` is mapping.normalize_droplet)."""
+	ref = str(droplet["provider_ref"])
+	name = frappe.db.get_value("Server", {"provider_ref": ref}, "name")
+	values = {
+		"hostname": droplet["hostname"],
+		"status": str(droplet["status"]),
+		"provider_account": account,
+		"provider": "digitalocean",
+		"provider_ref": ref,
+		"public_ip": droplet.get("public_ip"),
+		"private_ip": droplet.get("private_ip"),
+		"role": str(droplet.get("role") or "all"),
+		"region": droplet.get("region") or "",
+		"size": droplet.get("size") or "",
+		"ssh_user": "frappe",
+		"ssh_port": 22,
+	}
+	if name:
+		doc: Any = frappe.get_doc("Server", name)
+		doc.update(values)
+		doc.save(ignore_permissions=True)
+		return str(name)
+	doc = frappe.get_doc(
+		{"doctype": "Server", **values, "tags": [{"tag": t} for t in droplet.get("tags") or []]}
+	)
+	doc.insert(ignore_permissions=True)
+	return str(doc.name)
+
+
+def record_site(domain: str, bench: str) -> str:
+	"""Create the Site a successful `site.create` produced (name = domain)."""
+	if frappe.db.exists("Site", domain):
+		frappe.db.set_value("Site", domain, "status", "Active")
+		return domain
+	b: Any = frappe.get_doc("Bench", bench)
+	doc: Any = frappe.get_doc(
+		{
+			"doctype": "Site",
+			"domain": domain,
+			"status": "Active",
+			"bench": bench,
+			"server": b.server,
+			"provider_account": b.provider_account,
+			"provider": "digitalocean",
+			"provider_ref": f"{b.server}:{b.path}:{domain}",
+		}
+	)
+	doc.insert(ignore_permissions=True)
+	return str(doc.name)
+
+
+def record_backup(site: str, kind: str, location: str, size_mb: float, job_ref: str) -> str:
+	"""One Backup per stored file; `location` is spaces://bucket/key, never a signed URL."""
+	existing = frappe.db.get_value("Backup", {"location": location}, "name")
+	if existing:
+		return str(existing)
+	now = frappe.utils.now_datetime()
+	doc: Any = frappe.get_doc(
+		{
+			"doctype": "Backup",
+			"site": site,
+			"kind": kind,
+			"location": location,
+			"size_mb": size_mb,
+			"created_at": now,
+		}
+	)
+	doc.insert(ignore_permissions=True)
+	if kind == "db":
+		frappe.db.set_value("Site", site, "last_backup", now)
+	return str(doc.name)
+
+
+def load_backup_set(backup: str) -> dict[str, str]:
+	"""A Backup name (or a spaces:// location) → the locations of that backup's files by kind.
+
+	Files of one backup share the key prefix `<site>/<stamp>-`, so siblings are found by it."""
+	if backup.startswith("spaces://"):
+		row: Any = frappe.db.get_value("Backup", {"location": backup}, ["site", "location"], as_dict=True)
+	else:
+		row = frappe.db.get_value("Backup", backup, ["site", "location"], as_dict=True)
+	if not row:
+		from infra_control.core.errors import NotFound
+
+		raise NotFound("Backup", backup)
+	prefix = str(row.location).rsplit("-", 1)[0]
+	siblings = frappe.get_all(
+		"Backup",
+		filters={"site": row.site, "location": ["like", f"{prefix}-%"]},
+		fields=["kind", "location"],
+	)
+	return {str(s["kind"]): str(s["location"]) for s in siblings}
+
+
+def record_domain(site: str, domain: str) -> None:
+	doc: Any = frappe.get_doc("Site", site)
+	if any(d.domain == domain for d in doc.custom_domains):
+		return
+	doc.append("custom_domains", {"domain": domain})
+	doc.save(ignore_permissions=True)
+
+
+def spaces_client() -> Any:
+	"""A SpacesClient for the configured bucket, or None when Spaces is not configured."""
+	from infra_control.providers.digitalocean.spaces import SpacesClient
+
+	cfg = load_controller_settings().spaces
+	return SpacesClient(cfg) if cfg else None

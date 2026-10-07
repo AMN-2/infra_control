@@ -1,0 +1,55 @@
+---
+# site.restore (plan 9.2, high risk, typed confirmation): download the backup through presigned
+# GET URLs (`restore_urls`, keyed database/public/private) and restore it over the site.
+- name: Restore site
+  hosts: all
+  become: true
+  become_user: frappe
+  gather_facts: false
+  environment:
+    PATH: "/home/frappe/.local/bin:/usr/local/bin:/usr/bin:/bin"
+  vars:
+    db_admin_cnf: /home/frappe/.config/infra-control/db-admin.cnf
+    # bench restore picks decompression from the extension, so keep the real ones.
+    restore_names:
+      database: database.sql.gz
+      public: files.tar
+      private: private-files.tar
+  tasks:
+    - name: Preflight
+      ansible.builtin.include_tasks: tasks/site_preflight.yml
+
+    - name: Download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: infra-restore-
+      register: restore_dir
+
+    - name: Download the backup files
+      ansible.builtin.command:
+        argv: [curl, --fail, --silent, --show-error, --retry, "3", --max-time, "3600", -o, "{{ restore_dir.path }}/{{ restore_names[item] }}", "{{ restore_urls[item] }}"]
+      loop: "{{ restore_urls | list }}"
+      no_log: true
+      changed_when: true
+
+    - name: Read the database admin credentials
+      ansible.builtin.command: "awk -F= '/^(user|password)=/{print $2}' {{ db_admin_cnf }}"
+      register: db_admin
+      changed_when: false
+      no_log: true
+
+    - name: Restore
+      ansible.builtin.command:
+        argv: >-
+          {{ ['bench', '--site', site, 'restore', restore_dir.path ~ '/database.sql.gz',
+              '--db-root-username', db_admin.stdout_lines[0], '--db-root-password', db_admin.stdout_lines[1]]
+             + (['--with-public-files', restore_dir.path ~ '/files.tar'] if 'public' in restore_urls else [])
+             + (['--with-private-files', restore_dir.path ~ '/private-files.tar'] if 'private' in restore_urls else []) }}
+        chdir: "{{ bench_path }}"
+      no_log: true
+      changed_when: true
+
+    - name: Remove the downloaded files
+      ansible.builtin.file:
+        path: "{{ restore_dir.path }}"
+        state: absent

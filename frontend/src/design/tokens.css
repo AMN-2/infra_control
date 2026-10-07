@@ -1,0 +1,123 @@
+/*
+ * Infra Control design tokens (plan §10.1). The single source of every colour, size,
+ * duration and easing in the UI. Components reference these through Tailwind
+ * (see theme.css) or var(--ic-*); they never hard-code values.
+ *
+ * Colours are OKLCH so lightness steps are perceptually even. Dark only (light theme is v2+).
+ */
+:root {
+	color-scheme: dark;
+
+	/* ---- Surfaces: near-black, slight blue tint, canvas + three elevations ---- */
+	--ic-canvas: oklch(0.155 0.012 258);
+	--ic-surface-1: oklch(0.185 0.014 258); /* panels, cards */
+	--ic-surface-2: oklch(0.215 0.016 258); /* raised: hover rows, popovers, inputs */
+	--ic-surface-3: oklch(0.25 0.018 258); /* overlays: dialogs, palette, toasts */
+	--ic-scrim: oklch(0.1 0.01 258 / 0.6);
+
+	/* ---- Edges: 1px translucent ---- */
+	--ic-line: oklch(0.92 0.02 258 / 0.08);
+	--ic-line-strong: oklch(0.92 0.02 258 / 0.14);
+	--ic-line-focus: var(--ic-accent);
+
+	/* ---- Text ---- */
+	--ic-fg: oklch(0.95 0.006 258);
+	--ic-fg-muted: oklch(0.75 0.012 258);
+	--ic-fg-subtle: oklch(0.63 0.014 258);
+	--ic-fg-disabled: oklch(0.47 0.012 258);
+
+	/* ---- Accent: one colour for actions, hue-separated from running-blue ---- */
+	--ic-accent: oklch(0.56 0.19 288);
+	--ic-accent-hover: oklch(0.575 0.2 288);
+	--ic-accent-press: oklch(0.52 0.19 288);
+	--ic-accent-fg: oklch(0.99 0.005 288);
+	--ic-accent-soft: oklch(0.56 0.19 288 / 0.2);
+	--ic-accent-text: oklch(0.8 0.11 288); /* links and accent text on dark surfaces */
+
+	/* ---- Status: identical everywhere ---- */
+	--ic-healthy: oklch(0.77 0.15 155);
+	--ic-degraded: oklch(0.81 0.145 78);
+	--ic-down: oklch(0.68 0.19 25);
+	--ic-running: oklch(0.72 0.13 238);
+	--ic-neutral: oklch(0.66 0.012 258);
+
+	--ic-healthy-soft: oklch(0.77 0.15 155 / 0.14);
+	--ic-degraded-soft: oklch(0.81 0.145 78 / 0.14);
+	--ic-down-soft: oklch(0.68 0.19 25 / 0.15);
+	--ic-running-soft: oklch(0.72 0.13 238 / 0.15);
+	--ic-neutral-soft: oklch(0.66 0.012 258 / 0.14);
+
+	/* ---- Glow: only on the active/live element ---- */
+	--ic-glow-size: 18px;
+	--ic-glow-running: 0 0 var(--ic-glow-size) oklch(0.72 0.13 238 / 0.45);
+	--ic-glow-down: 0 0 var(--ic-glow-size) oklch(0.68 0.19 25 / 0.45);
+	--ic-glow-accent: 0 0 var(--ic-glow-size) oklch(0.6 0.19 288 / 0.45);
+
+	/* ---- Shadows (overlays only; elevation otherwise comes from surface lightness) ---- */
+	--ic-shadow-overlay:
+		0 1px 0 0 oklch(1 0 0 / 0.04) inset, 0 12px 32px -8px oklch(0.05 0.01 258 / 0.7);
+
+	/* ---- Type ---- */
+	--ic-font-display:
+		"Space Grotesk Variable", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+	--ic-font-body:
+		ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans Arabic",
+		sans-serif;
+	--ic-font-mono:
+		"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+	--ic-text-2xs: 0.6875rem; /* 11 — micro labels, uppercase */
+	--ic-text-xs: 0.75rem; /* 12 */
+	--ic-text-sm: 0.8125rem; /* 13 — default UI text */
+	--ic-text-md: 0.875rem; /* 14 */
+	--ic-text-lg: 1rem; /* 16 */
+	--ic-text-xl: 1.25rem; /* 20 */
+	--ic-text-2xl: 1.5rem; /* 24 */
+	--ic-text-3xl: 2rem; /* 32 */
+	--ic-text-4xl: 3rem; /* 48 — hero numerals */
+
+	--ic-leading-tight: 1.15;
+	--ic-leading-snug: 1.35;
+	--ic-leading-normal: 1.5;
+
+	--ic-tracking-tight: -0.02em;
+	--ic-tracking-wide: 0.06em;
+
+	/* ---- Space: 4px grid ---- */
+	--ic-space-unit: 0.25rem;
+
+	/* ---- Radius ---- */
+	--ic-radius-sm: 4px;
+	--ic-radius: 8px;
+	--ic-radius-full: 9999px;
+
+	/* ---- Motion (mirrored in motion.ts; a unit test keeps them in sync) ---- */
+	--ic-dur-press: 120ms; /* hover, press */
+	--ic-dur-base: 200ms; /* most transitions */
+	--ic-dur-emphasis: 240ms; /* dialogs, panels, shared elements */
+	--ic-dur-scene: 400ms; /* large scenes; the hard maximum */
+	--ic-ease: cubic-bezier(0.2, 0, 0, 1); /* the one enter/exit easing */
+	--ic-pulse-period: 2400ms; /* live pulse cycle; continuous, so outside the 400ms rule */
+
+	/* ---- Layers ---- */
+	--ic-z-sticky: 10;
+	--ic-z-popover: 30;
+	--ic-z-overlay: 40;
+	--ic-z-toast: 50;
+}
+
+/* Reduced motion (OS setting, or the showcase override) removes every non-essential duration. */
+@media (prefers-reduced-motion: reduce) {
+	:root:not([data-motion="full"]) {
+		--ic-dur-press: 0ms;
+		--ic-dur-base: 0ms;
+		--ic-dur-emphasis: 0ms;
+		--ic-dur-scene: 0ms;
+	}
+}
+:root[data-motion="reduce"] {
+	--ic-dur-press: 0ms;
+	--ic-dur-base: 0ms;
+	--ic-dur-emphasis: 0ms;
+	--ic-dur-scene: 0ms;
+}

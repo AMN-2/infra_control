@@ -1,0 +1,4 @@
+/* Design system entry: tokens, Tailwind theme mapping, base styles. */
+@import "./tokens.css";
+@import "./theme.css";
+@import "./base.css";

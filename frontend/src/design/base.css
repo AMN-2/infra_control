@@ -1,0 +1,219 @@
+/* Base element styles and motion primitives. Everything here reads tokens.css. */
+
+@utility duration-press {
+	transition-duration: var(--ic-dur-press);
+}
+@utility duration-base {
+	transition-duration: var(--ic-dur-base);
+}
+@utility duration-emphasis {
+	transition-duration: var(--ic-dur-emphasis);
+}
+@utility numerals {
+	font-family: var(--ic-font-display);
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum" 1;
+}
+@utility eyebrow {
+	font-size: var(--ic-text-2xs);
+	letter-spacing: var(--ic-tracking-wide);
+	text-transform: uppercase;
+	color: var(--ic-fg-subtle);
+	font-weight: 500;
+}
+
+@layer base {
+	html {
+		background: var(--ic-canvas);
+		color: var(--ic-fg);
+		font-family: var(--ic-font-body);
+		font-size: 100%;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		text-rendering: optimizeLegibility;
+	}
+	body {
+		font-size: var(--ic-text-sm);
+		line-height: var(--ic-leading-normal);
+		min-block-size: 100dvh;
+	}
+	h1,
+	h2,
+	h3,
+	h4 {
+		font-family: var(--ic-font-display);
+		line-height: var(--ic-leading-tight);
+		letter-spacing: var(--ic-tracking-tight);
+		font-weight: 600;
+	}
+	code,
+	kbd,
+	samp,
+	pre {
+		font-family: var(--ic-font-mono);
+		font-size: 0.95em;
+	}
+	::selection {
+		background: var(--ic-accent-soft);
+		color: var(--ic-fg);
+	}
+	:focus-visible {
+		outline: 2px solid var(--ic-line-focus);
+		outline-offset: 2px;
+		border-radius: var(--ic-radius-sm);
+	}
+}
+
+/* ---------------------------------------------------------------------------
+ * Live primitives (plan §10.3.8): continuous motion only on genuinely live things,
+ * paused when the tab is hidden, removed under reduced motion.
+ * ------------------------------------------------------------------------- */
+
+/* A ring that expands from a status dot. Put on the dot; colour comes from currentColor. */
+.ic-pulse {
+	position: relative;
+}
+.ic-pulse::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: currentColor;
+	opacity: 0;
+	animation: ic-pulse var(--ic-pulse-period) var(--ic-ease) infinite;
+	will-change: transform, opacity;
+	pointer-events: none;
+}
+@keyframes ic-pulse {
+	0% {
+		transform: scale(1);
+		opacity: 0.55;
+	}
+	70%,
+	100% {
+		transform: scale(3);
+		opacity: 0;
+	}
+}
+
+/* A soft halo that breathes behind the element running a job. Animates opacity only. */
+.ic-glow {
+	position: relative;
+	isolation: isolate;
+}
+.ic-glow::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: inherit;
+	box-shadow: var(--ic-glow, var(--ic-glow-running));
+	opacity: 0.55;
+	animation: ic-breathe var(--ic-pulse-period) ease-in-out infinite alternate;
+	will-change: opacity;
+	pointer-events: none;
+}
+@keyframes ic-breathe {
+	from {
+		opacity: 0.35;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+:root[data-visibility="hidden"] .ic-pulse::after,
+:root[data-visibility="hidden"] .ic-glow::before,
+:root[data-visibility="hidden"] .ic-live {
+	animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root:not([data-motion="full"]) .ic-pulse::after,
+	:root:not([data-motion="full"]) .ic-live {
+		animation: none;
+	}
+	:root:not([data-motion="full"]) .ic-glow::before {
+		animation: none;
+		opacity: 0.7;
+	}
+}
+:root[data-motion="reduce"] .ic-pulse::after,
+:root[data-motion="reduce"] .ic-live {
+	animation: none;
+}
+:root[data-motion="reduce"] .ic-glow::before {
+	animation: none;
+	opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------------------
+ * Vue <Transition> presets. Names match motion.ts `transitions`.
+ * ------------------------------------------------------------------------- */
+.ic-fade-enter-active,
+.ic-fade-leave-active,
+.ic-rise-enter-active,
+.ic-rise-leave-active,
+.ic-scale-enter-active,
+.ic-scale-leave-active {
+	transition-property: opacity, transform;
+	transition-duration: var(--ic-dur-base);
+	transition-timing-function: var(--ic-ease);
+}
+.ic-rise-move {
+	transition: transform var(--ic-dur-base) var(--ic-ease);
+}
+.ic-fade-enter-from,
+.ic-fade-leave-to {
+	opacity: 0;
+}
+.ic-rise-enter-from,
+.ic-rise-leave-to {
+	opacity: 0;
+	transform: translateY(calc(var(--ic-space-unit) * 2));
+}
+.ic-scale-enter-active,
+.ic-scale-leave-active {
+	transition-duration: var(--ic-dur-emphasis);
+}
+.ic-scale-enter-from,
+.ic-scale-leave-to {
+	opacity: 0;
+	transform: scale(0.96);
+}
+
+/* ---------------------------------------------------------------------------
+ * State layer: hover and press feedback without animating colour or layout.
+ * Hover fades a tinted layer in (opacity); press scales the element (transform).
+ * Set --ic-state-color to change the tint (defaults to currentColor).
+ * ------------------------------------------------------------------------- */
+.ic-state-layer {
+	position: relative;
+	isolation: isolate;
+	transition: transform var(--ic-dur-press) var(--ic-ease);
+}
+.ic-state-layer::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: inherit;
+	background: var(--ic-state-color, currentColor);
+	opacity: 0;
+	transition: opacity var(--ic-dur-press) var(--ic-ease);
+	pointer-events: none;
+}
+.ic-state-layer:hover::before {
+	opacity: var(--ic-state-hover-opacity, 0.08);
+}
+.ic-state-layer:active {
+	transform: scale(0.98);
+}
+.ic-state-layer:disabled,
+.ic-state-layer[aria-disabled="true"] {
+	transform: none;
+}
+.ic-state-layer:disabled::before,
+.ic-state-layer[aria-disabled="true"]::before {
+	opacity: 0;
+}

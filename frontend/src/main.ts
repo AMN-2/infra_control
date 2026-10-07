@@ -7,6 +7,7 @@ import { router } from "./router";
 import { installMotionEnvironment } from "./design/motion";
 import { authHooks } from "./api/client";
 import { connectRealtime } from "./realtime";
+import { realtimeOrigin } from "./api/boot";
 import { useSessionStore } from "./stores/session";
 import { useOverviewStore } from "./stores/overview";
 import { useInventoryStore } from "./stores/inventory";
@@ -23,7 +24,11 @@ if (session.load()) {
 	authHooks.onReauthenticate = () => {
 		session.reauthenticate();
 	};
-	connectRealtime({ site: session.site, path: session.boot?.socketio_path });
+	connectRealtime({
+		site: session.site,
+		path: session.boot?.socketio_path,
+		origin: realtimeOrigin(session.boot),
+	});
 	useOverviewStore().subscribe();
 	useInventoryStore().subscribe();
 	useJobsStore().subscribe();

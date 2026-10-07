@@ -7,6 +7,8 @@ export interface InfraBoot {
 	base_path: string;
 	api_base: string;
 	socketio_path: string;
+	/** Set only when Frappe's dev server (`bench serve`) renders the page; see realtimeOrigin(). */
+	socketio_port: number | null;
 }
 
 declare global {
@@ -28,6 +30,7 @@ export const DEV_BOOT: InfraBoot = {
 	base_path: "/infra/",
 	api_base: "/api/method/infra_control.api.",
 	socketio_path: "/socket.io",
+	socketio_port: null,
 };
 
 export function readBoot(): InfraBoot | null {
@@ -41,5 +44,19 @@ export function readBoot(): InfraBoot | null {
 		base_path: raw.base_path ?? "/infra/",
 		api_base: raw.api_base ?? "/api/method/infra_control.api.",
 		socketio_path: raw.socketio_path ?? "/socket.io",
+		socketio_port: typeof raw.socketio_port === "number" ? raw.socketio_port : null,
 	};
+}
+
+/**
+ * Where the Socket.IO client connects. Behind nginx (production) the page's own origin, which
+ * routes /socket.io. On Frappe's dev server the same host on `socketio_port`, as Frappe's desk
+ * client does for `window.dev_server`. `undefined` means "the page's origin".
+ */
+export function realtimeOrigin(
+	boot: Pick<InfraBoot, "socketio_port"> | null,
+	location: Pick<Location, "protocol" | "hostname"> = window.location
+): string | undefined {
+	if (!boot?.socketio_port) return undefined;
+	return `${location.protocol}//${location.hostname}:${boot.socketio_port}`;
 }

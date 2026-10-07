@@ -60,3 +60,17 @@ password, boolean, number/integer, enum, list of strings), validated before subm
 pattern, minLength, hostname, ranges) and again by the backend. High risk adds the typed
 confirmation (`confirm` = target name, enforced server-side too). Success: toast and navigation
 to the job viewer; failure: the API error (code and message) stays in the dialog.
+
+## Jobs and Job viewer (B2.3)
+
+Source: `features/jobs/JobsView.vue`, `features/jobs/JobDetailView.vue`, store `stores/jobs.ts`.
+
+| Element | Behaviour |
+|---|---|
+| Jobs list | Running and queued first, then failed, success, cancelled; status filter from the query; real progress per row; "Load older jobs" follows `next_cursor`. |
+| Header | Playbook title, job id, target (links to the server, site or filtered list), trigger, created time, status badge, `retry of` / `retried as` / `bulk` / `created` badges, live duration. |
+| Steps | `IcTimeline`: the running step is expanded and coloured as it executes, finished steps collapse and show their duration; `infra:job.step` adds or updates rows. |
+| Log | `IcTerminal` (xterm, lazy) seeded with each step's stored output under a `── title` rule, then streamed from `infra:job.log` through the store's `onLog`, buffered at 50 ms. |
+| Controls | Operators only. Cancel (typed confirmation of the job id, `cancel_requested` badge until the worker observes it); Retry on failed jobs (new job linked by `retry_of`, badge links to it). Viewers see no controls. |
+| Error | The masked failure reason as an alert under the progress bar. |
+| Parameters | Masked `params` as a definition list (`********` for write-only fields). |

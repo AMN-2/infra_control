@@ -13,6 +13,7 @@ Last updated: 2026-10-07
 | B1.2 app shell, routing, auth guard, command palette (+ `5213f05`: test files lint/type clean) | `agent-b/B1.2-app-shell` | [#16](https://github.com/AMN-2/infra_control/pull/16) | full local CI green, incl. Playwright |
 | B2.1 Overview + Topology screens (ADR 0002, Q-B8/Q-B9, docs/design/screens.md) | `agent-b/B2.1-overview-topology` | [#18](https://github.com/AMN-2/infra_control/pull/18) | full local CI green: 68 vitest, 15 Playwright, 132 KB gz initial |
 | B2.2 lists, server/site detail, capability-driven actions, run-playbook dialog (schema form, typed confirmation); IcTable clickable-row fix | `agent-b/B2.2-detail-screens` | [#19](https://github.com/AMN-2/infra_control/pull/19) | full local CI green: 79 vitest, 16 Playwright (+1 skipped on mock lock), 132 KB gz initial |
+| B2.3 jobs list, job viewer (timeline + live terminal), cancel with typed confirmation, retry | `agent-b/B2.3-job-viewer` | [#20](https://github.com/AMN-2/infra_control/pull/20) | full local CI green |
 
 Full local CI: `cd frontend && npm run check:api && npm run format:check && npm run lint &&
 npm run typecheck && npm test && npm run build && npm run check:size && CI=true npm run test:e2e`.

@@ -144,7 +144,9 @@ def test_start_launches_ansible_runner_with_inventory_vars_and_resume(
 	assert kw["private_data_dir"] == str(tmp_path / "runs" / "run1")
 	assert kw["ident"] == "run1"
 	assert kw["playbook"] == str((playbooks / "service_control.yml").resolve())
-	assert kw["extravars"] == {"service": "nginx", "action": "reload"}
+	assert kw["extravars"]["service"] == "nginx" and kw["extravars"]["action"] == "reload"
+	# Every run gets a results dir for playbooks that write per-host output (discovery).
+	assert kw["extravars"]["discovery_dest"].endswith("/results")
 	assert kw["inventory"]["all"]["hosts"]["SRV-0001"]["ansible_host"] == "164.92.10.11"
 	assert kw["cmdline"] == "--start-at-task 'Reload nginx'"
 	assert kw["envvars"]["ANSIBLE_ROLES_PATH"].endswith("ansible/roles")
@@ -293,3 +295,59 @@ def test_ansible_runner_builds_a_playbook_command_from_our_arguments(tmp_path: P
 	assert command[0].endswith("ansible-playbook")
 	assert str((playbooks / "service_control.yml").resolve()) in command
 	assert "--start-at-task" in command and "Reload nginx" in command
+
+
+def test_start_many_runs_one_play_against_several_servers_with_a_results_dir(
+	tmp_path: Path, playbooks: Path
+) -> None:
+	(playbooks / "inventory_discover.yml").write_text("- hosts: all\n  tasks: []\n")
+	runner, calls = make_runner(tmp_path, playbooks)
+	a = {**SERVER, "name": "gate-02.fra1", "public_ip": "1.1.1.1"}
+	b = {**SERVER, "name": "gate-03.fra1", "public_ip": "2.2.2.2"}
+	ref = runner.start_many([a, b], "inventory_discover.yml", {})
+	(kw,) = calls
+	hosts = kw["inventory"]["all"]["hosts"]
+	assert set(hosts) == {"gate-02.fra1", "gate-03.fra1"}
+	assert hosts["gate-03.fra1"]["ansible_host"] == "2.2.2.2"
+	# The playbook is told where to drop per-host JSON, and the dir exists.
+	dest = kw["extravars"]["discovery_dest"]
+	assert Path(dest).is_dir() and dest == str(runner.results_dir(ref))
+
+
+def test_read_results_and_unreachable_from_disk(tmp_path: Path, playbooks: Path) -> None:
+	(playbooks / "inventory_discover.yml").write_text("- hosts: all\n  tasks: []\n")
+	runner, _ = make_runner(tmp_path, playbooks)
+	ref = runner.start_many([SERVER], "inventory_discover.yml", {})
+	(runner.results_dir(ref) / "gate-03.fra1.json").write_text('{"benches": [{"path": "/x"}]}')
+	(runner.results_dir(ref) / "broken.json").write_text("{not json")
+	assert runner.read_results(ref) == {"gate-03.fra1": {"benches": [{"path": "/x"}]}}
+	# unreachable comes from the run's events.
+	write_artifacts(
+		tmp_path / "runs",
+		ref.external_id,
+		[ev(1, "runner_on_unreachable", "Scan", "t1", host="dead.fra1", res={"msg": "timed out"})],
+		status="successful",
+	)
+	assert runner.unreachable(ref) == ["dead.fra1"]
+
+
+def test_ignore_unreachable_run_stays_success_and_annotates_the_step(tmp_path: Path, playbooks: Path) -> None:
+	(playbooks / "inventory_discover.yml").write_text("- hosts: all\n  tasks: []\n")
+	runner, _ = make_runner(tmp_path, playbooks)
+	ref = runner.start_many([SERVER], "inventory_discover.yml", {})
+	events = [
+		ev(1, "playbook_on_task_start", "Scan for benches", "t1"),
+		ev(2, "runner_on_ok", "Scan for benches", "t1", host="gate-02.fra1", stdout="{}"),
+		ev(
+			3,
+			"runner_on_unreachable",
+			"Scan for benches",
+			"t1",
+			host="dead.fra1",
+			res={"msg": "ssh timed out"},
+		),
+	]
+	write_artifacts(tmp_path / "runs", ref.external_id, events, status="successful")
+	status = runner.status(ref)
+	assert status.state is OpState.SUCCESS and status.error is None
+	assert "unreachable, skipped: dead.fra1" in status.steps[0].output

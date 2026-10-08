@@ -1,0 +1,27 @@
+---
+# inventory.sync, host half (A2.5): list every bench and site on each managed server and leave
+# one JSON file per host on the controller at {{ discovery_dest }}/<inventory_hostname>.json.
+# Read-only on the servers. An unreachable server does not fail the run (ignore_unreachable);
+# the adapter reports it as a drift finding instead.
+- name: Discover benches and sites
+  hosts: all
+  become: true
+  become_user: frappe
+  gather_facts: false
+  ignore_unreachable: true
+  tasks:
+    - name: Scan for benches
+      ansible.builtin.script: files/discover_bench.py
+      args:
+        executable: python3
+      register: discovery
+      changed_when: false
+
+    - name: Store the result on the controller
+      ansible.builtin.copy:
+        content: "{{ discovery.stdout }}"
+        dest: "{{ discovery_dest }}/{{ inventory_hostname }}.json"
+        mode: "0600"
+      delegate_to: localhost
+      become: false
+      changed_when: false

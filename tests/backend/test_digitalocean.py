@@ -280,6 +280,8 @@ class _FakeRunner:
 		self.final = final
 		self.polls = 0
 		self.cancelled: list[OpRef] = []
+		self.results: dict[str, Any] = {}
+		self.unreachable_hosts: list[str] = []
 
 	def start(
 		self,
@@ -291,6 +293,28 @@ class _FakeRunner:
 	) -> OpRef:
 		self.started.append((server, playbook_file, dict(extra_vars or {})))
 		return OpRef("digitalocean", KIND_ANSIBLE, f"run-{len(self.started)}")
+
+	def start_many(
+		self,
+		servers: list[dict[str, Any]],
+		playbook_file: str,
+		extra_vars: dict[str, Any] | None = None,
+		*,
+		start_at_task: str | None = None,
+	) -> OpRef:
+		self.started.append(
+			({"servers": [s["name"] for s in servers]}, playbook_file, dict(extra_vars or {}))
+		)
+		return OpRef("digitalocean", KIND_ANSIBLE, f"run-{len(self.started)}")
+
+	results: dict[str, Any] = {}
+	unreachable_hosts: list[str] = []
+
+	def read_results(self, op: OpRef) -> dict[str, Any]:
+		return dict(self.results)
+
+	def unreachable(self, op: OpRef) -> list[str]:
+		return list(self.unreachable_hosts)
 
 	def status(self, op: OpRef) -> OpStatus:
 		self.polls += 1
@@ -372,6 +396,18 @@ class FakeRecords:
 
 	def spaces_client(self) -> SpacesClient | None:
 		return self.client
+
+	def reconcile(self, account: str, provider: str, inventory: dict[str, Any]) -> dict[str, Any]:
+		self.calls.append(("reconcile", (account, provider, inventory)))
+		return {
+			"servers_created": len(inventory["servers"]),
+			"benches_created": len(inventory["benches"]),
+			"sites_created": len(inventory["sites"]),
+			"findings": [
+				{"kind": "server_unreachable", "doctype": "Server", "name": h, "detail": "unreachable"}
+				for h in inventory.get("unreachable", [])
+			],
+		}
 
 
 def adapter(
@@ -606,13 +642,10 @@ def test_get_metrics_and_sync_inventory() -> None:
 		("load_1", _series(("", [(60, 0.8123)]))),
 	]:
 		responses.get(url(f"monitoring/metrics/droplet/{metric}"), json=body)
-	responses.get(url("droplets"), json={"droplets": [DROPLET], "links": {}})
 	a = adapter()
 	m = a.call("get_metrics", server="SRV-0001")
 	assert (m["cpu"], m["ram"], m["disk"], m["load1"]) == (pytest.approx(57.1, abs=0.1), 75.0, 54.0, 0.81)
 	assert responses.calls[0].request.params["host_id"] == "412345678"
-	inv = a.call("sync_inventory")
-	assert inv["benches"] == [] and inv["servers"][0]["hostname"] == "app-03.fra1"
 
 
 def test_cloud_init_is_key_only() -> None:
@@ -650,3 +683,65 @@ def test_ssh_key_is_found_by_key_material_not_by_name() -> None:
 		},
 	)
 	assert adapter(records=records)._ssh_key()["id"] == 3
+
+
+@responses.activate
+def test_sync_inventory_reconciles_at_once_when_no_server_is_reachable() -> None:
+	# No managed droplets: nothing to discover, reconcile the (empty) API result immediately.
+	responses.get(url("droplets"), json={"droplets": [], "links": {}})
+	runner, records = _FakeRunner(), FakeRecords()
+	a = adapter(runner, records=records)
+	result = a.call("sync_inventory")
+	assert not isinstance(result, OpRef)
+	assert result["servers_created"] == 0
+	assert runner.started == []  # no discovery run
+	assert records.calls[-1][0] == "reconcile"
+
+
+@responses.activate
+def test_sync_inventory_discovers_hosts_then_reconciles() -> None:
+	responses.get(url("droplets"), json={"droplets": [DROPLET], "links": {}})
+	responses.get(url("droplets"), json={"droplets": [DROPLET], "links": {}})
+	runner, records = _FakeRunner(), FakeRecords()
+	a = adapter(runner, records=records)
+
+	ref = a.call("sync_inventory")
+	assert isinstance(ref, OpRef) and ref.kind == "sync"
+	# The discovery run targets the active, reachable droplet.
+	assert runner.started[0][1] == "inventory_discover.yml"
+	assert runner.started[0][0] == {"servers": ["app-03.fra1"]}
+
+	# First poll: discovery still running -> the API step plus the inner step, no reconcile.
+	running = a.get_status(ref)
+	assert running.state is OpState.RUNNING
+	assert running.steps[0].name == "List servers at DigitalOcean"
+	assert records.calls == []
+
+	# Discovery finished: the runner returns results and one unreachable host.
+	runner.results = {
+		"app-03.fra1": {
+			"benches": [
+				{
+					"path": "/home/frappe/frappe-bench",
+					"frappe_version": "15.1",
+					"apps": [],
+					"sites": [{"domain": "x.iq", "maintenance_mode": False}],
+				}
+			]
+		}
+	}
+	runner.unreachable_hosts = ["ghost.fra1"]
+	done = a.get_status(ref)
+	assert done.state is OpState.SUCCESS
+	(call,) = [c for c in records.calls if c[0] == "reconcile"]
+	inv = call[1][2]
+	assert [b["path"] for b in inv["benches"]] == ["/home/frappe/frappe-bench"]
+	assert [s["domain"] for s in inv["sites"]] == ["x.iq"]
+	assert inv["unreachable"] == ["ghost.fra1"]
+	# The droplet id, not the hostname, identifies the discovered server.
+	assert inv["discovered"] == ["412345678"]
+	assert done.steps[-1].name == "Reconcile documents"
+	# A later poll does not reconcile twice.
+	a.get_status(ref)
+	assert len([c for c in records.calls if c[0] == "reconcile"]) == 1
+	assert a.cancel(ref) is True

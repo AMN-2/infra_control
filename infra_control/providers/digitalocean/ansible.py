@@ -33,6 +33,7 @@ from infra_control.providers.base import OpRef, OpState, OpStatus, OpStep
 
 KIND = "ansible"
 CANCEL_MARKER = "cancel"
+RESULTS_DIR = "results"
 OUTPUT_PER_STEP_MAX = 16 * 1024
 SSH_ARGS = (
 	"-o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 "
@@ -76,6 +77,18 @@ def _result_message(res: dict[str, Any]) -> str:
 		if isinstance(value, str) and value.strip():
 			return value.strip()
 	return "task failed"
+
+
+def unreachable_hosts(events: list[dict[str, Any]]) -> list[str]:
+	"""Hosts that answered no task (runner_on_unreachable), in first-seen order."""
+	out: list[str] = []
+	for ev in events:
+		if ev.get("event") == "runner_on_unreachable":
+			data = ev.get("event_data") or {}
+			host = str(data.get("host") or "") if isinstance(data, dict) else ""
+			if host and host not in out:
+				out.append(host)
+	return out
 
 
 def steps_from_events(events: list[dict[str, Any]]) -> tuple[list[_Step], str | None]:
@@ -140,25 +153,31 @@ def read_events(artifact_dir: Path) -> list[dict[str, Any]]:
 	return events
 
 
-def inventory_for(server: dict[str, Any], ssh_key_path: str) -> dict[str, Any]:
+def _host_vars(server: dict[str, Any], ssh_key_path: str) -> tuple[str, dict[str, Any]]:
 	host = str(server.get("name") or server.get("hostname") or "target")
 	address = server.get("public_ip") or server.get("private_ip")
 	if not address:
 		raise ValidationError("Server has no IP address to connect to", {"server": host})
-	return {
-		"all": {
-			"hosts": {
-				host: {
-					"ansible_host": str(address),
-					"ansible_user": str(server.get("ssh_user") or "frappe"),
-					"ansible_port": int(server.get("ssh_port") or 22),
-					"ansible_ssh_private_key_file": ssh_key_path,
-					"ansible_python_interpreter": "/usr/bin/python3",
-					"server_role": str(server.get("role") or "all"),
-				}
-			}
-		}
+	return host, {
+		"ansible_host": str(address),
+		"ansible_user": str(server.get("ssh_user") or "frappe"),
+		"ansible_port": int(server.get("ssh_port") or 22),
+		"ansible_ssh_private_key_file": ssh_key_path,
+		"ansible_python_interpreter": "/usr/bin/python3",
+		"server_role": str(server.get("role") or "all"),
 	}
+
+
+def inventory_for(server: dict[str, Any], ssh_key_path: str) -> dict[str, Any]:
+	return inventory_for_many([server], ssh_key_path)
+
+
+def inventory_for_many(servers: list[dict[str, Any]], ssh_key_path: str) -> dict[str, Any]:
+	"""One inventory group with every server as a host (Ansible runs them in parallel)."""
+	hosts = dict(_host_vars(s, ssh_key_path) for s in servers)
+	if not hosts:
+		raise ValidationError("No servers to run against", {})
+	return {"all": {"hosts": hosts}}
 
 
 class AnsibleRunner:
@@ -193,20 +212,34 @@ class AnsibleRunner:
 		*,
 		start_at_task: str | None = None,
 	) -> OpRef:
+		return self.start_many([server], playbook_file, extra_vars, start_at_task=start_at_task)
+
+	def start_many(
+		self,
+		servers: list[dict[str, Any]],
+		playbook_file: str,
+		extra_vars: dict[str, Any] | None = None,
+		*,
+		start_at_task: str | None = None,
+	) -> OpRef:
+		"""Run one playbook against several servers in one Ansible run (discovery). The playbook
+		may leave per-host results in `results_dir(op)` (extra var `discovery_dest`)."""
 		playbook = (self.playbooks_dir / playbook_file).resolve()
 		if self.playbooks_dir.resolve() not in playbook.parents or not playbook.is_file():
 			raise ValidationError("Unknown playbook file", {"playbook": playbook_file})
 		ident = self._ident()
 		private = self.root / ident
 		private.mkdir(parents=True, exist_ok=False)
+		results = private / RESULTS_DIR
+		results.mkdir()
 		cancel_marker = private / CANCEL_MARKER
 		cmdline = f"--start-at-task {shlex.quote(start_at_task)}" if start_at_task else None
 		self._launch(
 			private_data_dir=str(private),
 			ident=ident,
 			playbook=str(playbook),
-			inventory=inventory_for(server, self.ssh_key_path),
-			extravars=dict(extra_vars or {}),
+			inventory=inventory_for_many(servers, self.ssh_key_path),
+			extravars={**dict(extra_vars or {}), "discovery_dest": str(results)},
 			envvars={
 				# The venv's ansible-playbook first. Passing `binary=` instead would switch
 				# ansible-runner to RAW mode, which drops the playbook argument (seen live in the
@@ -229,6 +262,23 @@ class AnsibleRunner:
 	def _artifact_dir(self, ident: str) -> Path:
 		return self.root / ident / "artifacts" / ident
 
+	def results_dir(self, op: OpRef) -> Path:
+		return self.root / op.external_id / RESULTS_DIR
+
+	def read_results(self, op: OpRef) -> dict[str, Any]:
+		"""`{host: parsed JSON}` for every `<host>.json` a playbook left in `results_dir(op)`."""
+		out: dict[str, Any] = {}
+		for path in sorted(self.results_dir(op).glob("*.json")):
+			try:
+				data = json.loads(path.read_text())
+			except (OSError, ValueError):
+				continue
+			out[path.stem] = data
+		return out
+
+	def unreachable(self, op: OpRef) -> list[str]:
+		return unreachable_hosts(read_events(self._artifact_dir(op.external_id)))
+
 	def status(self, op: OpRef) -> OpStatus:
 		private = self.root / op.external_id
 		if not private.is_dir():
@@ -242,6 +292,15 @@ class AnsibleRunner:
 			rc_file = artifacts / "rc"
 			rc = rc_file.read_text().strip() if rc_file.is_file() else "?"
 			error = "Ansible run timed out" if raw == "timeout" else f"Ansible exited with rc {rc}"
+		if state is OpState.SUCCESS and error is not None:
+			# The play finished successfully although a host failed: `ignore_unreachable` (the
+			# discovery playbook). Keep the steps green and say which hosts were skipped.
+			skipped = unreachable_hosts(read_events(artifacts))
+			for s in steps:
+				if s.state is OpState.FAILED:
+					s.state = OpState.SUCCESS
+					s.output.append(f"unreachable, skipped: {', '.join(skipped) or 'unknown host'}\n")
+			error = None
 		if state is OpState.CANCELLED:
 			steps = [
 				_Step(s.name, s.uuid, OpState.CANCELLED, s.output, s.started_at, s.ended_at)

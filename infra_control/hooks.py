@@ -25,4 +25,6 @@ scheduler_events = {
 	"cron": {
 		"* * * * *": ["infra_control.job_engine.recovery.run"],
 	},
+	# inventory.sync on every enabled Provider Account (A2.5, plan 9.2: hourly, feeds drift).
+	"hourly": ["infra_control.inventory.schedule.sync_all_providers"],
 }

@@ -33,6 +33,7 @@ const ALLOW = (process.env.EDGE_ALLOW ?? "")
 	.split(",")
 	.map((s) => s.trim())
 	.filter(Boolean);
+const ALLOW_ANY = ALLOW.includes("any");
 const TLS =
 	process.env.EDGE_TLS_CERT && process.env.EDGE_TLS_KEY
 		? { cert: fs.readFileSync(process.env.EDGE_TLS_CERT), key: fs.readFileSync(process.env.EDGE_TLS_KEY) }
@@ -46,12 +47,13 @@ if (PUBLIC && ALLOW.length === 0) {
 	console.error("refusing to listen publicly without EDGE_ALLOW (client IP allowlist)");
 	process.exit(2);
 }
+if (PUBLIC && ALLOW_ANY && !TLS) { console.error("refusing EDGE_ALLOW=any without TLS"); process.exit(2); }
 if (PUBLIC && !TLS) console.warn("WARNING: public edge without TLS; passwords travel in clear text");
 
 const clientIp = (socket) => (socket.remoteAddress ?? "").replace(/^::ffff:/, "");
 const allowed = (socket) => {
 	const ip = clientIp(socket);
-	return LOOPBACK.includes(ip) || ALLOW.length === 0 || ALLOW.includes(ip);
+	return ALLOW_ANY || LOOPBACK.includes(ip) || ALLOW.length === 0 || ALLOW.includes(ip);
 };
 const isRealtime = (url = "") => url.startsWith("/socket.io");
 

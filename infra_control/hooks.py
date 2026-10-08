@@ -16,6 +16,9 @@ website_route_rules = [{"from_route": "/infra/<path:app_path>", "to_route": "inf
 after_install = "infra_control.install.after_install"
 after_migrate = "infra_control.install.after_migrate"
 
+# Infra users land on /infra after login unless they asked for another page (core/login.py).
+on_session_creation = ["infra_control.core.login.on_session_creation"]
+
 # Crash recovery runs every minute (A1.2). Phase 3 adds the collector, alert engine and drift sync:
 # 	"* * * * *": [..., "infra_control.monitoring.collector.collect_all",
 # 	              "infra_control.monitoring.alerts.evaluate_rules"],

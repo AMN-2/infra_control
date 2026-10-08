@@ -46,6 +46,13 @@ class FakeRedis:
 	def delete(self, *names: str) -> int:
 		return sum(1 for n in names if self.store.pop(n, None) is not None)
 
+	def hset(self, name: str, key: str, value: str) -> int:
+		self.store[f"{name}:{key}"] = value
+		return 1
+
+	def hget(self, name: str, key: str) -> str | None:
+		return self.store.get(f"{name}:{key}")
+
 	def eval(self, script: str, numkeys: int, *args: str) -> int:
 		key, token = args[0], args[1]
 		if self.store.get(key) == token:

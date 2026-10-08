@@ -38,9 +38,10 @@
       when: not existing.stat.exists
       changed_when: true
 
-    - name: Remote and branch of the app now on the bench
+    - name: Remote of the app now on the bench
+      # bench get-app names the remote `upstream`, a hand clone `origin`: take whatever is first.
       ansible.builtin.command:
-        argv: [git, -C, "{{ bench_path }}/apps/{{ app }}", config, --get, remote.origin.url]
+        argv: [git, -C, "{{ bench_path }}/apps/{{ app }}", remote, -v]
       register: app_remote
       changed_when: false
 
@@ -52,4 +53,4 @@
 
     - name: Report
       ansible.builtin.debug:
-        msg: "{{ app }}: {{ existing.stat.exists | ternary('already present', 'added') }} from {{ app_remote.stdout }} on {{ app_head.stdout }}"
+        msg: "{{ app }}: {{ existing.stat.exists | ternary('already present', 'added') }} from {{ (app_remote.stdout_lines | first | default('?')) | regex_replace('\\s+\\(fetch\\)$', '') }} on {{ app_head.stdout }}"

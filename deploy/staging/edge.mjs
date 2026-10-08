@@ -2,16 +2,23 @@
 //
 //   node edge.mjs
 //
-// Listens on EDGE_HOST:EDGE_PORT (default 127.0.0.1:8010, never a public address) and plays the
-// part nginx plays in production:
+// Plays the part nginx plays in production:
 //   /socket.io/*  (HTTP polling and WebSocket upgrades) -> Frappe's Socket.IO server
 //   everything else                                    -> the staging gunicorn
-// It adds X-Frappe-Site-Name so both servers pick the staging site regardless of the Host the
-// browser used. For Socket.IO it also pins Host and Origin to this proxy's own address: Frappe's
-// realtime server rejects an Origin whose host differs from Host, and authenticates the user by
-// calling back <Origin>/api/method/frappe.realtime.get_user_info, which must reach this proxy
-// even when the browser came in through a forwarded port with another number.
+// and adds X-Frappe-Site-Name so both pick the staging site whatever Host the browser used.
+//
+// Exposure is opt-in and narrow:
+//   EDGE_HOST     bind address, default 127.0.0.1. A non-loopback address needs EDGE_PUBLIC=1.
+//   EDGE_ALLOW    comma-separated client IPs allowed in; everyone else gets 403. Required when
+//                 public: the staging site must never be open to the whole internet.
+//   EDGE_TLS_CERT / EDGE_TLS_KEY  serve HTTPS (staging.sh makes a self-signed pair).
+//
+// Socket.IO: Frappe's realtime server rejects an Origin whose host differs from Host, and
+// authenticates by calling back <Origin>/api/method/frappe.realtime.get_user_info. Host and Origin
+// are therefore pinned to the staging gunicorn's internal address, which defaults the site.
+import fs from "node:fs";
 import http from "node:http";
+import https from "node:https";
 import net from "node:net";
 
 const SITE = process.env.INFRA_SITE ?? "ops-staging.localhost";
@@ -19,27 +26,53 @@ const EDGE_HOST = process.env.EDGE_HOST ?? "127.0.0.1";
 const EDGE_PORT = Number(process.env.EDGE_PORT ?? 8010);
 const WEB = { host: process.env.WEB_HOST ?? "127.0.0.1", port: Number(process.env.WEB_PORT ?? 8011) };
 const RT = { host: process.env.RT_HOST ?? "127.0.0.1", port: Number(process.env.RT_PORT ?? 9000) };
-const SELF = `${EDGE_HOST}:${EDGE_PORT}`;
+const WEB_ORIGIN = `http://${WEB.host}:${WEB.port}`;
+const LOOPBACK = ["127.0.0.1", "::1", "localhost"];
+const PUBLIC = !LOOPBACK.includes(EDGE_HOST);
+const ALLOW = (process.env.EDGE_ALLOW ?? "")
+	.split(",")
+	.map((s) => s.trim())
+	.filter(Boolean);
+const TLS =
+	process.env.EDGE_TLS_CERT && process.env.EDGE_TLS_KEY
+		? { cert: fs.readFileSync(process.env.EDGE_TLS_CERT), key: fs.readFileSync(process.env.EDGE_TLS_KEY) }
+		: null;
 
-if (!["127.0.0.1", "::1", "localhost"].includes(EDGE_HOST)) {
-	console.error(`refusing to listen on ${EDGE_HOST}: the staging edge is local-only`);
+if (PUBLIC && process.env.EDGE_PUBLIC !== "1") {
+	console.error(`refusing to listen on ${EDGE_HOST}: set EDGE_PUBLIC=1 to expose the staging edge`);
 	process.exit(2);
 }
+if (PUBLIC && ALLOW.length === 0) {
+	console.error("refusing to listen publicly without EDGE_ALLOW (client IP allowlist)");
+	process.exit(2);
+}
+if (PUBLIC && !TLS) console.warn("WARNING: public edge without TLS; passwords travel in clear text");
 
+const clientIp = (socket) => (socket.remoteAddress ?? "").replace(/^::ffff:/, "");
+const allowed = (socket) => {
+	const ip = clientIp(socket);
+	return LOOPBACK.includes(ip) || ALLOW.length === 0 || ALLOW.includes(ip);
+};
 const isRealtime = (url = "") => url.startsWith("/socket.io");
 
 function upstreamHeaders(req, realtime) {
 	const headers = { ...req.headers, "x-frappe-site-name": SITE };
-	headers["x-forwarded-for"] = req.socket.remoteAddress ?? "";
-	headers["x-forwarded-proto"] = "http";
+	headers["x-forwarded-for"] = clientIp(req.socket);
+	headers["x-forwarded-proto"] = TLS ? "https" : "http";
 	if (realtime) {
-		headers.host = SELF;
-		headers.origin = `http://${SELF}`;
+		headers.host = `${WEB.host}:${WEB.port}`;
+		headers.origin = WEB_ORIGIN;
 	}
 	return headers;
 }
 
-const server = http.createServer((req, res) => {
+function handler(req, res) {
+	if (!allowed(req.socket)) {
+		console.warn(`403 ${clientIp(req.socket)} ${req.method} ${req.url}`);
+		res.writeHead(403, { "content-type": "text/plain" });
+		res.end("forbidden\n");
+		return;
+	}
 	const realtime = isRealtime(req.url);
 	const target = realtime ? RT : WEB;
 	const upstream = http.request(
@@ -54,11 +87,13 @@ const server = http.createServer((req, res) => {
 		res.end(`upstream ${realtime ? "realtime" : "web"} unavailable: ${err.code ?? err.message}\n`);
 	});
 	req.pipe(upstream);
-});
+}
+
+const server = TLS ? https.createServer(TLS, handler) : http.createServer(handler);
 
 // WebSocket upgrades (Socket.IO): replay the request line and rewritten headers, then splice.
 server.on("upgrade", (req, client, head) => {
-	if (!isRealtime(req.url)) {
+	if (!allowed(req.socket) || !isRealtime(req.url)) {
 		client.destroy();
 		return;
 	}
@@ -82,5 +117,7 @@ server.on("upgrade", (req, client, head) => {
 });
 
 server.listen(EDGE_PORT, EDGE_HOST, () => {
-	console.log(`staging edge on http://${SELF} -> web ${WEB.host}:${WEB.port}, realtime ${RT.host}:${RT.port}, site ${SITE}`);
+	const scheme = TLS ? "https" : "http";
+	const who = PUBLIC ? `allow ${ALLOW.join(", ")}` : "loopback only";
+	console.log(`staging edge ${scheme}://${EDGE_HOST}:${EDGE_PORT} (${who}) -> web ${WEB_ORIGIN}, realtime ${RT.host}:${RT.port}, site ${SITE}`);
 });

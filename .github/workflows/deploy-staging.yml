@@ -9,12 +9,12 @@ name: deploy-staging
 
 on:
   push:
-    branches: [integration/phase2]
+    branches: [main]
   workflow_dispatch:
     inputs:
       branch:
         description: Branch to deploy
-        default: integration/phase2
+        default: main
         required: true
 
 concurrency:

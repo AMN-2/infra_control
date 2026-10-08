@@ -29,6 +29,7 @@ RESERVED = {
 PLAN_DOCTYPES = {
 	"Infra Settings",
 	"Provider Account",
+	"Git Connection",  # ADR 0005
 	"Server",
 	"Bench",
 	"Site",

@@ -217,6 +217,7 @@ All DocTypes live in module `Infra Control`. Naming series shown where relevant.
 |---|---|---|
 | `Infra Settings` (Single) | Global config | `controller_ip`, `telegram_bot_token` (Password), `telegram_chat_id`, `spaces_bucket`, `spaces_key`/`spaces_secret` (Password) |
 | `Provider Account` | Credentials per provider | `provider` (Select), `label`, `api_token` (Password), `team` (FC only), `is_staging` (Check) |
+| `Git Connection` | GitHub access for repository browsing and private clones (ADR 0005) | `label`, `provider` (github), `token` (Password), verified `login`, `account_type`, `scopes`, `verified_at`, `enabled` |
 | `Server` | One DO droplet | `provider_account`, `provider_ref` (droplet id), `public_ip`, `private_ip`, `role` (app/db/proxy/all), `region`, `size`, `tags`, `status`, `last_heartbeat` |
 | `Bench` | A bench | `provider_account`, `provider_ref`, `server` (nullable for FC), `path`, `frappe_version`, `apps` (child: app, version, branch) |
 | `Site` | A site | `provider_account`, `provider_ref`, `bench`, `domain`, `custom_domains` (child), `status`, `plan`, `ssl_expiry`, `db_size_mb`, `last_backup` |

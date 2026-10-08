@@ -395,7 +395,13 @@ def _secrets_for(doc: Any) -> list[str]:
 		account = resolve_target(doc.target_doctype, doc.target_name).provider_account
 		out.append(registry.config_from_account(account).api_token)
 	playbook: Any = frappe.get_doc("Playbook", doc.playbook)
-	out.extend(secret_values(_unstash_params(doc.name), _load_schema(playbook)))
+	params = _unstash_params(doc.name)
+	out.extend(secret_values(params, _load_schema(playbook)))
+	with contextlib.suppress(Exception):
+		if params.get("connection"):
+			from infra_control.api.git import token_for
+
+			out.append(token_for(str(params["connection"])))
 	return out
 
 

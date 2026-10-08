@@ -320,3 +320,23 @@ def test_site_playbooks_can_find_system_binaries() -> None:
 		(play,) = load(path.name)
 		dirs = play["environment"]["PATH"].split(":")
 		assert "/usr/sbin" in dirs and "/home/frappe/.local/bin" in dirs, path.name
+
+
+def test_add_app_with_a_connection_clones_through_an_authenticated_url() -> None:
+	runner = _FakeRunner()
+	a = adapter(runner)
+	a._git_token_loader = lambda connection: "ghp_secret"
+	a.call(
+		"add_app",
+		bench="BENCH-0001",
+		app="smart_features",
+		repo="https://github.com/org/smart_features.git",
+		branch="v1.2.0",
+		connection="GH",
+	)
+	_server, _playbook, extra = runner.started[0]
+	assert extra["repo"] == "https://github.com/org/smart_features.git"
+	assert extra["repo_auth_url"] == "https://x-access-token:ghp_secret@github.com/org/smart_features.git"
+	# Without a connection no auth URL is passed at all.
+	a.call("add_app", bench="BENCH-0001", app="erpnext", repo="https://github.com/frappe/erpnext")
+	assert "repo_auth_url" not in runner.started[1][2]

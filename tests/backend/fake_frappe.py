@@ -106,6 +106,8 @@ class FakeDoc:
 		if not self._data.get("name"):
 			if dt == "Infra Job Step":
 				self._data["name"] = f"{self._data['job']}-{self._data['step_index']}"
+			elif dt == "Git Connection":  # autoname field:label
+				self._data["name"] = self._data["label"]
 			else:
 				self._data["name"] = f"{SERIES.get(dt, dt + '-')}{next(self._frappe.counter):05d}"
 		self._data.setdefault("creation", self._frappe.now())

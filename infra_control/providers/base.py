@@ -176,7 +176,7 @@ class Provider(ABC):
 		"""`bench.update`: pull app code, then (by default) back up and migrate every site."""
 
 	@abstractmethod
-	def add_app(self, bench: str, app: str, repo: str, branch: str = "") -> OpRef:
+	def add_app(self, bench: str, app: str, repo: str, branch: str = "", connection: str = "") -> OpRef:
 		"""`bench.add_app`: `bench get-app` on the bench host (SSH providers only)."""
 
 	@abstractmethod

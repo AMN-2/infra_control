@@ -70,6 +70,7 @@ tags:
   - name: alert_rules
   - name: audit
   - name: search
+  - name: git
 
 x-realtime-events:
   - infra:job.updated
@@ -880,6 +881,148 @@ paths:
         "429": { $ref: "#/components/responses/RateLimited" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/InvalidState" }
+
+  # ---------------------------------------------------------------------------
+  # git (ADR 0005): GitHub connections and read-only repository browsing
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.git.connections:
+    get:
+      tags: [git]
+      operationId: git_connections
+      summary: Configured Git connections (tokens never returned)
+      responses:
+        "200":
+          description: Connections
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GitConnectionList" }
+              examples:
+                default: { $ref: "#/components/examples/GitConnectionList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.git.connect:
+    post:
+      tags: [git]
+      operationId: git_connect
+      summary: Verify a GitHub access token and store it as a connection (Infra Admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [label, token]
+              properties:
+                label: { type: string, minLength: 1, description: "Stable id, e.g. GH-SMARTCHOICE; an existing label replaces its token" }
+                token: { type: string, format: password, writeOnly: true, minLength: 1 }
+      responses:
+        "200":
+          description: The verified connection
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [connection]
+                properties:
+                  connection: { $ref: "#/components/schemas/GitConnection" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.git.disconnect:
+    post:
+      tags: [git]
+      operationId: git_disconnect
+      summary: Delete a Git connection (Infra Admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [connection]
+              properties:
+                connection: { type: string }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [connection, deleted]
+                properties:
+                  connection: { type: string }
+                  deleted: { type: boolean, const: true }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.git.repos:
+    get:
+      tags: [git]
+      operationId: git_repos
+      summary: Repositories the connection can see, newest pushed first
+      parameters:
+        - name: connection
+          in: query
+          required: true
+          schema: { type: string }
+        - name: query
+          in: query
+          schema: { type: string, description: "Substring of owner/name" }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+      responses:
+        "200":
+          description: Page of repositories
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GitRepoPage" }
+              examples:
+                default: { $ref: "#/components/examples/GitRepoPage" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.git.refs:
+    get:
+      tags: [git]
+      operationId: git_refs
+      summary: Branches and tags of a repository (the "version" picker)
+      parameters:
+        - name: connection
+          in: query
+          required: true
+          schema: { type: string }
+        - name: repo
+          in: query
+          required: true
+          schema: { type: string, description: "owner/name" }
+      responses:
+        "200":
+          description: Repository and its refs
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GitRefList" }
+              examples:
+                default: { $ref: "#/components/examples/GitRefList" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
 
   # ---------------------------------------------------------------------------
   # audit
@@ -1804,6 +1947,62 @@ components:
       properties:
         rule: { $ref: "#/components/schemas/AlertRule" }
 
+    # ----- git (ADR 0005) ------------------------------------------------------
+    GitConnection:
+      type: object
+      additionalProperties: false
+      required: [name, label, provider, enabled, login, account_type, scopes, verified_at]
+      properties:
+        name: { type: string }
+        label: { type: string }
+        provider: { type: string, enum: [github] }
+        enabled: { type: boolean }
+        login: { type: [string, "null"] }
+        account_type: { type: [string, "null"], description: "User or Organization" }
+        scopes: { type: array, items: { type: string } }
+        verified_at: { type: [string, "null"], format: date-time }
+    GitConnectionList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/GitConnection" } }
+    GitRepo:
+      type: object
+      additionalProperties: false
+      required: [full_name, name, owner, private, default_branch, clone_url, description, pushed_at]
+      properties:
+        full_name: { type: string }
+        name: { type: string }
+        owner: { type: string }
+        private: { type: boolean }
+        default_branch: { type: string }
+        clone_url: { type: string, format: uri }
+        description: { type: [string, "null"] }
+        pushed_at: { type: [string, "null"], format: date-time }
+    GitRepoPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_page]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/GitRepo" } }
+        next_page: { type: [integer, "null"] }
+    GitRef:
+      type: object
+      additionalProperties: false
+      required: [name, kind, sha]
+      properties:
+        name: { type: string }
+        kind: { type: string, enum: [branch, tag] }
+        sha: { type: string }
+    GitRefList:
+      type: object
+      additionalProperties: false
+      required: [repo, items]
+      properties:
+        repo: { $ref: "#/components/schemas/GitRepo" }
+        items: { type: array, items: { $ref: "#/components/schemas/GitRef" } }
+
     # ----- audit ---------------------------------------------------------------
     AuditEntry:
       type: object
@@ -2137,6 +2336,52 @@ components:
           - { ts: "2026-10-07T09:28:00Z", value: 35.7 }
           - { ts: "2026-10-07T09:29:00Z", value: 24.1 }
           - { ts: "2026-10-07T09:30:00Z", value: 23.5 }
+    GitConnectionList:
+      value:
+        items:
+          - name: GH-SMARTCHOICE
+            label: GH-SMARTCHOICE
+            provider: github
+            enabled: true
+            login: smartchoice-iq
+            account_type: Organization
+            scopes: [repo, read:org]
+            verified_at: "2026-10-09T08:00:00Z"
+    GitRepoPage:
+      value:
+        items:
+          - full_name: smartchoice-iq/smart_features
+            name: smart_features
+            owner: smartchoice-iq
+            private: true
+            default_branch: develop
+            clone_url: https://github.com/smartchoice-iq/smart_features.git
+            description: SmartChoice SaaS features
+            pushed_at: "2026-10-08T21:10:00Z"
+          - full_name: frappe/erpnext
+            name: erpnext
+            owner: frappe
+            private: false
+            default_branch: develop
+            clone_url: https://github.com/frappe/erpnext.git
+            description: Free and Open Source ERP
+            pushed_at: "2026-10-08T20:00:00Z"
+        next_page: null
+    GitRefList:
+      value:
+        repo:
+          full_name: frappe/erpnext
+          name: erpnext
+          owner: frappe
+          private: false
+          default_branch: develop
+          clone_url: https://github.com/frappe/erpnext.git
+          description: Free and Open Source ERP
+          pushed_at: "2026-10-08T20:00:00Z"
+        items:
+          - { name: develop, kind: branch, sha: 1a2b3c4d5e6f }
+          - { name: version-15, kind: branch, sha: 2b3c4d5e6f70 }
+          - { name: v15.48.0, kind: tag, sha: 3c4d5e6f7081 }
     PlaybookList:
       value:
         items:
@@ -2200,8 +2445,9 @@ components:
               required: [app, repo]
               properties:
                 app: { type: string, pattern: "^[a-z][a-z0-9_]{1,63}$" }
-                repo: { type: string, format: uri, description: "https:// or git@ URL of the app" }
-                branch: { type: string, default: "" }
+                repo: { type: string, format: uri, description: "https:// or git@ URL of the app", x-picker: git_repo }
+                branch: { type: string, default: "", description: "Branch or tag", x-picker: git_ref }
+                connection: { type: string, default: "", description: "Git Connection whose token clones a private repository", x-picker: git_connection }
           - key: site.install_app
             title: Install app on site
             description: Back up, then bench install-app for an app already on the bench. Fails if the backup fails.

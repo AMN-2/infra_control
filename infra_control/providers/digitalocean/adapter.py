@@ -155,6 +155,7 @@ class DigitalOceanProvider(Provider):
 		server_loader: Callable[[str], dict[str, Any]] = settings.load_server,
 		site_loader: Callable[[str], dict[str, Any]] = settings.load_site,
 		bench_loader: Callable[[str], dict[str, Any]] = settings.load_bench,
+		git_token_loader: Callable[[str], str] = settings.git_token,
 		records: Records | None = None,
 		clock: Callable[[], float] = time.time,
 	) -> None:
@@ -165,6 +166,7 @@ class DigitalOceanProvider(Provider):
 		self._server_loader = server_loader
 		self._site_loader = site_loader
 		self._bench_loader = bench_loader
+		self._git_token_loader = git_token_loader
 		self._clock = clock
 		self._records: Records = records or _SettingsRecords()
 		self._provisions: dict[str, _Provision] = {}
@@ -269,13 +271,18 @@ class DigitalOceanProvider(Provider):
 		}
 		return self.runner.start(server, BENCH_PLAYBOOKS["update_bench"], extra_vars)
 
-	def add_app(self, bench: str, app: str, repo: str, branch: str = "") -> OpRef:
-		"""`bench.add_app`: get-app on the bench host; the Bench App row is recorded on success."""
+	def add_app(self, bench: str, app: str, repo: str, branch: str = "", connection: str = "") -> OpRef:
+		"""`bench.add_app`: get-app on the bench host; the Bench App row is recorded on success.
+		With a `connection`, the clone URL carries that GitHub token (masked everywhere)."""
 		b = self._bench_loader(bench)
 		if not b.get("server"):
 			raise ProviderError("Bench has no server on DigitalOcean", {"bench": bench})
 		server = self._server(str(b["server"]))
 		extra_vars = {"bench_path": b.get("path"), "app": app, "repo": repo, "branch": branch or ""}
+		if connection:
+			from infra_control.integrations.github import authenticated_clone_url
+
+			extra_vars["repo_auth_url"] = authenticated_clone_url(repo, self._git_token_loader(connection))
 		ref = self.runner.start(server, BENCH_PLAYBOOKS["add_app"], extra_vars)
 		self._pending[ref.external_id] = _Pending("bench_app", bench, {"app": app, "branch": branch or ""})
 		return ref

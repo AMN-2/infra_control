@@ -71,10 +71,21 @@
       register: switched
       changed_when: "'Already on' not in (switched.stderr | default(''))"
 
-    - name: Pull (fast-forward only)
+    - name: On a branch or on a tag?
+      ansible.builtin.command:
+        argv: [git, -C, "{{ bench_path }}/apps/{{ item }}", symbolic-ref, -q, --short, HEAD]
+      loop: "{{ selected_apps }}"
+      register: heads
+      changed_when: false
+      failed_when: false
+
+    - name: Pull (fast-forward only; a tag checkout is already the wanted version)
       ansible.builtin.command:
         argv: [git, -C, "{{ bench_path }}/apps/{{ item }}", pull, --quiet, --ff-only]
       loop: "{{ selected_apps }}"
+      loop_control:
+        index_var: i
+      when: heads.results[i].rc == 0
       register: pulled
       changed_when: false
 

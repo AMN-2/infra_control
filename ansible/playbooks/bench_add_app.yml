@@ -32,10 +32,19 @@
       register: existing
 
     - name: bench get-app
+      # `repo_auth_url` (private repositories) carries a token: no_log keeps it out of the job log.
       ansible.builtin.command:
-        argv: "{{ ['bench', 'get-app'] + (['--branch', app_branch] if app_branch | length > 0 else []) + [repo] }}"
+        argv: "{{ ['bench', 'get-app'] + (['--branch', app_branch] if app_branch | length > 0 else []) + [repo_auth_url | default(repo)] }}"
         chdir: "{{ bench_path }}"
       when: not existing.stat.exists
+      changed_when: true
+      no_log: "{{ repo_auth_url is defined }}"
+
+    - name: Keep the clean remote URL on the bench
+      # After an authenticated clone the token must not stay in .git/config.
+      ansible.builtin.command:
+        argv: [git, -C, "{{ bench_path }}/apps/{{ app }}", remote, set-url, upstream, "{{ repo }}"]
+      when: repo_auth_url is defined and not existing.stat.exists
       changed_when: true
 
     - name: Remote of the app now on the bench

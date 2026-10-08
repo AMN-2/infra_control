@@ -100,7 +100,7 @@ class DummyProvider(Provider):
 			"update_bench", steps, bench=bench, apps=apps, branch=branch, migrate=migrate, build=build
 		)
 
-	def add_app(self, bench: str, app: str, repo: str, branch: str = "") -> OpRef:
+	def add_app(self, bench: str, app: str, repo: str, branch: str = "", connection: str = "") -> OpRef:
 		return self._start(
 			"add_app", ["bench get-app", "Report"], bench=bench, app=app, repo=repo, branch=branch
 		)

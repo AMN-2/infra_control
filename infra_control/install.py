@@ -179,8 +179,19 @@ PLAYBOOKS: tuple[dict[str, Any], ...] = (
 		params_schema=_schema(
 			["app", "repo"],
 			app={"type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$"},
-			repo={"type": "string", "format": "uri", "description": "https:// or git@ URL of the app"},
-			branch={"type": "string", "default": ""},
+			repo={
+				"type": "string",
+				"format": "uri",
+				"description": "https:// or git@ URL of the app",
+				"x-picker": "git_repo",
+			},
+			branch={"type": "string", "default": "", "description": "Branch or tag", "x-picker": "git_ref"},
+			connection={
+				"type": "string",
+				"default": "",
+				"description": "Git Connection whose token clones a private repository",
+				"x-picker": "git_connection",
+			},
 		),
 	),
 	_pb(

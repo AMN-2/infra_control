@@ -242,6 +242,12 @@ def record_domain(site: str, domain: str) -> None:
 	doc.save(ignore_permissions=True)
 
 
+def git_token(connection: str) -> str:
+	from infra_control.api.git import token_for
+
+	return token_for(connection)
+
+
 def record_bench_app(bench: str, app: str, branch: str) -> None:
 	"""Add the Bench App row a successful `bench.add_app` produced (inventory.sync keeps it current)."""
 	doc: Any = frappe.get_doc("Bench", bench)

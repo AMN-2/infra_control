@@ -46,6 +46,12 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	"alert_rules.delete": "post",
 	"audit.list": "get",
 	"search.query": "get",
+	# ADR 0005 (reviewer request 2026-10-08): GitHub connections and repository browsing.
+	"git.connections": "get",
+	"git.connect": "post",
+	"git.disconnect": "post",
+	"git.repos": "get",
+	"git.refs": "get",
 }
 
 # Plan section 5 unified enums.

@@ -32,7 +32,7 @@ class TestA31Monitoring(FrappeTestCase):
 					"is_staging": 1,
 				}
 			).insert(ignore_permissions=True)
-		if not frappe.db.exists("Server", SERVER):
+		if not frappe.db.exists("Server", {"hostname": "mon-01.fra1"}):
 			frappe.get_doc(
 				{
 					"doctype": "Server",
@@ -43,6 +43,19 @@ class TestA31Monitoring(FrappeTestCase):
 				}
 			).insert(ignore_permissions=True)
 		cls._server_name = frappe.db.get_value("Server", {"hostname": "mon-01.fra1"}, "name")
+
+	@classmethod
+	def tearDownClass(cls) -> None:
+		# setUpClass's inserts are committed by the rollup/collector commits inside tests, so clean
+		# them here (Server uses an auto naming series, not a fixed name).
+		for metric in frappe.get_all("Server Metric", filters={"server": cls._server_name}, pluck="name"):
+			frappe.delete_doc("Server Metric", metric, force=True, ignore_permissions=True)
+		if frappe.db.exists("Server", cls._server_name):
+			frappe.delete_doc("Server", cls._server_name, force=True, ignore_permissions=True)
+		if frappe.db.exists("Provider Account", "DO-MON-TEST"):
+			frappe.delete_doc("Provider Account", "DO-MON-TEST", force=True, ignore_permissions=True)
+		frappe.db.commit()
+		super().tearDownClass()
 
 	def tearDown(self) -> None:
 		for name in frappe.get_all("Server Metric", filters={"server": self._server_name}, pluck="name"):

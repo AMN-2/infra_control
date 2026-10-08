@@ -36,11 +36,15 @@ fi
 log "fetch"
 git fetch --quiet "$REMOTE" "$BRANCH"
 before=$(git rev-parse HEAD)
-if [ "$(git rev-parse --abbrev-ref HEAD)" != "$BRANCH" ]; then
-	git checkout --quiet -B "$BRANCH" FETCH_HEAD
-else
-	git merge --quiet --ff-only FETCH_HEAD
+target=$(git rev-parse FETCH_HEAD)
+# Forward only, across branches too: the remote branch must contain what runs now. This is
+# what stopped a "deploy main" from rolling staging back to the scaffold commit (2026-10-08).
+if [ "$before" != "$target" ] && ! git merge-base --is-ancestor "$before" "$target"; then
+	echo "refusing: origin/$BRANCH ($target) does not contain the deployed commit ($before)."
+	echo "          Merge or fast-forward $BRANCH on GitHub first; a rollback is a manual git checkout."
+	exit 3
 fi
+git checkout --quiet -B "$BRANCH" "$target"
 after=$(git rev-parse HEAD)
 if [ "$before" = "$after" ]; then echo "already at $after; nothing to deploy"; exit 0; fi
 echo "$before -> $after"

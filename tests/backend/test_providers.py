@@ -43,6 +43,12 @@ class _FcLike(Provider):
 	) -> OpRef:
 		return OpRef(self.name, "press_job", "4b")
 
+	def add_app(self, bench: str, app: str, repo: str, branch: str = "") -> OpRef:
+		return OpRef(self.name, "press_job", "4c")
+
+	def install_app(self, site: str, app: str) -> OpRef:
+		return OpRef(self.name, "press_job", "4d")
+
 	def set_maintenance(self, site: str, on: bool) -> OpRef:
 		return OpRef(self.name, "press_job", "5")
 

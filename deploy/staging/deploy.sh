@@ -35,12 +35,16 @@ fi
 
 log "fetch"
 git fetch --quiet "$REMOTE" "$BRANCH"
-before=$(git rev-parse HEAD)
+# What the site last had migrate/build/restart run for; HEAD alone misses commits made on
+# this checkout directly (the state file is created on the first full deploy).
+STATE=${DEPLOY_STATE:-$HOME/.infra-staging/deployed.sha}
+head=$(git rev-parse HEAD)
+before=$(cat "$STATE" 2>/dev/null || echo "$head")
 target=$(git rev-parse FETCH_HEAD)
 # Forward only, across branches too: the remote branch must contain what runs now. This is
 # what stopped a "deploy main" from rolling staging back to the scaffold commit (2026-10-08).
-if [ "$before" != "$target" ] && ! git merge-base --is-ancestor "$before" "$target"; then
-	echo "refusing: origin/$BRANCH ($target) does not contain the deployed commit ($before)."
+if [ "$head" != "$target" ] && ! git merge-base --is-ancestor "$head" "$target"; then
+	echo "refusing: origin/$BRANCH ($target) does not contain the checked-out commit ($head)."
 	echo "          Merge or fast-forward $BRANCH on GitHub first; a rollback is a manual git checkout."
 	exit 3
 fi
@@ -70,4 +74,5 @@ fi
 log "restart web + worker"
 "$HERE/staging.sh" restart web worker
 "$HERE/staging.sh" status | sed -n '1,5p'
+echo "$after" > "$STATE"
 log "deployed $after"

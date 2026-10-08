@@ -1,0 +1,55 @@
+---
+# bench.add_app (A3.5): put an app on a bench with `bench get-app` and build its assets.
+# Idempotent: when apps/<app> already exists nothing is fetched (changed=0); the remote and
+# branch are reported so a human can see a mismatch. No app is ever removed or replaced.
+- name: Add app to bench
+  hosts: all
+  become: true
+  become_user: frappe
+  gather_facts: false
+  environment:
+    PATH: "/home/frappe/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  vars:
+    app_branch: "{{ branch | default('') }}"
+  tasks:
+    - name: Check the bench
+      ansible.builtin.stat:
+        path: "{{ bench_path }}/apps/frappe"
+      register: preflight_bench
+      failed_when: not preflight_bench.stat.exists
+
+    - name: Check the request
+      ansible.builtin.assert:
+        that:
+          - app is match('^[a-z][a-z0-9_]{1,63}$')
+          - repo is match('^(https://|git@|ssh://)')
+        fail_msg: "app must be a python package name and repo a https:// or git URL"
+        quiet: true
+
+    - name: Is the app already on the bench?
+      ansible.builtin.stat:
+        path: "{{ bench_path }}/apps/{{ app }}"
+      register: existing
+
+    - name: bench get-app
+      ansible.builtin.command:
+        argv: "{{ ['bench', 'get-app'] + (['--branch', app_branch] if app_branch | length > 0 else []) + [repo] }}"
+        chdir: "{{ bench_path }}"
+      when: not existing.stat.exists
+      changed_when: true
+
+    - name: Remote and branch of the app now on the bench
+      ansible.builtin.command:
+        argv: [git, -C, "{{ bench_path }}/apps/{{ app }}", config, --get, remote.origin.url]
+      register: app_remote
+      changed_when: false
+
+    - name: Branch of the app
+      ansible.builtin.command:
+        argv: [git, -C, "{{ bench_path }}/apps/{{ app }}", rev-parse, --abbrev-ref, HEAD]
+      register: app_head
+      changed_when: false
+
+    - name: Report
+      ansible.builtin.debug:
+        msg: "{{ app }}: {{ existing.stat.exists | ternary('already present', 'added') }} from {{ app_remote.stdout }} on {{ app_head.stdout }}"

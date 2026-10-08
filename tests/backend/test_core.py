@@ -94,6 +94,8 @@ def test_playbook_catalogue_matches_plan_section_9_2() -> None:
 		"site.add_domain": ("Site", "low"),
 		"site.suspend": ("Site", "medium"),
 		"bench.update": ("Bench", "medium"),  # ADR 0004
+		"bench.add_app": ("Bench", "medium"),  # ADR 0004
+		"site.install_app": ("Site", "medium"),  # ADR 0004
 		"metrics.collect": ("Server", "low"),
 		"inventory.sync": ("Provider Account", "low"),
 	}

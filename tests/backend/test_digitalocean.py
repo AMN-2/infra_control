@@ -391,6 +391,9 @@ class FakeRecords:
 	def record_domain(self, site: str, domain: str) -> None:
 		self.calls.append(("domain", (site, domain)))
 
+	def record_bench_app(self, bench: str, app: str, branch: str) -> None:
+		self.calls.append(("bench_app", (bench, app, branch)))
+
 	def load_backup_set(self, backup: str) -> dict[str, str]:
 		return self.backup_sets[backup]
 

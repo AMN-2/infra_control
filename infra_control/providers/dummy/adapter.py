@@ -100,6 +100,24 @@ class DummyProvider(Provider):
 			"update_bench", steps, bench=bench, apps=apps, branch=branch, migrate=migrate, build=build
 		)
 
+	def add_app(self, bench: str, app: str, repo: str, branch: str = "") -> OpRef:
+		return self._start(
+			"add_app", ["bench get-app", "Report"], bench=bench, app=app, repo=repo, branch=branch
+		)
+
+	def install_app(self, site: str, app: str) -> OpRef:
+		return self._start(
+			"install_app",
+			[
+				"Backup before installing",
+				"Enable maintenance mode",
+				"bench install-app",
+				"Disable maintenance mode",
+			],
+			site=site,
+			app=app,
+		)
+
 	def set_maintenance(self, site: str, on: bool) -> OpRef:
 		return self._start("set_maintenance", ["Set maintenance"], site=site, on=on)
 

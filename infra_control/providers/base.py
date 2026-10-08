@@ -101,6 +101,8 @@ METHOD_CAPABILITY: dict[str, Capability | None] = {
 	"restore_site": Capability.SITE,
 	"update_site": Capability.SITE,
 	"update_bench": Capability.SSH,
+	"add_app": Capability.SSH,
+	"install_app": Capability.SITE,
 	"set_maintenance": Capability.SITE,
 	"add_domain": Capability.SITE,
 	"suspend_site": Capability.SITE,
@@ -157,6 +159,10 @@ class Provider(ABC):
 	@abstractmethod
 	def set_maintenance(self, site: str, on: bool) -> OpRef: ...
 
+	@abstractmethod
+	def install_app(self, site: str, app: str) -> OpRef:
+		"""`site.install_app`: back up, then install an app already on the site's bench."""
+
 	# --- bench level --------------------------------------------------------------------
 	@abstractmethod
 	def update_bench(
@@ -168,6 +174,10 @@ class Provider(ABC):
 		build: bool = True,
 	) -> OpRef:
 		"""`bench.update`: pull app code, then (by default) back up and migrate every site."""
+
+	@abstractmethod
+	def add_app(self, bench: str, app: str, repo: str, branch: str = "") -> OpRef:
+		"""`bench.add_app`: `bench get-app` on the bench host (SSH providers only)."""
 
 	@abstractmethod
 	def add_domain(self, site: str, domain: str) -> OpRef: ...

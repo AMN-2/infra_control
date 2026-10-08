@@ -213,6 +213,36 @@ def test_update_bench_runs_on_the_bench_server_with_its_path() -> None:
 	assert a.get_status(ref).state is OpState.SUCCESS
 
 
+def test_add_app_records_the_bench_app_on_success() -> None:
+	runner, records = _FakeRunner(), FakeRecords()
+	a = adapter(runner, records=records)
+	ref = a.call(
+		"add_app",
+		bench="BENCH-0001",
+		app="smart_features",
+		repo="https://github.com/x/smart_features",
+		branch="develop",
+	)
+	_server, playbook, extra = runner.started[0]
+	assert (
+		playbook == "bench_add_app.yml" and extra["app"] == "smart_features" and extra["branch"] == "develop"
+	)
+	assert records.calls == []
+	finish(runner)
+	a.get_status(ref)
+	assert records.calls == [("bench_app", ("BENCH-0001", "smart_features", "develop"))]
+
+
+def test_install_app_backs_up_first_like_migrate() -> None:
+	runner, records = _FakeRunner(), FakeRecords()
+	a = adapter(runner, records=records)
+	a.call("install_app", site="demo.iq", app="smart_features")
+	_server, playbook, extra = runner.started[0]
+	assert playbook == "site_install_app.yml" and list(extra["backup_urls"]) == ["database"]
+	names = [t.get("name", "") for t in tasks_in(PLAYBOOKS / "site_install_app.yml")]
+	assert names.index("Backup before installing") < names.index("bench install-app")
+
+
 def test_bench_update_backs_up_before_migrating_and_never_resets() -> None:
 	"""Plan 13.7 for updates: backup first, fail if it fails; the pull is fast-forward only."""
 	names = [t.get("name", "") for t in tasks_in(PLAYBOOKS / "bench_update.yml")]

@@ -54,8 +54,9 @@ SITE_PLAYBOOKS: dict[str, str] = {
 	"set_maintenance": "site_maintenance.yml",
 	"add_domain": "site_add_domain.yml",
 	"suspend_site": "site_suspend.yml",
+	"install_app": "site_install_app.yml",
 }
-BENCH_PLAYBOOKS: dict[str, str] = {"update_bench": "bench_update.yml"}
+BENCH_PLAYBOOKS: dict[str, str] = {"update_bench": "bench_update.yml", "add_app": "bench_add_app.yml"}
 SERVICE_PLAYBOOK = "service_control.yml"
 ALLOWED_SERVICES: frozenset[str] = frozenset({"nginx", "supervisor", "mariadb", "redis"})
 ALLOWED_SERVICE_ACTIONS: frozenset[str] = frozenset({"restart", "reload"})
@@ -70,6 +71,7 @@ class Records(Protocol):
 	def record_site(self, domain: str, bench: str) -> str: ...
 	def record_backup(self, site: str, kind: str, location: str, size_mb: float, job_ref: str) -> str: ...
 	def record_domain(self, site: str, domain: str) -> None: ...
+	def record_bench_app(self, bench: str, app: str, branch: str) -> None: ...
 	def load_backup_set(self, backup: str) -> dict[str, str]: ...
 	def spaces_client(self) -> spaces.SpacesClient | None: ...
 	def reconcile(self, account: str, provider: str, inventory: dict[str, Any]) -> dict[str, Any]: ...
@@ -267,6 +269,27 @@ class DigitalOceanProvider(Provider):
 		}
 		return self.runner.start(server, BENCH_PLAYBOOKS["update_bench"], extra_vars)
 
+	def add_app(self, bench: str, app: str, repo: str, branch: str = "") -> OpRef:
+		"""`bench.add_app`: get-app on the bench host; the Bench App row is recorded on success."""
+		b = self._bench_loader(bench)
+		if not b.get("server"):
+			raise ProviderError("Bench has no server on DigitalOcean", {"bench": bench})
+		server = self._server(str(b["server"]))
+		extra_vars = {"bench_path": b.get("path"), "app": app, "repo": repo, "branch": branch or ""}
+		ref = self.runner.start(server, BENCH_PLAYBOOKS["add_app"], extra_vars)
+		self._pending[ref.external_id] = _Pending("bench_app", bench, {"app": app, "branch": branch or ""})
+		return ref
+
+	def install_app(self, site: str, app: str) -> OpRef:
+		"""`site.install_app`: like site.migrate, a database backup first; fails if it fails."""
+		urls, locations = self._backup_targets(site, with_files=False)
+		return self._start_site(
+			"install_app",
+			site,
+			{"app": app, "backup_urls": urls},
+			_Pending("backup", site, {"locations": locations}),
+		)
+
 	def backup_site(self, site: str, with_files: bool = True) -> OpRef:
 		urls, locations = self._backup_targets(site, with_files)
 		return self._start_site(
@@ -346,6 +369,10 @@ class DigitalOceanProvider(Provider):
 			self._records.record_site(pending.site, str(pending.extra["bench"]))
 		elif pending.kind == "domain":
 			self._records.record_domain(pending.site, str(pending.extra["domain"]))
+		elif pending.kind == "bench_app":
+			self._records.record_bench_app(
+				pending.site, str(pending.extra["app"]), str(pending.extra["branch"])
+			)
 		elif pending.kind == "backup":
 			client = self._spaces()
 			for name, location in dict(pending.extra["locations"]).items():
@@ -723,6 +750,9 @@ class _SettingsRecords:
 
 	def record_domain(self, site: str, domain: str) -> None:
 		settings.record_domain(site, domain)
+
+	def record_bench_app(self, bench: str, app: str, branch: str) -> None:
+		settings.record_bench_app(bench, app, branch)
 
 	def load_backup_set(self, backup: str) -> dict[str, str]:
 		return settings.load_backup_set(backup)

@@ -2187,6 +2187,34 @@ components:
                 branch: { type: string, default: "", description: Switch the selected apps to this branch first }
                 migrate: { type: boolean, default: true, description: Back up and migrate every site on the bench }
                 build: { type: boolean, default: true }
+          - key: bench.add_app
+            title: Add app to bench
+            description: bench get-app from a git repository (optionally a branch) and build its assets. Already present = no-op.
+            target_doctype: Bench
+            creates: null
+            risk: medium
+            required_capability: ssh
+            params_schema:
+              type: object
+              additionalProperties: false
+              required: [app, repo]
+              properties:
+                app: { type: string, pattern: "^[a-z][a-z0-9_]{1,63}$" }
+                repo: { type: string, format: uri, description: "https:// or git@ URL of the app" }
+                branch: { type: string, default: "" }
+          - key: site.install_app
+            title: Install app on site
+            description: Back up, then bench install-app for an app already on the bench. Fails if the backup fails.
+            target_doctype: Site
+            creates: null
+            risk: medium
+            required_capability: site
+            params_schema:
+              type: object
+              additionalProperties: false
+              required: [app]
+              properties:
+                app: { type: string, pattern: "^[a-z][a-z0-9_]{1,63}$" }
           - key: site.migrate
             title: Migrate site
             description: Takes a backup, then runs bench migrate. Fails if the backup fails.

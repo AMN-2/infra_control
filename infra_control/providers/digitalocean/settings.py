@@ -242,6 +242,15 @@ def record_domain(site: str, domain: str) -> None:
 	doc.save(ignore_permissions=True)
 
 
+def record_bench_app(bench: str, app: str, branch: str) -> None:
+	"""Add the Bench App row a successful `bench.add_app` produced (inventory.sync keeps it current)."""
+	doc: Any = frappe.get_doc("Bench", bench)
+	if any(a.app == app for a in doc.apps):
+		return
+	doc.append("apps", {"app": app, "branch": branch or None})
+	doc.save(ignore_permissions=True)
+
+
 def spaces_client() -> Any:
 	"""A SpacesClient for the configured bucket, or None when Spaces is not configured."""
 	from infra_control.providers.digitalocean.spaces import SpacesClient

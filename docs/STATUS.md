@@ -83,6 +83,15 @@ Local branches stack on `integration/phase2`: `agent-b/B3.1-live-charts-continue
 `agent-b/B3.2-alerts-rules` → `agent-a/A3.3-drift-detection`. No PRs opened yet for Phase 3
 (the reviewer has not merged Phase 1/2 PRs on GitHub; see Phase 2 merge order).
 
+**Live run 2026-10-08 (session 5):** scheduler enabled on `ops-staging.localhost` (it was
+paused: `pause_scheduler` in site config, and the Phase 3 job types had never been synced);
+the first collector run hit the tz-aware timestamp bug (fixed in `4dd6a15`); since then
+`Server Metric` rows arrive every minute for gate-02 and gate-03 from DigitalOcean Monitoring
+and `last_heartbeat` updates. The test record `SRV-0005` (fake account `DO-TEST`) was
+archived so it stops failing collection every minute. Note: enabling the scheduler also runs
+the other apps' scheduled jobs on this shared staging site (`smart_demo` tenant reconcile
+errors in Error Log are theirs, not ours).
+
 **Exit gate (plan §12), still to run live:** (1) stop nginx on a staging server and receive a
 Telegram alert within 2 minutes — needs a Telegram bot token in `Infra Settings` and the
 `infra` worker plus scheduler running on `ops-staging.localhost`; (2) a bulk migrate with a

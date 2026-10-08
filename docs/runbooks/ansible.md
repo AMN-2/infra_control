@@ -25,7 +25,7 @@ ansible/
 | `mariadb` | MariaDB with utf8mb4 and InnoDB settings, bound to 127.0.0.1, root over the unix socket; a `infra_admin` database user whose password is generated on the server once and kept in `~frappe/.config/infra-control/db-admin.cnf` (0600) for `bench new-site` and `bench restore` |
 | `redis` | Redis bound to localhost, 256 MB cap |
 | `nginx` | nginx and certbot, default site removed, global limits, `nginx -t` before every reload |
-| `bench` | nodejs, npm, yarn, supervisor, wkhtmltopdf, `bench` CLI via pipx for `frappe`; `bench init` only when `bench_init: true` |
+| `bench` | Node 20 from NodeSource (`bench_node_major`, ADR 0006), yarn, supervisor, wkhtmltopdf, `bench` CLI via pipx for `frappe`; `bench init` only when `bench_init: true` |
 
 `server_provision.yml` waits for SSH and `cloud-init status --wait`, then applies roles by the
 server's role: `all` = every role, `app` = base, redis, nginx, bench, `db` = base, mariadb,

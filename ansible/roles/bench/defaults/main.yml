@@ -2,14 +2,14 @@
 bench_user: frappe
 bench_home: "/home/{{ bench_user }}"
 bench_packages:
-  - nodejs
-  - npm
   - supervisor
   - wkhtmltopdf
   # libmariadb-dev, not libmysqlclient-dev: the two conflict on Ubuntu 24.04 and the mariadb
   # role installs libmariadb-dev; mixing them made every run swap one for the other.
   - libmariadb-dev
 bench_cli_version: "5.25.*"
+# Node major from NodeSource (ADR 0006); Frappe v15 supports 18 and 20, current apps need 20.
+bench_node_major: 20
 # `bench init` is optional: it clones Frappe and builds assets (several minutes). The exit-gate
 # provision sets it; Molecule leaves it off and checks the tooling only.
 bench_init: false

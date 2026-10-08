@@ -35,3 +35,59 @@
       loop: "{{ role_map[server_role | default('all')] }}"
       loop_control:
         loop_var: role_item
+
+# Verification (ADR 0006): a provision that leaves any of this unmet fails the job instead of
+# reporting a half-built server.
+- name: Verify server
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    service_map:
+      base: []
+      mariadb: [mariadb.service]
+      redis: [redis-server.service]
+      nginx: [nginx.service]
+      bench: [supervisor.service]
+    role_map:
+      all: [base, mariadb, redis, nginx, bench]
+      app: [base, redis, nginx, bench]
+      db: [base, mariadb]
+      proxy: [base, nginx]
+  tasks:
+    - name: Collect service states
+      ansible.builtin.service_facts:
+
+    - name: Required services are running
+      ansible.builtin.assert:
+        that: ansible_facts.services[item].state == 'running'
+        fail_msg: "{{ item }} is not running"
+        quiet: true
+      loop: "{{ role_map[server_role | default('all')] | map('extract', service_map) | flatten }}"
+
+    - name: Node is {{ bench_node_major | default(20) }} or newer
+      ansible.builtin.command: node --version
+      register: verify_node
+      changed_when: false
+      failed_when: (verify_node.stdout | regex_replace('^v', '') | split('.') | first | int) < (bench_node_major | default(20) | int)
+      when: "'bench' in role_map[server_role | default('all')]"
+
+    - name: bench CLI answers for the frappe user
+      become_user: frappe
+      ansible.builtin.command: /home/frappe/.local/bin/bench --version
+      changed_when: false
+      when: "'bench' in role_map[server_role | default('all')]"
+
+    - name: The bench lists frappe
+      become_user: frappe
+      ansible.builtin.command:
+        argv: [/home/frappe/.local/bin/bench, version]
+        chdir: "/home/frappe/{{ bench_name | default('frappe-bench') }}"
+      register: verify_bench
+      changed_when: false
+      failed_when: "'frappe' not in verify_bench.stdout"
+      when: "'bench' in role_map[server_role | default('all')] and (bench_init | default(false) | bool)"
+
+    - name: Report
+      ansible.builtin.debug:
+        msg: "verified: services up, node {{ verify_node.stdout | default('n/a') }}, bench ready"

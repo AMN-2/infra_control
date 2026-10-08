@@ -49,6 +49,12 @@
       ansible.builtin.command: yarn --version
       changed_when: false
 
+    - name: Node is 20 or newer (ADR 0006)
+      ansible.builtin.command: node --version
+      register: verify_node
+      changed_when: false
+      failed_when: (verify_node.stdout | regex_replace('^v', '') | split('.') | first | int) < 20
+
     - name: The database admin logs in with its option file, and only frappe can read it
       become_user: frappe
       ansible.builtin.command: mariadb --defaults-extra-file=/home/frappe/.config/infra-control/db-admin.cnf -N -e "SELECT CURRENT_USER()"

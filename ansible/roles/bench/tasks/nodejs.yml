@@ -1,0 +1,44 @@
+---
+# Node 20 from NodeSource (ADR 0006): current Frappe apps need Node >= 20; Ubuntu 24.04 ships 18.
+# Idempotent: keyring and repository are files, apt only acts when the package is missing.
+- name: NodeSource keyring directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: NodeSource signing key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /etc/apt/keyrings/nodesource.asc
+    mode: "0644"
+    timeout: 30
+
+- name: NodeSource repository (node {{ bench_node_major }}.x)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/nodesource.asc] https://deb.nodesource.com/node_{{ bench_node_major }}.x nodistro main"
+    filename: nodesource
+    state: present
+    update_cache: true
+
+- name: Prefer NodeSource's nodejs over Ubuntu's
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/nodesource
+    mode: "0644"
+    content: |
+      Package: nodejs
+      Pin: origin deb.nodesource.com
+      Pin-Priority: 1001
+
+- name: Install nodejs {{ bench_node_major }}
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Installed Node major version
+  ansible.builtin.command: node --version
+  register: bench_node_version
+  changed_when: false
+  failed_when: (bench_node_version.stdout | regex_replace('^v', '') | split('.') | first | int) < (bench_node_major | int)

@@ -6,6 +6,9 @@
     update_cache: true
     cache_valid_time: 3600
 
+- name: Node.js from NodeSource
+  ansible.builtin.include_tasks: nodejs.yml
+
 - name: Install yarn globally
   ansible.builtin.command: npm install -g yarn
   args:

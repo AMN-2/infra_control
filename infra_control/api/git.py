@@ -70,7 +70,7 @@ def connect(label: str | None = None, token: str | None = None) -> dict[str, Any
 		doc.save()
 	else:
 		doc.insert()
-	audit.record("git.connect", result="success", target_name=label_value)
+	audit.record("git.connect", result="success", params={"label": label_value})
 	row = frappe.get_all("Git Connection", filters={"name": doc.name}, fields=FIELDS)[0]
 	return {"connection": _serialized(row)}
 
@@ -81,7 +81,7 @@ def disconnect(connection: str | None = None) -> dict[str, Any]:
 	if not frappe.db.exists("Git Connection", name):
 		raise NotFound("Git Connection", name)
 	frappe.delete_doc("Git Connection", name, ignore_permissions=True)
-	audit.record("git.disconnect", result="success", target_name=name)
+	audit.record("git.disconnect", result="success", params={"connection": name})
 	return {"connection": name, "deleted": True}
 
 

@@ -1,4 +1,11 @@
 {
+  "_IcBadge-KxaWAZ_O.js": {
+    "file": "assets/IcBadge-KxaWAZ_O.js",
+    "name": "IcBadge",
+    "imports": [
+      "_components-Bvpk12nt.js"
+    ]
+  },
   "_IcEmptyState-U1jJs2iJ.js": {
     "file": "assets/IcEmptyState-U1jJs2iJ.js",
     "name": "IcEmptyState",
@@ -57,24 +64,25 @@
       "_components-Bvpk12nt.js"
     ]
   },
-  "_TargetActions-DuVRVObn.js": {
-    "file": "assets/TargetActions-DuVRVObn.js",
+  "_TargetActions-CIDtCOJA.js": {
+    "file": "assets/TargetActions-CIDtCOJA.js",
     "name": "TargetActions",
     "imports": [
       "_components-Bvpk12nt.js",
+      "_IcBadge-KxaWAZ_O.js",
       "_IcSkeleton-Cyhm2ZHj.js",
       "_play-xUuSdy27.js",
       "_IcSelect-BFuFYKcz.js",
       "_IcTabs-CXU9E7Nd.js",
       "index.html",
-      "_playbooks-BF7qjt7Z.js"
+      "_playbooks-CJxPvoc4.js",
+      "_git-C2KZ9KaP.js"
     ]
   },
-  "__async-BKkPO2c-.js": {
-    "file": "assets/_async-BKkPO2c-.js",
+  "__async-9yAdkrt8.js": {
+    "file": "assets/_async-9yAdkrt8.js",
     "name": "_async",
     "imports": [
-      "_rolldown-runtime-B0Z9INg1.js",
       "_components-Bvpk12nt.js"
     ]
   },
@@ -86,6 +94,14 @@
       "node_modules/@xterm/addon-fit/lib/addon-fit.mjs"
     ]
   },
+  "_git-C2KZ9KaP.js": {
+    "file": "assets/git-C2KZ9KaP.js",
+    "name": "git",
+    "imports": [
+      "_components-Bvpk12nt.js",
+      "__async-9yAdkrt8.js"
+    ]
+  },
   "_play-xUuSdy27.js": {
     "file": "assets/play-xUuSdy27.js",
     "name": "play",
@@ -93,18 +109,26 @@
       "_components-Bvpk12nt.js"
     ]
   },
-  "_playbooks-BF7qjt7Z.js": {
-    "file": "assets/playbooks-BF7qjt7Z.js",
+  "_playbooks-CJxPvoc4.js": {
+    "file": "assets/playbooks-CJxPvoc4.js",
     "name": "playbooks",
     "imports": [
       "_components-Bvpk12nt.js",
-      "__async-BKkPO2c-.js"
+      "__async-9yAdkrt8.js"
     ]
   },
   "_plus-Dc_bJQ2i.js": {
     "file": "assets/plus-Dc_bJQ2i.js",
     "name": "plus",
     "imports": [
+      "_components-Bvpk12nt.js"
+    ]
+  },
+  "_realtime-C2xFRMru.js": {
+    "file": "assets/realtime-C2xFRMru.js",
+    "name": "realtime",
+    "imports": [
+      "_rolldown-runtime-B0Z9INg1.js",
       "_components-Bvpk12nt.js"
     ]
   },
@@ -120,14 +144,23 @@
       "_IcEmptyState-U1jJs2iJ.js"
     ]
   },
+  "_trash-2-BFk8Mkw9.js": {
+    "file": "assets/trash-2-BFk8Mkw9.js",
+    "name": "trash-2",
+    "imports": [
+      "_components-Bvpk12nt.js"
+    ]
+  },
   "index.html": {
-    "file": "assets/index-Cj1bl-BB.js",
+    "file": "assets/index-BpxPjWLI.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
     "imports": [
       "_components-Bvpk12nt.js",
-      "__async-BKkPO2c-.js"
+      "__async-9yAdkrt8.js",
+      "_IcBadge-KxaWAZ_O.js",
+      "_realtime-C2xFRMru.js"
     ],
     "dynamicImports": [
       "src/features/overview/OverviewView.vue",
@@ -140,11 +173,12 @@
       "src/features/jobs/JobDetailView.vue",
       "src/features/bulk/BulkView.vue",
       "src/features/alerts/AlertsView.vue",
+      "src/features/settings/GitHubView.vue",
       "src/features/design/DesignShowcase.vue",
       "src/features/system/NotFoundView.vue"
     ],
     "css": [
-      "assets/index-Dzv8d4pQ.css"
+      "assets/index-B88vqnbV.css"
     ],
     "assets": [
       "assets/space-grotesk-vietnamese-wght-normal-D0rl6rjA.woff2",
@@ -206,14 +240,16 @@
     "isDynamicEntry": true
   },
   "src/features/alerts/AlertsView.vue": {
-    "file": "assets/AlertsView-BzcoZnaY.js",
+    "file": "assets/AlertsView-CgBPvfjD.js",
     "name": "AlertsView",
     "src": "src/features/alerts/AlertsView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_components-Bvpk12nt.js",
-      "__async-BKkPO2c-.js",
+      "__async-9yAdkrt8.js",
+      "_IcBadge-KxaWAZ_O.js",
       "_IcSkeleton-Cyhm2ZHj.js",
+      "_trash-2-BFk8Mkw9.js",
       "_IcEmptyState-U1jJs2iJ.js",
       "_IcSelect-BFuFYKcz.js",
       "_IcTabs-CXU9E7Nd.js",
@@ -222,29 +258,31 @@
     ]
   },
   "src/features/bulk/BulkView.vue": {
-    "file": "assets/BulkView-D9WRGGl4.js",
+    "file": "assets/BulkView-uxhYAZOD.js",
     "name": "BulkView",
     "src": "src/features/bulk/BulkView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_components-Bvpk12nt.js",
-      "__async-BKkPO2c-.js",
+      "__async-9yAdkrt8.js",
       "_IcSkeleton-Cyhm2ZHj.js",
       "_IcEmptyState-U1jJs2iJ.js",
       "_IcProgress-Cy2DNloM.js",
       "_IcSelect-BFuFYKcz.js",
+      "_realtime-C2xFRMru.js",
       "index.html",
       "_time-Cch5MwlD.js",
-      "_playbooks-BF7qjt7Z.js"
+      "_playbooks-CJxPvoc4.js"
     ]
   },
   "src/features/design/DesignShowcase.vue": {
-    "file": "assets/DesignShowcase-5-NKPyh8.js",
+    "file": "assets/DesignShowcase-pH7Eddr8.js",
     "name": "DesignShowcase",
     "src": "src/features/design/DesignShowcase.vue",
     "isDynamicEntry": true,
     "imports": [
       "_components-Bvpk12nt.js",
+      "_IcBadge-KxaWAZ_O.js",
       "_IcSkeleton-Cyhm2ZHj.js",
       "_play-xUuSdy27.js",
       "_plus-Dc_bJQ2i.js",
@@ -262,12 +300,13 @@
     ]
   },
   "src/features/jobs/JobDetailView.vue": {
-    "file": "assets/JobDetailView-CovkzXzr.js",
+    "file": "assets/JobDetailView-CfZcu9wA.js",
     "name": "JobDetailView",
     "src": "src/features/jobs/JobDetailView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_components-Bvpk12nt.js",
+      "_IcBadge-KxaWAZ_O.js",
       "_IcSkeleton-Cyhm2ZHj.js",
       "_IcProgress-Cy2DNloM.js",
       "index.html",
@@ -275,7 +314,7 @@
     ]
   },
   "src/features/jobs/JobsView.vue": {
-    "file": "assets/JobsView-CCCa6rpP.js",
+    "file": "assets/JobsView-DFdliM6N.js",
     "name": "JobsView",
     "src": "src/features/jobs/JobsView.vue",
     "isDynamicEntry": true,
@@ -290,7 +329,7 @@
     ]
   },
   "src/features/overview/OverviewView.vue": {
-    "file": "assets/OverviewView-C3731-7K.js",
+    "file": "assets/OverviewView-Baw75Cp6.js",
     "name": "OverviewView",
     "src": "src/features/overview/OverviewView.vue",
     "isDynamicEntry": true,
@@ -304,13 +343,14 @@
     ]
   },
   "src/features/servers/ServerDetailView.vue": {
-    "file": "assets/ServerDetailView-CtwX5UE4.js",
+    "file": "assets/ServerDetailView-wLrGvaTU.js",
     "name": "ServerDetailView",
     "src": "src/features/servers/ServerDetailView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_components-Bvpk12nt.js",
-      "__async-BKkPO2c-.js",
+      "__async-9yAdkrt8.js",
+      "_IcBadge-KxaWAZ_O.js",
       "_IcSkeleton-Cyhm2ZHj.js",
       "_IcEmptyState-U1jJs2iJ.js",
       "_IcMetricChip-CDaDPfgW.js",
@@ -320,19 +360,21 @@
       "_IcTable-DH6HMUyI.js",
       "index.html",
       "_time-Cch5MwlD.js",
-      "_TargetActions-DuVRVObn.js"
+      "_TargetActions-CIDtCOJA.js"
     ],
     "dynamicImports": [
       "src/features/servers/chartEngine.ts"
     ]
   },
   "src/features/servers/ServersView.vue": {
-    "file": "assets/ServersView-Bc7OoenN.js",
+    "file": "assets/ServersView-HzK_sgGA.js",
     "name": "ServersView",
     "src": "src/features/servers/ServersView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_components-Bvpk12nt.js",
+      "__async-9yAdkrt8.js",
+      "_IcBadge-KxaWAZ_O.js",
       "_IcSkeleton-Cyhm2ZHj.js",
       "_IcMetricChip-CDaDPfgW.js",
       "_IcProviderBadge-BeXIJ-xu.js",
@@ -351,13 +393,29 @@
       "_rolldown-runtime-B0Z9INg1.js"
     ]
   },
+  "src/features/settings/GitHubView.vue": {
+    "file": "assets/GitHubView-C3JXm7Kw.js",
+    "name": "GitHubView",
+    "src": "src/features/settings/GitHubView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-Bvpk12nt.js",
+      "_IcBadge-KxaWAZ_O.js",
+      "_IcSkeleton-Cyhm2ZHj.js",
+      "_trash-2-BFk8Mkw9.js",
+      "_IcEmptyState-U1jJs2iJ.js",
+      "_time-Cch5MwlD.js",
+      "_git-C2KZ9KaP.js"
+    ]
+  },
   "src/features/sites/SiteDetailView.vue": {
-    "file": "assets/SiteDetailView-dwEgNay8.js",
+    "file": "assets/SiteDetailView-C_NLQT2O.js",
     "name": "SiteDetailView",
     "src": "src/features/sites/SiteDetailView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_components-Bvpk12nt.js",
+      "_IcBadge-KxaWAZ_O.js",
       "_IcSkeleton-Cyhm2ZHj.js",
       "_IcProgress-Cy2DNloM.js",
       "_IcProviderBadge-BeXIJ-xu.js",
@@ -365,11 +423,11 @@
       "_IcTable-DH6HMUyI.js",
       "index.html",
       "_time-Cch5MwlD.js",
-      "_TargetActions-DuVRVObn.js"
+      "_TargetActions-CIDtCOJA.js"
     ]
   },
   "src/features/sites/SitesView.vue": {
-    "file": "assets/SitesView-CC1iW7pD.js",
+    "file": "assets/SitesView-BgpF64xl.js",
     "name": "SitesView",
     "src": "src/features/sites/SitesView.vue",
     "isDynamicEntry": true,
@@ -394,7 +452,7 @@
     ]
   },
   "src/features/topology/TopologyView.vue": {
-    "file": "assets/TopologyView-BpSo_3M_.js",
+    "file": "assets/TopologyView-CZOf1y74.js",
     "name": "TopologyView",
     "src": "src/features/topology/TopologyView.vue",
     "isDynamicEntry": true,

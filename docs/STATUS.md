@@ -59,7 +59,7 @@ files that the earlier "green" had missed (commit `5213f05` on `agent-b/B1.2-app
 | A2.3 site playbooks | done, verified live | `agent-a/A2.3-site-playbooks` | #23 |
 | A2.6 Phase 2 gate, 11 live fixes, staging deployment | done | `agent-a/A2.6-phase2-gate` | #24 |
 | A2.4 Frappe Cloud client + adapter | blocked: staging FC team, Q7/Q8 | | |
-| A2.5 inventory.sync with host discovery | next | | |
+| A2.5 inventory.sync with host discovery | done, verified live (JOB-00023) + 18 integration tests | `agent-a/A2.5-inventory-sync` (on #24) | #26 |
 
 **Gate** (`docs/runbooks/phase2_gate.md`): part 1 passed (runs 2 and 3, identical, from fresh
 droplets); part 2 passed on DigitalOcean, Frappe Cloud half blocked; part 3 passed (built SPA at

@@ -78,6 +78,7 @@ droplets); part 2 passed on DigitalOcean, Frappe Cloud half blocked; part 3 pass
 | B3.1 live charts on server detail | done | `agent-b/B3.1-live-charts-continue` |
 | B3.2 alerts screen + rule editor | done: 91 vitest, 19 Playwright | `agent-b/B3.2-alerts-rules` |
 | B3.3 bulk rollout screen | done | `agent-b/B3.1-live-charts-continue` |
+| A3.5b `bench.add_app` + `site.install_app` (ADR 0004 amendment) | done, deployed; live on gate-02: JOB-00050 get-app erpnext version-15 succeeded (report step bug fixed in `277bed9`), JOB-00051 idempotent re-run recorded the Bench App row; JOB-00052 install_app on gate-site-2 (see below) | `integration/phase2` |
 | A3.5 `bench.update` (code rollout to a bench; ADR 0004) | done, deployed to staging; first live run JOB-00042 on BENCH-0002 (gate-02): Success, 18/18 steps, idempotent path ("nothing to update") | `integration/phase2` `1cc16cb` |
 
 Local branches stack on `integration/phase2`: `agent-b/B3.1-live-charts-continue` →
@@ -92,6 +93,11 @@ and `last_heartbeat` updates. The test record `SRV-0005` (fake account `DO-TEST`
 archived so it stops failing collection every minute. Note: enabling the scheduler also runs
 the other apps' scheduled jobs on this shared staging site (`smart_demo` tenant reconcile
 errors in Error Log are theirs, not ours).
+
+**Finding for Phase 4 (2026-10-08, JOB-00049):** the `bench` Ansible role installs Node 18;
+current Frappe apps (e.g. `frappe/wiki` develop) need Node >= 20, so `bench get-app` fails on
+their asset build. Raise the role to Node 20 (Frappe v15 supports it) under A4.x and re-run
+Molecule.
 
 **Exit gate (plan §12), still to run live:** (1) stop nginx on a staging server and receive a
 Telegram alert within 2 minutes — needs a Telegram bot token in `Infra Settings` and the

@@ -27,6 +27,8 @@ scheduler_events = {
 			"infra_control.job_engine.recovery.run",
 			# Metric collector (A3.1): one Server Metric per managed server, per minute.
 			"infra_control.monitoring.collector.collect_all",
+			# Alert engine (A3.2): evaluate every enabled rule, fire/resolve and notify.
+			"infra_control.monitoring.alerts.evaluate_rules",
 		],
 	},
 	"hourly": [

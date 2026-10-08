@@ -164,4 +164,10 @@ def apply_plan(plan: SyncPlan) -> dict[str, Any]:
 def reconcile(account: str, provider: str, inventory: dict[str, Any]) -> dict[str, Any]:
 	"""Plan against the current documents and apply. The adapters' `Records.reconcile`."""
 	plan = plan_sync(account, provider, inventory, load_documents(account))
-	return apply_plan(plan)
+	result = apply_plan(plan)
+	# A2.5/A3.3: findings open or resolve the account's inventory-drift alert.
+	from infra_control.monitoring.alerts import sync_drift_alerts
+
+	drift = sync_drift_alerts(account, list(result.get("findings") or []))
+	result["drift_alerts"] = drift
+	return result

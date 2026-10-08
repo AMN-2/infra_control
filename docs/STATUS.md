@@ -78,7 +78,7 @@ droplets); part 2 passed on DigitalOcean, Frappe Cloud half blocked; part 3 pass
 | B3.1 live charts on server detail | done | `agent-b/B3.1-live-charts-continue` |
 | B3.2 alerts screen + rule editor | done: 91 vitest, 19 Playwright | `agent-b/B3.2-alerts-rules` |
 | B3.3 bulk rollout screen | done | `agent-b/B3.1-live-charts-continue` |
-| A3.5 `bench.update` (code rollout to a bench; ADR 0004) | done, deployed to staging; first live run JOB-00042 on BENCH-0002 (gate-02) | `integration/phase2` `1cc16cb` |
+| A3.5 `bench.update` (code rollout to a bench; ADR 0004) | done, deployed to staging; first live run JOB-00042 on BENCH-0002 (gate-02): Success, 18/18 steps, idempotent path ("nothing to update") | `integration/phase2` `1cc16cb` |
 
 Local branches stack on `integration/phase2`: `agent-b/B3.1-live-charts-continue` →
 `agent-b/B3.2-alerts-rules` → `agent-a/A3.3-drift-detection`. No PRs opened yet for Phase 3

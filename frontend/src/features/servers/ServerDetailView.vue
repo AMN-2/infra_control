@@ -23,16 +23,19 @@ import ErrorState from "@/features/system/ErrorState.vue";
 import { relativeTime } from "@/lib/time";
 import { useInventoryStore, type Bench } from "@/stores/inventory";
 import { useJobsStore, type Job } from "@/stores/jobs";
+import { METRICS, useMetricsStore } from "@/stores/metrics";
+import MetricChart from "./MetricChart.vue";
 
 /**
  * Server detail (plan §10.2): metrics, benches, job history, capability-driven actions.
- * Metrics update in place from `infra:server.heartbeat`; the session trend feeds sparklines
- * until the real metric series arrives in B3.1.
+ * Historical series come from `metrics.series`; heartbeats update the latest reading and append
+ * to the three realtime series without polling.
  */
 const route = useRoute();
 const router = useRouter();
 const inventory = useInventoryStore();
 const jobs = useJobsStore();
+const metrics = useMetricsStore();
 
 const name = computed(() => String(route.params.name ?? ""));
 const server = computed(() => inventory.serverDetails[name.value]);
@@ -42,6 +45,7 @@ const now = ref(Date.now());
 function load(): void {
 	void inventory.fetchServer(name.value);
 	void jobs.fetchList({ target_doctype: "Server", target_name: name.value });
+	void metrics.fetchServer(name.value);
 }
 onMounted(() => {
 	inventory.subscribe();
@@ -51,8 +55,10 @@ onMounted(() => {
 watch(name, load);
 watch(
 	() => server.value?.latest_metrics?.ts,
-	() => {
+	(ts) => {
 		now.value = Date.now();
+		const latest = server.value?.latest_metrics;
+		if (ts && latest) metrics.appendHeartbeat(name.value, latest);
 	}
 );
 
@@ -96,6 +102,14 @@ const series = computed(() => ({
 	ram: history.value.map((h) => h.ram),
 	disk: history.value.map((h) => h.disk),
 }));
+const historical = computed(() => metrics.series[name.value] ?? {});
+const metricLabel = {
+	cpu: "CPU",
+	ram: "RAM",
+	disk: "Disk",
+	load1: "Load",
+	queue_backlog: "Queue",
+} as const;
 </script>
 
 <template>
@@ -190,6 +204,40 @@ const series = computed(() => ({
 							unit=""
 							:warn="100"
 							:crit="500"
+						/>
+					</div>
+				</div>
+			</IcCard>
+
+			<IcCard title="History" subtitle="Last 24 hours · resolution selected by the server">
+				<div
+					v-if="metrics.loading[name]"
+					class="grid gap-4 lg:grid-cols-2"
+					data-testid="metrics-loading"
+				>
+					<IcSkeleton v-for="i in 4" :key="i" variant="block" />
+				</div>
+				<ErrorState
+					v-else-if="metrics.errors[name]"
+					:error="metrics.errors[name]!"
+					@retry="metrics.fetchServer(name)"
+				/>
+				<IcEmptyState
+					v-else-if="!METRICS.some((metric) => historical[metric]?.points.length)"
+					title="No metric history"
+					description="Historical charts appear after the collector stores its first reading."
+				/>
+				<div v-else class="grid gap-4 lg:grid-cols-2" data-testid="metric-history">
+					<div
+						v-for="metric in METRICS"
+						:key="metric"
+						class="rounded border border-line bg-surface-2 p-3"
+					>
+						<h3 class="text-sm font-medium">{{ metricLabel[metric] }}</h3>
+						<MetricChart
+							:label="metricLabel[metric]"
+							:points="historical[metric]?.points ?? []"
+							:unit="['cpu', 'ram', 'disk'].includes(metric) ? '%' : ''"
 						/>
 					</div>
 				</div>

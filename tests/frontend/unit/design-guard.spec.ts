@@ -12,6 +12,7 @@ const SRC = fileURLToPath(new URL("../../../frontend/src", import.meta.url));
 // Only the token sources may hold raw values; design/components are checked like any feature.
 const EXEMPT = [
 	"design/tokens.css",
+	"design/tokens.ts",
 	"design/theme.css",
 	"design/base.css",
 	"design/motion.ts",

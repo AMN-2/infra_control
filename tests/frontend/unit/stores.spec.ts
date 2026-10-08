@@ -12,6 +12,7 @@ const { useJobsStore } = await import("@/stores/jobs");
 const { useInventoryStore } = await import("@/stores/inventory");
 const { useAlertsStore } = await import("@/stores/alerts");
 const { useSessionStore } = await import("@/stores/session");
+const { useMetricsStore, METRICS } = await import("@/stores/metrics");
 
 const job = (name: string, status = "Running") => ({
 	name,
@@ -40,6 +41,48 @@ beforeEach(() => {
 	_resetForTests();
 	GET.mockReset();
 	POST.mockReset();
+});
+
+describe("metrics store", () => {
+	it("loads every contracted series and appends realtime readings without duplicates", async () => {
+		GET.mockImplementation(
+			(_path: string, options: { params: { query: { metric: string } } }) => {
+				const metric = options.params.query.metric;
+				return Promise.resolve({
+					data: {
+						server: "SRV-1",
+						metric,
+						resolution: "1m",
+						from: "2026-10-08T09:00:00Z",
+						to: "2026-10-08T10:00:00Z",
+						points: [{ ts: "2026-10-08T09:59:00Z", value: 10 }],
+					},
+				});
+			}
+		);
+		const store = useMetricsStore();
+		await store.fetchServer("SRV-1", 1);
+		expect(GET).toHaveBeenCalledTimes(METRICS.length);
+		expect(Object.keys(store.series["SRV-1"] ?? {})).toEqual([...METRICS]);
+
+		const beat = { ts: "2026-10-08T10:00:00Z", cpu: 21, ram: 42, disk: 63 };
+		store.appendHeartbeat("SRV-1", beat);
+		store.appendHeartbeat("SRV-1", { ...beat, cpu: 22 });
+		expect(store.series["SRV-1"]?.cpu?.points).toEqual([
+			{ ts: "2026-10-08T09:59:00Z", value: 10 },
+			{ ts: beat.ts, value: 22 },
+		]);
+		expect(store.series["SRV-1"]?.ram?.points.at(-1)?.value).toBe(42);
+		expect(store.series["SRV-1"]?.load1?.points).toHaveLength(1);
+	});
+
+	it("keeps a per-server error that callers can retry", async () => {
+		GET.mockRejectedValue(new Error("offline"));
+		const store = useMetricsStore();
+		await store.fetchServer("SRV-1");
+		expect(store.errors["SRV-1"]?.code).toBe("network_error");
+		expect(store.loading["SRV-1"]).toBe(false);
+	});
 });
 
 describe("jobs store", () => {

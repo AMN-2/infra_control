@@ -298,3 +298,51 @@ def alert(row: dict[str, Any]) -> dict[str, Any]:
 		"acknowledged_at": iso_utc(row.get("acknowledged_at")),
 		"resolved_at": iso_utc(row.get("resolved_at")),
 	}
+
+
+ALERT_RULE_FIELDS = [
+	"name",
+	"title",
+	"kind",
+	"target_doctype",
+	"metric",
+	"operator",
+	"threshold",
+	"for_minutes",
+	"severity",
+	"enabled",
+	"builtin",
+	"modified",
+	"creation",
+]
+
+
+def _unique(values: list[Any]) -> list[str]:
+	seen: set[str] = set()
+	out: list[str] = []
+	for value in values:
+		text = str(value)
+		if text not in seen:
+			seen.add(text)
+			out.append(text)
+	return out
+
+
+def alert_rule(row: dict[str, Any], *, channels: list[Any]) -> dict[str, Any]:
+	"""Exactly the `AlertRule` schema. `metric`/`operator`/`threshold`/`for_minutes` are null for
+	the kinds that do not use them (the stored docs already honour the per-kind matrix)."""
+	return {
+		"name": row["name"],
+		"title": row["title"],
+		"kind": row.get("kind") or "metric",
+		"target_doctype": row.get("target_doctype") or "Server",
+		"metric": row.get("metric") or None,
+		"operator": row.get("operator") or None,
+		"threshold": float(row["threshold"]) if row.get("threshold") not in (None, "") else None,
+		"for_minutes": int(row["for_minutes"]) if row.get("for_minutes") not in (None, "") else None,
+		"severity": row["severity"],
+		"channels": _unique(channels),
+		"enabled": bool(row.get("enabled")),
+		"builtin": bool(row.get("builtin")),
+		"modified_at": iso_utc(row.get("modified")) or iso_utc(row.get("creation")) or "",
+	}

@@ -96,6 +96,36 @@ def str_param(name: str, value: Any, *, required: bool = False) -> str | None:
 	return str(value)
 
 
+def bool_param(name: str, value: Any, *, default: bool) -> bool:
+	if value in (None, ""):
+		return default
+	if isinstance(value, bool):
+		return value
+	if isinstance(value, int):
+		return bool(value)
+	token = str(value).strip().lower()
+	if token in ("1", "true", "yes", "on"):
+		return True
+	if token in ("0", "false", "no", "off"):
+		return False
+	raise ValidationError(f"{name} must be a boolean", {"field": name})
+
+
+def list_param(name: str, value: Any) -> list[Any]:
+	if value in (None, ""):
+		return []
+	if isinstance(value, str):
+		import json
+
+		try:
+			value = json.loads(value)
+		except ValueError:
+			raise ValidationError(f"{name} must be a JSON array", {"field": name}) from None
+	if not isinstance(value, list):
+		raise ValidationError(f"{name} must be an array", {"field": name})
+	return value
+
+
 def dict_param(name: str, value: Any) -> dict[str, Any]:
 	if value in (None, ""):
 		return {}

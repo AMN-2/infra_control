@@ -19,6 +19,9 @@ SERIES = {
 	"Alert Rule": "RULE-",
 }
 
+# Child tables the fake persists on insert/save: {parent doctype: {fieldname: child doctype}}.
+CHILD_DOCTYPES: dict[str, dict[str, str]] = {"Alert Rule": {"channels": "Alert Rule Channel"}}
+
 
 class FakeRedis:
 	def __init__(self) -> None:
@@ -55,7 +58,8 @@ class FakeDoc:
 	def __init__(self, frappe: FakeFrappe, data: dict[str, Any]) -> None:
 		object.__setattr__(self, "_frappe", frappe)
 		object.__setattr__(self, "_data", dict(data))
-		object.__setattr__(self, "flags", SimpleNamespace(ignore_permissions=False))
+		object.__setattr__(self, "_children", {})
+		object.__setattr__(self, "flags", SimpleNamespace(ignore_permissions=False, ignore_links=False))
 
 	def __getattr__(self, item: str) -> Any:
 		return self._data.get(item)
@@ -67,7 +71,15 @@ class FakeDoc:
 		return self._data.get(key, default)
 
 	def set(self, key: str, value: Any) -> None:
-		self._data[key] = value
+		if isinstance(value, list):  # a child table assignment (e.g. doc.set("channels", []))
+			self._children[key] = [dict(v) for v in value]
+		else:
+			self._data[key] = value
+
+	def append(self, fieldname: str, value: dict[str, Any]) -> dict[str, Any]:
+		row = dict(value)
+		self._children.setdefault(fieldname, []).append(row)
+		return row
 
 	def get_password(self, field: str) -> Any:
 		return self._data.get(field)
@@ -84,7 +96,23 @@ class FakeDoc:
 				self._data["name"] = f"{SERIES.get(dt, dt + '-')}{next(self._frappe.counter):05d}"
 		self._data.setdefault("creation", self._frappe.now())
 		self._frappe.store.setdefault(dt, {})[self._data["name"]] = self
+		self._sync_children()
 		return self
+
+	def _sync_children(self) -> None:
+		for fieldname, child_dt in CHILD_DOCTYPES.get(self._data["doctype"], {}).items():
+			table = self._frappe.store.setdefault(child_dt, {})
+			for stale in [n for n, d in table.items() if d.get("parent") == self._data["name"]]:
+				table.pop(stale, None)
+			for idx, row in enumerate(self._children.get(fieldname, []), start=1):
+				self._frappe.add(
+					child_dt,
+					parent=self._data["name"],
+					parenttype=self._data["doctype"],
+					parentfield=fieldname,
+					idx=idx,
+					**row,
+				)
 
 	def save(self, ignore_permissions: bool = False) -> FakeDoc:
 		return self.insert()

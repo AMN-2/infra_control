@@ -52,6 +52,9 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	"git.disconnect": "post",
 	"git.repos": "get",
 	"git.refs": "get",
+	# ADR 0006: provider accounts and the live provisioning catalogue.
+	"providers.accounts": "get",
+	"providers.options": "get",
 }
 
 # Plan section 5 unified enums.

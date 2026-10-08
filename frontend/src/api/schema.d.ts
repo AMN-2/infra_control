@@ -568,6 +568,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/infra_control.api.providers.accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Provider accounts (tokens never returned) */
+        get: operations["providers_accounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.providers.options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Regions and plans (sizes with specs and price) a server can be provisioned with; cached one hour */
+        get: operations["providers_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/method/infra_control.api.audit.list": {
         parameters: {
             query?: never;
@@ -1190,6 +1224,48 @@ export interface components {
         GitRefList: {
             repo: components["schemas"]["GitRepo"];
             items: components["schemas"]["GitRef"][];
+        };
+        ProviderAccountSummary: {
+            name: string;
+            label: string;
+            provider: components["schemas"]["Provider"];
+            enabled: boolean;
+            is_staging: boolean;
+        };
+        ProviderAccountList: {
+            items: components["schemas"]["ProviderAccountSummary"][];
+        };
+        ProvisionRegion: {
+            slug: string;
+            name: string;
+            /** @description Size slugs offered in the region */
+            sizes: string[];
+        };
+        ProvisionSize: {
+            slug: string;
+            /** @enum {string} */
+            family: "basic" | "general" | "cpu" | "memory" | "storage" | "other";
+            description: string;
+            vcpus: number;
+            memory_mb: number;
+            disk_gb: number;
+            transfer_tb: number;
+            /** @description USD */
+            price_monthly: number;
+            /** @description USD */
+            price_hourly: number;
+            regions: string[];
+        };
+        ProvisionCatalogue: {
+            account: string;
+            provider: components["schemas"]["Provider"];
+            regions: components["schemas"]["ProvisionRegion"][];
+            sizes: components["schemas"]["ProvisionSize"][];
+            defaults: {
+                region: string;
+                size: string;
+                image: string;
+            };
         };
         AuditEntry: {
             name: string;
@@ -2338,6 +2414,57 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    providers_accounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accounts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderAccountList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    providers_options: {
+        parameters: {
+            query: {
+                account: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Provisioning catalogue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvisionCatalogue"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["CapabilityMissing"];
             429: components["responses"]["RateLimited"];
         };
     };

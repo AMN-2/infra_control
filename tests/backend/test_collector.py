@@ -31,6 +31,7 @@ def ff(monkeypatch: pytest.MonkeyPatch) -> FakeFrappe:
 	for module in (collector, realtime, registry):
 		monkeypatch.setattr(module, "frappe", f)
 	monkeypatch.setattr(collector, "now_datetime", f.now)
+	monkeypatch.setattr(collector, "get_system_timezone", lambda: "UTC")
 	monkeypatch.setattr(collector, "get_datetime", lambda v: v if hasattr(v, "year") else f.now())
 	monkeypatch.setattr(
 		collector, "add_to_date", lambda ts, minutes=0: ts + __import__("datetime").timedelta(minutes=minutes)
@@ -103,3 +104,21 @@ def test_collect_all_marks_a_stale_server_down(ff: FakeFrappe) -> None:
 	result = collector.collect_all()
 	assert result["downed"] == 1
 	assert ff.store["Server"]["SRV-0001"].get("status") == "Down"
+
+
+def test_tz_aware_provider_timestamp_is_stored_naive_and_emitted_as_utc(
+	ff: FakeFrappe, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	"""DigitalOcean returns UTC-aware timestamps; MariaDB rejects an offset (Phase 3 live run)."""
+	from datetime import UTC, datetime
+
+	monkeypatch.setattr(collector, "get_system_timezone", lambda: "Asia/Baghdad")
+	aware = datetime(2026, 10, 8, 20, 16, 16, tzinfo=UTC)
+	provider = _MetricsProvider()
+	provider.metrics = {"cpu": 1.0, "ts": aware}
+	monkeypatch.setattr(registry, "get_provider", lambda account: provider)
+	assert collector.collect_one("SRV-0001", "DO-STAGING") is True
+	stored = next(iter(ff.store["Server Metric"].values())).get("ts")
+	assert stored.tzinfo is None and stored == datetime(2026, 10, 8, 23, 16, 16)
+	hb = [e for e in ff.events if e[0] == "infra:server.heartbeat"][-1][1]
+	assert hb["ts"] == "2026-10-08T20:16:16Z"

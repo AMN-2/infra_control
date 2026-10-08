@@ -10,10 +10,12 @@ that into a notification). A collection failure for one server never stops the o
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import frappe
-from frappe.utils import add_to_date, get_datetime, now_datetime
+from frappe.utils import add_to_date, get_datetime, get_system_timezone, now_datetime
 
 from infra_control.core.enums import Capability, ServerStatus
 from infra_control.job_engine import realtime
@@ -61,7 +63,7 @@ def collect_one(server: str, account: str) -> bool:
 	metrics = provider.get_metrics(server)
 	if not isinstance(metrics, dict) or metrics.get("cpu") is None:
 		return False
-	ts = get_datetime(metrics.get("ts")) if metrics.get("ts") else now_datetime()
+	ts = _db_datetime(get_datetime(metrics.get("ts"))) if metrics.get("ts") else now_datetime()
 	cpu = _num(metrics.get("cpu"))
 	ram = _num(metrics.get("ram"))
 	disk = _num(metrics.get("disk"))
@@ -118,6 +120,17 @@ def _num(value: Any) -> float | None:
 		return None
 
 
+def _db_datetime(value: datetime | None) -> datetime | None:
+	"""Adapters return tz-aware (UTC) timestamps; Frappe stores naive system-timezone datetimes
+	and MariaDB rejects an offset (the Phase 1 gate bug, fixed for job steps in #17)."""
+	if value is None or value.tzinfo is None:
+		return value
+	return value.astimezone(ZoneInfo(get_system_timezone())).replace(tzinfo=None)
+
+
 def _iso(ts: Any) -> str:
-	dt = get_datetime(ts)
-	return str(dt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+	"""Naive system-timezone datetime -> RFC 3339 UTC with `Z` (the realtime contract)."""
+	dt: datetime = get_datetime(ts)
+	if dt.tzinfo is None:
+		dt = dt.replace(tzinfo=ZoneInfo(get_system_timezone()))
+	return dt.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")

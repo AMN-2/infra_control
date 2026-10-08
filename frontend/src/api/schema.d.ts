@@ -347,6 +347,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/infra_control.api.bulk.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List bulk operations, newest first (summary rows, no targets) */
+        get: operations["bulk_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/method/infra_control.api.alerts.list": {
         parameters: {
             query?: never;
@@ -924,6 +941,10 @@ export interface components {
         };
         BulkEnvelope: {
             bulk: components["schemas"]["BulkOperation"];
+        };
+        BulkPage: {
+            items: components["schemas"]["BulkOperation"][];
+            next_cursor: components["schemas"]["NextCursor"];
         };
         BulkCreateRequest: {
             playbook: string;
@@ -1803,6 +1824,36 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    bulk_list: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["BulkStatus"];
+                playbook?: string;
+                limit?: components["parameters"]["limit"];
+                /** @description Opaque cursor from a previous page's `next_cursor`. */
+                cursor?: components["parameters"]["cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Page of bulk operations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkPage"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             429: components["responses"]["RateLimited"];
         };
     };

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
+	IcButton,
 	IcCard,
 	IcMetricChip,
 	IcPageHeader,
@@ -14,9 +15,13 @@ import {
 import ErrorState from "@/features/system/ErrorState.vue";
 import { relativeTime } from "@/lib/time";
 import { useInventoryStore, type Server } from "@/stores/inventory";
+import { useSessionStore } from "@/stores/session";
+import ProvisionDialog from "./ProvisionDialog.vue";
 
 /** Servers list with the filters the other screens link to (`status`, `provider_account`). */
 const inventory = useInventoryStore();
+const session = useSessionStore();
+const provisioning = ref(false);
 const route = useRoute();
 const router = useRouter();
 
@@ -79,7 +84,18 @@ const columns: Column<Row>[] = [
 		<IcPageHeader
 			title="Servers"
 			:subtitle="account ? `Provider account ${account}` : undefined"
-		/>
+		>
+			<template #actions>
+				<IcButton
+					v-if="session.canOperate"
+					variant="primary"
+					data-testid="server-new"
+					@click="provisioning = true"
+					>New server</IcButton
+				>
+			</template>
+		</IcPageHeader>
+		<ProvisionDialog v-model="provisioning" />
 		<div class="flex flex-wrap items-center gap-3">
 			<label class="text-xs text-fg-muted" for="servers-status">Status</label>
 			<div class="w-44">

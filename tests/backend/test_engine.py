@@ -493,3 +493,18 @@ def test_cancel_set_by_the_api_is_seen_on_the_next_poll(
 	# Every reload (where cancel_requested is read) happens after at least one commit in that poll.
 	assert seen_commits and all(c > 0 for c in seen_commits)
 	assert seen_commits == sorted(seen_commits)
+
+
+def test_scheduler_user_may_run_a_low_risk_playbook_without_any_role(ff: FakeFrappe) -> None:
+	# The scheduler has no Infra role; a low-risk, system playbook must still be creatable.
+	ff.session.user = engine.SCHEDULER_USER
+	ff.roles.pop(engine.SCHEDULER_USER, None)
+	job = engine.create_job("inventory.sync", "Provider Account", "DO-STAGING", user=engine.SCHEDULER_USER)
+	assert job.status == "Queued" and job.triggered_by == engine.SCHEDULER_USER
+
+
+def test_scheduler_user_may_not_run_a_high_risk_playbook(ff: FakeFrappe) -> None:
+	from infra_control.core.errors import PermissionDenied
+
+	with pytest.raises(PermissionDenied):
+		engine.create_job("server.reboot", "Server", "SRV-0001", user=engine.SCHEDULER_USER)

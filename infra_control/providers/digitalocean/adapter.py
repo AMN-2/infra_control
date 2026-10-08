@@ -33,6 +33,8 @@ from infra_control.providers.registry import register
 KIND_ACTION = "do_action"
 KIND_PROVISION = "provision"
 KIND_ANSIBLE = "ansible"
+KIND_SYNC = "sync"
+DISCOVERY_PLAYBOOK = "inventory_discover.yml"
 
 SSH_KEY_NAME = "infra-control"
 """The DigitalOcean SSH key (account → Security) whose public key gets onto every droplet."""
@@ -69,6 +71,7 @@ class Records(Protocol):
 	def record_domain(self, site: str, domain: str) -> None: ...
 	def load_backup_set(self, backup: str) -> dict[str, str]: ...
 	def spaces_client(self) -> spaces.SpacesClient | None: ...
+	def reconcile(self, account: str, provider: str, inventory: dict[str, Any]) -> dict[str, Any]: ...
 
 
 @dataclass
@@ -86,6 +89,18 @@ BACKUP_FILES: dict[str, tuple[str, str]] = {
 	"public": ("files", "files.tar"),
 	"private": ("files", "private-files.tar"),
 }
+
+
+@dataclass
+class _Sync:
+	"""An inventory.sync in flight: the API half is done, the host half (discovery) runs."""
+
+	servers: list[dict[str, Any]]
+	"""Normalized droplets (mapping.normalize_droplet), all of them."""
+	hosts: dict[str, str]
+	"""inventory hostname (= hostname) -> droplet id, for the servers discovery was sent to."""
+	started_at: datetime
+	result: dict[str, Any] | None = None
 
 
 @dataclass
@@ -151,6 +166,7 @@ class DigitalOceanProvider(Provider):
 		self._records: Records = records or _SettingsRecords()
 		self._provisions: dict[str, _Provision] = {}
 		self._pending: dict[str, _Pending] = {}
+		self._syncs: dict[str, _Sync] = {}
 
 	# --- helpers ---------------------------------------------------------------------------
 	def _settings(self) -> settings.ControllerSettings:
@@ -404,15 +420,106 @@ class DigitalOceanProvider(Provider):
 		}
 
 	# --- lifecycle -------------------------------------------------------------------------
-	def sync_inventory(self) -> dict[str, Any]:
-		"""Servers from the API (droplets tagged `infra-control`); benches and sites need the
-		hosts and arrive with the discovery playbook (A2.5)."""
+	def sync_inventory(self) -> OpRef | dict[str, Any]:
+		"""Two halves. API: droplets tagged `infra-control` become the server list. Hosts: the
+		discovery playbook lists benches and sites on every reachable server (one Ansible run, in
+		parallel), then `Records.reconcile` creates and updates documents and reports drift
+		findings. Without reachable servers the API half is reconciled at once."""
 		servers = [mapping.normalize_droplet(d) for d in self.client.list_droplets(tag=mapping.MANAGED_TAG)]
-		return {"servers": servers, "benches": [], "sites": []}
+		targets: list[dict[str, Any]] = []
+		hosts: dict[str, str] = {}
+		for srv in servers:
+			if srv["status"] is not ServerStatus.ACTIVE or not srv.get("public_ip"):
+				continue
+			host = str(srv["hostname"])
+			targets.append(
+				{
+					"name": host,
+					"hostname": host,
+					"public_ip": srv["public_ip"],
+					"ssh_user": DEFAULT_SSH_USER,
+					"ssh_port": 22,
+					"role": str(srv["role"]),
+				}
+			)
+			hosts[host] = str(srv["provider_ref"])
+		if not targets:
+			return self._records.reconcile(
+				self.config.account,
+				self.name,
+				{"servers": servers, "benches": [], "sites": [], "unreachable": [], "discovered": []},
+			)
+		ref = self.runner.start_many(targets, DISCOVERY_PLAYBOOK, {})
+		self._syncs[ref.external_id] = _Sync(servers, hosts, datetime.now(UTC))
+		return OpRef(self.name, KIND_SYNC, ref.external_id)
+
+	def _sync_status(self, op: OpRef) -> OpStatus:
+		from infra_control.inventory.plan import normalize_discovery
+
+		run = OpRef(self.name, KIND_ANSIBLE, op.external_id)
+		inner = self.runner.status(run)
+		sync = self._syncs.get(op.external_id)
+		if sync is None:
+			# A fresh adapter instance (worker restart): the server list is fetched again.
+			servers = [
+				mapping.normalize_droplet(d) for d in self.client.list_droplets(tag=mapping.MANAGED_TAG)
+			]
+			sync = _Sync(
+				servers, {str(s_["hostname"]): str(s_["provider_ref"]) for s_ in servers}, datetime.now(UTC)
+			)
+			self._syncs[op.external_id] = sync
+		api_step = OpStep(
+			"List servers at DigitalOcean",
+			OpState.SUCCESS,
+			output=f"{len(sync.servers)} droplets tagged {mapping.MANAGED_TAG}\n",
+			started_at=sync.started_at,
+			ended_at=sync.started_at,
+		)
+		steps: list[OpStep] = [api_step, *inner.steps]
+		if not inner.state.terminal or inner.state is not OpState.SUCCESS:
+			return OpStatus(inner.state, tuple(steps), error=inner.error)
+		if sync.result is None:
+			unreachable = self.runner.unreachable(run)
+			benches: list[dict[str, Any]] = []
+			sites: list[dict[str, Any]] = []
+			discovered: list[str] = []
+			for host, payload in self.runner.read_results(run).items():
+				ref = sync.hosts.get(host)
+				if ref is None or not isinstance(payload, dict):
+					continue
+				discovered.append(ref)
+				b, s_ = normalize_discovery(ref, host, payload)
+				benches.extend(b)
+				sites.extend(s_)
+			sync.result = self._records.reconcile(
+				self.config.account,
+				self.name,
+				{
+					"servers": sync.servers,
+					"benches": benches,
+					"sites": sites,
+					"unreachable": unreachable,
+					"discovered": discovered,
+				},
+			)
+		summary = sync.result
+		lines = [f"{k}: {v}" for k, v in summary.items() if isinstance(v, int)]
+		for f in summary.get("findings") or []:
+			lines.append(f"finding {f.get('kind')}: {f.get('doctype')} {f.get('name')}: {f.get('detail')}")
+		steps.append(
+			OpStep(
+				"Reconcile documents",
+				OpState.SUCCESS,
+				output="\n".join(lines) + "\n",
+				started_at=datetime.now(UTC),
+				ended_at=datetime.now(UTC),
+			)
+		)
+		return OpStatus(OpState.SUCCESS, tuple(steps))
 
 	def cancel(self, op: OpRef) -> bool:
-		if op.kind == KIND_ANSIBLE:
-			return self.runner.cancel(op)
+		if op.kind in (KIND_ANSIBLE, KIND_SYNC):
+			return self.runner.cancel(OpRef(self.name, KIND_ANSIBLE, op.external_id))
 		if op.kind == KIND_PROVISION:
 			p = self._provisions.get(op.external_id)
 			return bool(p and p.configure and self.runner.cancel(p.configure))
@@ -427,6 +534,8 @@ class DigitalOceanProvider(Provider):
 			status = self.runner.status(op)
 			self._record(op, status)
 			return status
+		if op.kind == KIND_SYNC:
+			return self._sync_status(op)
 		raise ProviderError("Unknown DigitalOcean operation kind", {"kind": op.kind})
 
 	def _action_status(self, op: OpRef) -> OpStatus:
@@ -597,6 +706,11 @@ class _SettingsRecords:
 	def spaces_client(self) -> spaces.SpacesClient | None:
 		client: spaces.SpacesClient | None = settings.spaces_client()
 		return client
+
+	def reconcile(self, account: str, provider: str, inventory: dict[str, Any]) -> dict[str, Any]:
+		from infra_control.inventory.apply import reconcile
+
+		return reconcile(account, provider, inventory)
 
 
 def _key_material(public_key: str) -> str:

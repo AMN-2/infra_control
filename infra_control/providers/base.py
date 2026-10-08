@@ -167,8 +167,11 @@ class Provider(ABC):
 	def get_status(self, op: OpRef) -> OpStatus: ...
 
 	@abstractmethod
-	def sync_inventory(self) -> dict[str, Any]:
-		"""Normalized `{"servers": [...], "benches": [...], "sites": [...]}` (unified enums)."""
+	def sync_inventory(self) -> OpRef | dict[str, Any]:
+		"""Reconcile the provider's inventory with the DocTypes (A2.5).
+
+		Returns the reconciliation summary when the provider can finish synchronously, or an
+		`OpRef` the engine polls when hosts must be visited first (DigitalOcean discovery)."""
 
 	def cancel(self, op: OpRef) -> bool:
 		"""Best effort. Returns True if the provider accepted the cancellation."""

@@ -213,8 +213,9 @@ class FakeFrappe:
 		fields: list[str] | None = None,
 		order_by: str = "",
 		limit: int | None = None,
+		pluck: str | None = None,
 		**kw: Any,
-	) -> list[dict[str, Any]]:
+	) -> list[Any]:
 		rows = self._rows(doctype, filters)
 		for clause in reversed([c.strip() for c in order_by.split(",") if c.strip()]):
 			field, _, direction = clause.partition(" ")
@@ -222,7 +223,10 @@ class FakeFrappe:
 				key=lambda d, f=field: (d.get(f) is None, d.get(f) if d.get(f) is not None else 0),
 				reverse=direction.strip().lower() == "desc",
 			)
-		out = [{f: d.get(f) for f in (fields or ["name"])} for d in rows]
+		if pluck:
+			out: list[Any] = [d.get(pluck) for d in rows]
+		else:
+			out = [{f: d.get(f) for f in (fields or ["name"])} for d in rows]
 		return out[:limit] if limit else out
 
 	def add_child(self, parent: FakeDoc, child_doctype: str, **data: Any) -> FakeDoc:

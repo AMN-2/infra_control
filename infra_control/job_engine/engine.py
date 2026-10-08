@@ -41,6 +41,7 @@ from infra_control.core.errors import (
 	InvalidState,
 	NotFound,
 	NotSupported,
+	PermissionDenied,
 	ValidationError,
 )
 from infra_control.core.permissions import require_risk
@@ -50,6 +51,8 @@ from infra_control.providers import registry
 from infra_control.providers.base import OpRef, OpState, OpStatus, Provider
 
 QUEUE = "infra"
+SCHEDULER_USER = "scheduler"
+"""`Infra Job.triggered_by` for jobs the scheduler creates (contract: "User id, or `scheduler`")."""
 POLL_INITIAL_SECONDS = 3.0
 POLL_MAX_SECONDS = 15.0
 LOCK_WAIT_SECONDS = 120.0
@@ -178,7 +181,14 @@ def create_job(
 		playbook: Any = frappe.get_doc("Playbook", playbook_key)
 		if not playbook.enabled:
 			raise InvalidState(f"Playbook {playbook_key} is disabled", {"playbook": playbook_key})
-		require_risk(playbook.risk, user)
+		if user == SCHEDULER_USER:
+			# System-initiated (hooks.scheduler_events). Only low-risk playbooks, no human roles.
+			if Risk(playbook.risk) is not Risk.LOW:
+				raise PermissionDenied(
+					f"The scheduler may not run {playbook.risk}-risk playbooks", {"playbook": playbook_key}
+				)
+		else:
+			require_risk(playbook.risk, user)
 		if target_doctype != playbook.target_doctype:
 			raise ValidationError(
 				f"Playbook {playbook_key} targets a {playbook.target_doctype}, not a {target_doctype}",

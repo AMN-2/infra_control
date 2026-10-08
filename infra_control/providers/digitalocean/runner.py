@@ -25,9 +25,23 @@ class PlaybookRunner(Protocol):
 	) -> OpRef:
 		"""Launch a playbook against one server (`server` is the normalized Server document)."""
 
+	def start_many(
+		self,
+		servers: list[dict[str, Any]],
+		playbook_file: str,
+		extra_vars: dict[str, Any] | None = None,
+		*,
+		start_at_task: str | None = None,
+	) -> OpRef:
+		"""One run against several servers (discovery); per-host JSON results via `read_results`."""
+
 	def status(self, op: OpRef) -> OpStatus: ...
 
 	def cancel(self, op: OpRef) -> bool: ...
+
+	def read_results(self, op: OpRef) -> dict[str, Any]: ...
+
+	def unreachable(self, op: OpRef) -> list[str]: ...
 
 
 class UnavailableRunner:
@@ -45,8 +59,24 @@ class UnavailableRunner:
 	) -> OpRef:
 		raise ProviderError(self.reason, {"playbook": playbook_file, "server": server.get("name")})
 
+	def start_many(
+		self,
+		servers: list[dict[str, Any]],
+		playbook_file: str,
+		extra_vars: dict[str, Any] | None = None,
+		*,
+		start_at_task: str | None = None,
+	) -> OpRef:
+		raise ProviderError(self.reason, {"playbook": playbook_file, "servers": len(servers)})
+
 	def status(self, op: OpRef) -> OpStatus:
 		raise ProviderError(self.reason, {"op": op.to_dict()})
 
 	def cancel(self, op: OpRef) -> bool:
 		return False
+
+	def read_results(self, op: OpRef) -> dict[str, Any]:
+		return {}
+
+	def unreachable(self, op: OpRef) -> list[str]:
+		return []

@@ -127,9 +127,9 @@ class DummyProvider(Provider):
 		)
 
 	# --- lifecycle ----------------------------------------------------------------------
-	def sync_inventory(self) -> dict[str, Any]:
+	def sync_inventory(self) -> OpRef | dict[str, Any]:
 		self.calls.append(("sync_inventory", {}))
-		return {"servers": [], "benches": [], "sites": []}
+		return {"servers_created": 0, "servers_updated": 0, "findings": 0}
 
 	def cancel(self, op: OpRef) -> bool:
 		self.ops[op.external_id].cancelled = True

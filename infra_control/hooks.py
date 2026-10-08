@@ -23,8 +23,20 @@ after_migrate = "infra_control.install.after_migrate"
 # 	"daily": ["infra_control.providers.frappe_cloud.contract_test.run"],
 scheduler_events = {
 	"cron": {
-		"* * * * *": ["infra_control.job_engine.recovery.run"],
+		"* * * * *": [
+			"infra_control.job_engine.recovery.run",
+			# Metric collector (A3.1): one Server Metric per managed server, per minute.
+			"infra_control.monitoring.collector.collect_all",
+		],
 	},
-	# inventory.sync on every enabled Provider Account (A2.5, plan 9.2: hourly, feeds drift).
-	"hourly": ["infra_control.inventory.schedule.sync_all_providers"],
+	"hourly": [
+		# inventory.sync on every enabled Provider Account (A2.5, plan 9.2: hourly, feeds drift).
+		"infra_control.inventory.schedule.sync_all_providers",
+		# Roll 1m metrics up to 1h and 1d (A3.1).
+		"infra_control.monitoring.rollup.run_rollups",
+	],
+	"daily": [
+		# Metric retention: 1m 7 days, 1h 90 days, 1d 2 years (A3.1).
+		"infra_control.monitoring.rollup.purge_old_metrics",
+	],
 }

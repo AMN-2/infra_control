@@ -128,6 +128,15 @@ class _Db:
 	def get_single_value(self, doctype: str, field: str) -> Any:
 		return self.f.singles.get(doctype, {}).get(field)
 
+	def set_value(self, doctype: str, name: Any, fieldname: Any, value: Any = None) -> None:
+		target = self.exists(doctype, name)
+		if not target:
+			return
+		row = self.f.store[doctype][target]
+		updates = fieldname if isinstance(fieldname, dict) else {fieldname: value}
+		for k, v in updates.items():
+			row.set(k, v)
+
 	def commit(self) -> None:
 		self.f.commits += 1
 
@@ -247,6 +256,9 @@ class FakeFrappe:
 
 	def get_roles(self, user: str | None = None) -> list[str]:
 		return list(self.roles.get(user or self.session.user, ()))
+
+	def delete_doc(self, doctype: str, name: str, *a: Any, **kw: Any) -> None:
+		self.store.get(doctype, {}).pop(name, None)
 
 	def log_error(self, title: str = "", message: str = "") -> None:
 		self.errors.append(f"{title}: {message}")

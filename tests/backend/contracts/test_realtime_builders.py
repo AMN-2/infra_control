@@ -27,6 +27,9 @@ def _validator(contracts_dir: Path, event_index: dict[str, str], event: str) -> 
 		realtime.job_log("JOB-00042", 2, "x" * 10_000),
 		realtime.bulk_updated("BULK-0007", "Running", 1, 3, 1),
 		realtime.inventory_changed("Site", "demo.smartchoice-iq.com", "created"),
+		realtime.server_heartbeat("SRV-0001", "Active", 23.456, 61.2, 54.0, "2026-10-07T09:30:40Z"),
+		realtime.alert_fired("ALERT-1", "RULE-1", "Server", "SRV-0001", "critical"),
+		realtime.alert_resolved("ALERT-1", "RULE-1", "Server", "SRV-0001", "critical"),
 	],
 )
 def test_builders_validate(

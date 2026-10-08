@@ -33,7 +33,13 @@ _CONDITION_FIELDS = frozenset({"metric", "operator", "threshold", "for_minutes"}
 
 
 def _channels(rule: str) -> builtins.list[str]:
-	return [str(c) for c in frappe.get_all("Alert Rule Channel", filters={"parent": rule}, pluck="channel")]
+	# Order by the child `idx` so the set comes back in the order it was entered (deterministic).
+	return [
+		str(c)
+		for c in frappe.get_all(
+			"Alert Rule Channel", filters={"parent": rule}, pluck="channel", order_by="idx asc"
+		)
+	]
 
 
 def _rule_row(name: str) -> dict[str, Any]:

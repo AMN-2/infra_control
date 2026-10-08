@@ -79,6 +79,8 @@ droplets); part 2 passed on DigitalOcean, Frappe Cloud half blocked; part 3 pass
 | B3.2 alerts screen + rule editor | done: 91 vitest, 19 Playwright | `agent-b/B3.2-alerts-rules` |
 | B3.3 bulk rollout screen | done | `agent-b/B3.1-live-charts-continue` |
 | A3.5b `bench.add_app` + `site.install_app` (ADR 0004 amendment) | done, deployed; live on gate-02: JOB-00050 get-app erpnext version-15 succeeded (report step bug fixed in `277bed9`), JOB-00051 idempotent re-run recorded the Bench App row; JOB-00052 install_app erpnext on gate-site-2: Success, 16/16 (database backup uploaded to Spaces, install-app under maintenance) | `integration/phase2` |
+| A3.6 GitHub connections + repository/version pickers (ADR 0005) | done: Git Connection DocType, GitHubClient, git.* API, Settings → GitHub, pickers in the run dialog, private clones under no_log | `integration/phase2` |
+| A3.7 Provision from a plan (ADR 0006) | done: providers.accounts/options (cached catalogue), New server wizard, Node 20 in the bench role, post-provision verification play; Molecule not re-run here (no molecule on this host) | `integration/phase2` |
 | A3.5 `bench.update` (code rollout to a bench; ADR 0004) | done, deployed to staging; first live run JOB-00042 on BENCH-0002 (gate-02): Success, 18/18 steps, idempotent path ("nothing to update") | `integration/phase2` `1cc16cb` |
 
 Local branches stack on `integration/phase2`: `agent-b/B3.1-live-charts-continue` →

@@ -1,7 +1,7 @@
 # Agent A status
 
 Resume file for the next Agent A session. Update before every session ends.
-Last update: 2026-10-07 (session 3; single agent owns backend and frontend since session 2).
+Last update: 2026-10-08 (session 4; Phase 2 gate run live on DigitalOcean).
 
 ## Phase 0 tasks
 
@@ -46,27 +46,42 @@ files that the earlier "green" had missed (commit `5213f05` on `agent-b/B1.2-app
 2. **Still needs the reviewer:** approval of the design system from `/infra/_design` (sections
    Surfaces..Motion from B0.2, Components from B1.1).
 
-## In progress: Phase 2
-
-Started 2026-10-07 on the reviewer's instruction. After the Phase 1 report (gate half 1 passed,
-design approval pending) the reviewer answered "continue the work" twice; this is recorded as
-the gate decision in docs/QUESTIONS.md Q10, and the reviewer can still object to the design
-system from `/infra/_design`.
+## Phase 2 (2026-10-08): exit gate passed except the Frappe Cloud half
 
 | Task | State | Branch | PR |
 |---|---|---|---|
-| B2.1 Overview + Topology | done, full local CI green | `agent-b/B2.1-overview-topology` (on B1.2) | #18 |
-| B2.2 Servers/Sites lists, Server detail, Site detail, capability actions, run-playbook dialog | done, full local CI green | `agent-b/B2.2-detail-screens` (on B2.1) | #19 |
-| B2.3 Jobs list + Job viewer with live terminal, cancel/retry | done, full local CI green | `agent-b/B2.3-job-viewer` (on B2.2) | #20 |
-| A2.1 DigitalOcean client + adapter | done, 166 unit tests; not verified live (no staging token) | `agent-a/A2.1-digitalocean` (on #17), worktree `/home/frappe/worktrees/infra_control-agent-a` | #21 |
-| A2.2 Ansible roles, server.provision, service.control | done; Molecule converge + idempotence + verify green, 181 unit tests | `agent-a/A2.2-ansible-roles` (on #21) | #22 |
-| A2.3 Site playbooks on DO | done; Molecule green, 195 unit tests; playbooks run live in the exit gate | `agent-a/A2.3-site-playbooks` (on #22) | #23 |
-| A2.4 Frappe Cloud client + adapter | blocked on Q7/Q8 (staging team) | | |
-| A2.5 inventory.sync | next | | |
+| B2.1 Overview + Topology | done | `agent-b/B2.1-overview-topology` | #18 |
+| B2.2 lists, server/site detail, actions, run dialog | done | `agent-b/B2.2-detail-screens` | #19 |
+| B2.3 jobs list + job viewer | done | `agent-b/B2.3-job-viewer` | #20 |
+| B2.4 + B2.5 frontend against a real site | done | `agent-b/B2.5-realtime-dev-port` | #25 |
+| A2.1 DigitalOcean client + adapter | done, verified live | `agent-a/A2.1-digitalocean` | #21 |
+| A2.2 Ansible roles, provision, service.control | done, Molecule + live | `agent-a/A2.2-ansible-roles` | #22 |
+| A2.3 site playbooks | done, verified live | `agent-a/A2.3-site-playbooks` | #23 |
+| A2.6 Phase 2 gate, 11 live fixes, staging deployment | done | `agent-a/A2.6-phase2-gate` | #24 |
+| A2.4 Frappe Cloud client + adapter | blocked: staging FC team, Q7/Q8 | | |
+| A2.5 inventory.sync with host discovery | next | | |
 
-Preview for the reviewer: `http://<host>:5180/infra/` (Vite + Prism mock + realtime replay,
-session 3; dies with the session). Phase 2 exit gate needs a real DigitalOcean staging token
-(`Provider Account` with `is_staging = 1`).
+**Gate** (`docs/runbooks/phase2_gate.md`): part 1 passed (runs 2 and 3, identical, from fresh
+droplets); part 2 passed on DigitalOcean, Frappe Cloud half blocked; part 3 passed (built SPA at
+`/infra` against the real API and realtime, a job started from the UI streamed live).
+
+**Merge order:** #3..#7, #8..#12, #17, #21, #22, #23, #24, then #13..#16, #18, #19, #20, #25.
+
+## Running the staging control plane
+
+`ops-staging.localhost` on this bench, `deploy/staging/README.md`:
+
+```bash
+cd ~/frappe-bench/apps/infra_control/deploy/staging && ./staging.sh status   # start|stop|restart
+```
+
+Open it by forwarding port 8010 (VS Code Ports panel) and browsing `http://localhost:8010/infra`.
+Everything listens on 127.0.0.1. Never use `bench serve` for it (binds 0.0.0.0 with the debugger).
+The bench checkout `apps/infra_control` stays on the local branch `integration/phase2` (all phase 2
+branches merged); work on other branches in a worktree under `~/worktrees/`.
+
+Live DigitalOcean resources (staging team): droplets gate-02.fra1 (SRV-0003) and gate-03.fra1
+(SRV-0004), the managed firewall, Spaces bucket `infara`. There is no `server.deprovision` yet.
 
 ## Open questions (docs/QUESTIONS.md)
 

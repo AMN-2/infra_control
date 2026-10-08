@@ -19,6 +19,15 @@ from infra_control.core.enums import TERMINAL_BULK_STATUSES, BulkStatus
 from infra_control.install import after_install
 from infra_control.job_engine import engine as jobs
 
+
+# The driver normally re-enqueues itself on the `infra` RQ queue after each unit. In the test we
+# drive it synchronously in-process (so the dummy provider and the step-by-step assertions apply);
+# a live staging worker would otherwise race the loop and, not seeing the in-process dummy-provider
+# flag, hit the real adapter. Neutralising the enqueue keeps the rollout fully in this process.
+def _no_enqueue(_name: str) -> None:
+	return None
+
+
 ACCOUNT = "DO-A34"
 HOST = "a34-01.fra1"
 BENCH_TITLE = "a34-bench"
@@ -34,6 +43,8 @@ class TestA34Bulk(FrappeTestCase):
 		after_install()
 		frappe.conf.infra_use_dummy_provider = 1
 		jobs.sleep = lambda _s: None
+		cls._enqueue_patch = mock.patch.object(bulk_engine, "_enqueue_drive", _no_enqueue)
+		cls._enqueue_patch.start()
 		if not frappe.db.exists("Provider Account", ACCOUNT):
 			frappe.get_doc(
 				{
@@ -94,6 +105,7 @@ class TestA34Bulk(FrappeTestCase):
 		if frappe.db.exists("Provider Account", ACCOUNT):
 			frappe.delete_doc("Provider Account", ACCOUNT, force=True, ignore_permissions=True)
 		frappe.db.commit()
+		cls._enqueue_patch.stop()
 		super().tearDownClass()
 
 	def tearDown(self) -> None:

@@ -6,7 +6,36 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import get_test_client
 
+from infra_control.core.permissions import INFRA_ADMIN
 from infra_control.install import after_install
+
+
+def _ensure_login_user(
+	email: str = "infra.httptest@example.com",
+	password: str = "infra-http-test-9427",  # noqa: S107 (test credential)
+) -> tuple[str, str]:
+	"""A System User with Infra Admin and a known password, for login in HTTP tests."""
+	from frappe.utils.password import update_password
+
+	if not frappe.db.exists("User", email):
+		frappe.get_doc(
+			{
+				"doctype": "User",
+				"email": email,
+				"first_name": "Infra HTTP Test",
+				"user_type": "System User",
+				"send_welcome_email": 0,
+				"enabled": 1,
+			}
+		).insert(ignore_permissions=True)
+	user = frappe.get_doc("User", email)
+	if not any(r.role == INFRA_ADMIN for r in user.roles):
+		user.append("roles", {"role": INFRA_ADMIN})
+		user.save(ignore_permissions=True)
+	update_password(email, password)
+	frappe.db.commit()
+	return email, password
+
 
 BASE = "/api/method/infra_control.api."
 
@@ -16,14 +45,14 @@ class TestA14Api(FrappeTestCase):
 	def setUpClass(cls) -> None:
 		super().setUpClass()
 		after_install()
-		frappe.db.commit()
+		cls.login_user, cls.login_password = _ensure_login_user()
 		cls.client = get_test_client()
 		cls.host = {"Host": frappe.local.site}
 
 	def _login(self) -> dict[str, str]:
 		response = self.client.post(
 			"/api/method/login",
-			data={"usr": "Administrator", "pwd": frappe.conf.admin_password or "admin"},
+			data={"usr": self.login_user, "pwd": self.login_password},
 			headers=self.host,
 		)
 		self.assertEqual(response.status_code, 200)

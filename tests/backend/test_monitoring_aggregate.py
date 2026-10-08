@@ -13,7 +13,6 @@ from infra_control.monitoring.aggregate import (
 	rollup,
 )
 
-
 BASE = datetime(2026, 10, 7, 9, 0, 0, tzinfo=UTC)
 
 

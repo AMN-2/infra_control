@@ -113,17 +113,21 @@ class _Db:
 				(
 					n
 					for n, d in self.f.store.get(doctype, {}).items()
-					if all(d.get(k) == v for k, v in name.items())
+					if all(self.f._match(d, k, v) for k, v in name.items())
 				),
 				None,
 			)
 		return name if name in self.f.store.get(doctype, {}) else None
 
-	def get_value(self, doctype: str, filters: Any, fieldname: str = "name") -> Any:
+	def get_value(self, doctype: str, filters: Any, fieldname: Any = "name", as_dict: bool = False) -> Any:
 		name = self.exists(doctype, filters)
 		if not name:
 			return None
-		return self.f.store[doctype][name].get(fieldname)
+		row = self.f.store[doctype][name]
+		if isinstance(fieldname, (list, tuple)):
+			values = {f: row.get(f) for f in fieldname}
+			return _Response(values) if as_dict else list(values.values())
+		return row.get(fieldname)
 
 	def get_single_value(self, doctype: str, field: str) -> Any:
 		return self.f.singles.get(doctype, {}).get(field)

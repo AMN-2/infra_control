@@ -41,7 +41,12 @@ alive() { [ -f "$RUN/$1.pid" ] && kill -0 "$(cat "$RUN/$1.pid")" 2>/dev/null; }
 start_one() {
 	local name=$1; shift
 	if alive "$name"; then echo "$name: already running (pid $(cat "$RUN/$name.pid"))"; return; fi
-	( cd "$BENCH/sites" && setsid nohup "$@" >>"$LOGS/infra-staging-$name.log" 2>&1 < /dev/null & echo $! > "$RUN/$name.pid" )
+	rm -f "$RUN/$name.pid"
+	# The launched program writes its own PID before exec, so the file names the real process
+	# (setsid may fork, and `$!` of a wrapper named a shell that had already exited: 2026-10-08).
+	( cd "$BENCH/sites" && nohup setsid bash -c 'echo $$ > "$1"; shift; exec "$@"' _ "$RUN/$name.pid" "$@" \
+		>>"$LOGS/infra-staging-$name.log" 2>&1 < /dev/null & )
+	for _ in 1 2 3 4 5; do [ -s "$RUN/$name.pid" ] && break; sleep 1; done
 	sleep 1
 	if alive "$name"; then echo "$name: started (pid $(cat "$RUN/$name.pid"))"; else echo "$name: FAILED, see $LOGS/infra-staging-$name.log"; return 1; fi
 }
@@ -56,21 +61,30 @@ stop_one() {
 	rm -f "$RUN/$name.pid"; echo "$name: stopped"
 }
 
+# start/stop/restart take optional component names: `start web worker` leaves the edge alone.
+want() { [ $# -eq 0 ] || [[ " $* " == *" $COMPONENT "* ]]; }
+
 start() {
-	start_one web "$BENCH/env/bin/gunicorn" --bind "127.0.0.1:$WEB_PORT" --workers 2 --threads 4 \
+	COMPONENT=web want "$@" && start_one web "$BENCH/env/bin/gunicorn" --bind "127.0.0.1:$WEB_PORT" --workers 2 --threads 4 \
 		--timeout 120 --graceful-timeout 30 --pythonpath "$HERE" --chdir "$BENCH/sites" wsgi:application
 	local tls_env=()
 	if [ "${EDGE_TLS:-0}" = 1 ]; then
 		tls_pair
 		tls_env=(EDGE_TLS_CERT="$RUN/tls/cert.pem" EDGE_TLS_KEY="$RUN/tls/key.pem")
 	fi
-	start_one edge env INFRA_SITE="$SITE" EDGE_HOST="$EDGE_HOST" EDGE_PORT="$EDGE_PORT" \
+	COMPONENT=edge want "$@" && start_one edge env INFRA_SITE="$SITE" EDGE_HOST="$EDGE_HOST" EDGE_PORT="$EDGE_PORT" \
 		EDGE_PUBLIC="${EDGE_PUBLIC:-0}" EDGE_ALLOW="${EDGE_ALLOW:-}" WEB_PORT="$WEB_PORT" \
 		"${tls_env[@]}" "$NODE" "$HERE/edge.mjs"
-	start_one worker "$BENCH_CLI" worker --queue infra
+	COMPONENT=worker want "$@" && start_one worker "$BENCH_CLI" worker --queue infra
+	return 0
 }
 
-stop() { stop_one edge; stop_one web; stop_one worker; }
+stop() {
+	COMPONENT=edge want "$@" && stop_one edge
+	COMPONENT=web want "$@" && stop_one web
+	COMPONENT=worker want "$@" && stop_one worker
+	return 0
+}
 
 status() {
 	for name in web edge worker; do
@@ -87,9 +101,9 @@ status() {
 }
 
 case "${1:-status}" in
-	start) start ;;
-	stop) stop ;;
-	restart) stop; start ;;
+	start) shift; start "$@" ;;
+	stop) shift; stop "$@" ;;
+	restart) shift; stop "$@"; start "$@" ;;
 	status) status ;;
-	*) echo "usage: $0 start|stop|restart|status"; exit 2 ;;
+	*) echo "usage: $0 start|stop|restart|status [web] [edge] [worker]"; exit 2 ;;
 esac

@@ -1,7 +1,7 @@
 # Agent A status
 
 Resume file for the next Agent A session. Update before every session ends.
-Last update: 2026-10-08 (session 4; Phase 2 gate run live on DigitalOcean).
+Last update: 2026-10-08 (session 5; Phase 3 tasks complete on both sides, gate pending).
 
 ## Phase 0 tasks
 
@@ -66,6 +66,28 @@ droplets); part 2 passed on DigitalOcean, Frappe Cloud half blocked; part 3 pass
 `/infra` against the real API and realtime, a job started from the UI streamed live).
 
 **Merge order:** #3..#7, #8..#12, #17, #21, #22, #23, #24, then #13..#16, #18, #19, #20, #25.
+
+## Phase 3 (2026-10-08): all tasks done except the live gate
+
+| Task | State | Branch |
+|---|---|---|
+| A3.1 collector, rollups, retention | done | `agent-a/A3.1-monitoring-collector` (merged into `integration/phase2`) |
+| A3.2 alert engine, Telegram + email, alerts/alert_rules API | done | `agent-a/A3.2-alert-engine`, `agent-a/A3.2-alerts-api` (merged) |
+| A3.3 drift detection | done: findings from A2.5 feed one drift alert per account (ADR 0003, `docs/runbooks/drift.md`) | `agent-a/A3.3-drift-detection` (docs; code landed with A2.5/A3.2) |
+| A3.4 bulk operations + `bulk.list` | done | `agent-a/A3.4-bulk-operations` (merged), `agent-b/B3.1-live-charts-continue` (bulk.list) |
+| B3.1 live charts on server detail | done | `agent-b/B3.1-live-charts-continue` |
+| B3.2 alerts screen + rule editor | done: 91 vitest, 19 Playwright | `agent-b/B3.2-alerts-rules` |
+| B3.3 bulk rollout screen | done | `agent-b/B3.1-live-charts-continue` |
+
+Local branches stack on `integration/phase2`: `agent-b/B3.1-live-charts-continue` →
+`agent-b/B3.2-alerts-rules` → `agent-a/A3.3-drift-detection`. No PRs opened yet for Phase 3
+(the reviewer has not merged Phase 1/2 PRs on GitHub; see Phase 2 merge order).
+
+**Exit gate (plan §12), still to run live:** (1) stop nginx on a staging server and receive a
+Telegram alert within 2 minutes — needs a Telegram bot token in `Infra Settings` and the
+`infra` worker plus scheduler running on `ops-staging.localhost`; (2) a bulk migrate with a
+deliberately broken canary halts without touching other sites — the engine test
+(`tests/backend/test_bulk_engine.py`) covers the halt, the live run needs two staging sites.
 
 ## Running the staging control plane
 

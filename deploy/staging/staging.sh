@@ -19,6 +19,22 @@ BENCH_CLI=${BENCH_CLI:-$(command -v bench || echo "$HOME/venv/bench/bin/bench")}
 WEB_PORT=${WEB_PORT:-8011}
 EDGE_PORT=${EDGE_PORT:-8010}
 mkdir -p "$RUN"
+# Optional exposure settings (kept out of git): EDGE_HOST, EDGE_PUBLIC, EDGE_ALLOW, EDGE_TLS=1,
+# EDGE_TLS_CN. Without the file the edge stays on 127.0.0.1.
+[ -f "$RUN/edge.env" ] && . "$RUN/edge.env"
+EDGE_HOST=${EDGE_HOST:-127.0.0.1}
+
+tls_pair() {
+	# Self-signed certificate for the address in EDGE_TLS_CN (an IP or a host name), 2 years.
+	local dir=$RUN/tls cn=${EDGE_TLS_CN:-127.0.0.1} san
+	[ -f "$dir/cert.pem" ] && [ -f "$dir/key.pem" ] && return
+	mkdir -p "$dir" && chmod 700 "$dir"
+	if [[ $cn =~ ^[0-9.]+$ ]]; then san="IP:$cn,IP:127.0.0.1"; else san="DNS:$cn,IP:127.0.0.1"; fi
+	openssl req -x509 -newkey rsa:2048 -nodes -days 730 -subj "/CN=$cn/O=Infra Control staging" \
+		-addext "subjectAltName=$san" -keyout "$dir/key.pem" -out "$dir/cert.pem" 2>/dev/null
+	chmod 600 "$dir/key.pem"
+	echo "tls: self-signed certificate for $cn in $dir"
+}
 
 alive() { [ -f "$RUN/$1.pid" ] && kill -0 "$(cat "$RUN/$1.pid")" 2>/dev/null; }
 
@@ -43,7 +59,14 @@ stop_one() {
 start() {
 	start_one web "$BENCH/env/bin/gunicorn" --bind "127.0.0.1:$WEB_PORT" --workers 2 --threads 4 \
 		--timeout 120 --graceful-timeout 30 --pythonpath "$HERE" --chdir "$BENCH/sites" wsgi:application
-	start_one edge env INFRA_SITE="$SITE" EDGE_PORT="$EDGE_PORT" WEB_PORT="$WEB_PORT" "$NODE" "$HERE/edge.mjs"
+	local tls_env=()
+	if [ "${EDGE_TLS:-0}" = 1 ]; then
+		tls_pair
+		tls_env=(EDGE_TLS_CERT="$RUN/tls/cert.pem" EDGE_TLS_KEY="$RUN/tls/key.pem")
+	fi
+	start_one edge env INFRA_SITE="$SITE" EDGE_HOST="$EDGE_HOST" EDGE_PORT="$EDGE_PORT" \
+		EDGE_PUBLIC="${EDGE_PUBLIC:-0}" EDGE_ALLOW="${EDGE_ALLOW:-}" WEB_PORT="$WEB_PORT" \
+		"${tls_env[@]}" "$NODE" "$HERE/edge.mjs"
 	start_one worker "$BENCH_CLI" worker --queue infra
 }
 
@@ -53,11 +76,13 @@ status() {
 	for name in web edge worker; do
 		if alive "$name"; then echo "$name: running (pid $(cat "$RUN/$name.pid"))"; else echo "$name: stopped"; fi
 	done
-	printf "edge  http://127.0.0.1:%s/api/method/ping -> " "$EDGE_PORT"
-	curl -s -m 5 "http://127.0.0.1:$EDGE_PORT/api/method/ping" || echo "no answer"
+	local scheme=http; [ "${EDGE_TLS:-0}" = 1 ] && scheme=https
+	echo "edge  $scheme://$EDGE_HOST:$EDGE_PORT  (allow: ${EDGE_ALLOW:-loopback only})"
+	printf "ping through edge -> "
+	curl -sk -m 5 "$scheme://127.0.0.1:$EDGE_PORT/api/method/ping" || echo "no answer"
 	echo
 	printf "realtime through edge -> "
-	curl -s -m 5 "http://127.0.0.1:$EDGE_PORT/socket.io/?EIO=4&transport=polling" | head -c 60 || echo "no answer"
+	curl -sk -m 5 "$scheme://127.0.0.1:$EDGE_PORT/socket.io/?EIO=4&transport=polling" | head -c 60 || echo "no answer"
 	echo
 }
 

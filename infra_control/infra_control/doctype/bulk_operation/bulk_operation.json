@@ -15,6 +15,7 @@
   "batch_size",
   "triggered_by",
   "cancel_requested",
+  "pause_requested",
   "sb2",
   "canary_doctype",
   "canary_name",
@@ -94,6 +95,12 @@
    "fieldname": "cancel_requested",
    "fieldtype": "Check",
    "label": "Cancel Requested",
+   "default": "0"
+  },
+  {
+   "fieldname": "pause_requested",
+   "fieldtype": "Check",
+   "label": "Pause Requested",
    "default": "0"
   },
   {

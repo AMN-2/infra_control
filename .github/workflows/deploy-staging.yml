@@ -1,0 +1,41 @@
+name: deploy-staging
+
+# Push-to-deploy for the staging control plane. Runs deploy/staging/deploy.sh on the host
+# over SSH. Needs three repository secrets (Settings → Secrets → Actions):
+#   STAGING_HOST      the host's IP or name
+#   STAGING_USER      the bench user (frappe)
+#   STAGING_SSH_KEY   a private key whose public half is in that user's ~/.ssh/authorized_keys
+# Without them the job fails at the SSH step and nothing on the host changes.
+
+on:
+  push:
+    branches: [integration/phase2]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy
+        default: integration/phase2
+        required: true
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Deploy over SSH
+        env:
+          HOST: ${{ secrets.STAGING_HOST }}
+          USER: ${{ secrets.STAGING_USER }}
+          KEY: ${{ secrets.STAGING_SSH_KEY }}
+          BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
+        run: |
+          test -n "$HOST" -a -n "$USER" -a -n "$KEY" || { echo "staging secrets are not set"; exit 1; }
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$USER@$HOST" \
+            "bash -lc '~/frappe-bench/apps/infra_control/deploy/staging/deploy.sh $BRANCH'"

@@ -36,6 +36,25 @@ PID files live in `~/.infra-staging/`, logs in `~/frappe-bench/logs/infra-stagin
 Processes are started with `setsid nohup`, so they survive the terminal or agent session that
 started them. They do not come back after a host reboot; run `./staging.sh start` again.
 
+## Deploy from GitHub
+
+```bash
+~/frappe-bench/apps/infra_control/deploy/staging/deploy.sh                 # integration/phase2
+~/frappe-bench/apps/infra_control/deploy/staging/deploy.sh agent-a/A4.1-x  # any branch
+```
+
+`deploy.sh` refuses while an Infra Job is Running or the checkout has uncommitted changes,
+then fetches the branch from GitHub, fast-forwards (a diverged branch stops it), installs
+Python deps when `pyproject.toml` changed, runs `bench migrate`, rebuilds and publishes the
+SPA when `frontend/` changed, and restarts web + worker (the edge stays up). Running it with
+nothing new is a no-op.
+
+`.github/workflows/deploy-staging.yml` runs the same script over SSH on every push to
+`integration/phase2` (or by hand from the Actions tab with a branch name). It needs the
+secrets `STAGING_HOST`, `STAGING_USER`, `STAGING_SSH_KEY`; the matching public key goes in
+`~/.ssh/authorized_keys` of the bench user. Until the secrets exist the workflow fails at the
+SSH step and the host is untouched.
+
 ## Open it
 
 1. In VS Code (Remote SSH), open the Ports panel and forward port **8010**. From a terminal the

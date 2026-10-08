@@ -100,15 +100,18 @@ class TestA31Monitoring(FrappeTestCase):
 		for i, cpu in enumerate([18.2, 21.0, 35.7]):
 			self._write_minute(add_to_date(base, minutes=i), cpu)
 		frappe.local.response = frappe._dict()
-		result = metrics_api.series(
+		metrics_api.series(
 			server=self._server_name,
 			metric="cpu",
 			**{"from": base.isoformat(), "to": add_to_date(base, minutes=5).isoformat(), "resolution": "1m"},
 		)
+		result = dict(frappe.local.response)
+		self.assertEqual(result.get("http_status_code"), 200)
 		self.assertEqual(result["server"], self._server_name)
 		self.assertEqual(result["metric"], "cpu")
 		self.assertEqual(result["resolution"], "1m")
 		self.assertEqual([p["value"] for p in result["points"]], [18.2, 21.0, 35.7])
 		self.assertTrue(all(set(p) == {"ts", "value"} for p in result["points"]))
 		# The whole body is JSON-serialisable (what the API handler returns).
+		result.pop("http_status_code", None)
 		json.dumps(result)

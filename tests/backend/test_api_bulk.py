@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 import json
 from pathlib import Path
 from typing import Any
@@ -12,7 +13,7 @@ from fake_frappe import FakeFrappe
 from jsonschema import Draft202012Validator, FormatChecker
 
 import infra_control.api as api_pkg
-from infra_control.api import _serialize
+from infra_control.api import _pagination, _serialize
 from infra_control.api import bulk as bulk_api
 from infra_control.bulk import engine as bulk_engine
 from infra_control.bulk import health
@@ -46,7 +47,18 @@ def validate(fn: str, payload: dict[str, Any], status: str = "200") -> None:
 @pytest.fixture
 def ff(monkeypatch: pytest.MonkeyPatch) -> FakeFrappe:
 	f = FakeFrappe()
-	for module in (api_pkg, bulk_api, bulk_engine, _serialize, jobs, realtime, audit, permissions, health):
+	for module in (
+		api_pkg,
+		bulk_api,
+		bulk_engine,
+		_pagination,
+		_serialize,
+		jobs,
+		realtime,
+		audit,
+		permissions,
+		health,
+	):
 		monkeypatch.setattr(module, "frappe", f, raising=False)
 	monkeypatch.setattr(_serialize, "system_timezone", lambda: "UTC")
 	monkeypatch.setattr(bulk_engine, "now_datetime", f.now)
@@ -216,3 +228,25 @@ def test_targets_accept_json_strings(ff: FakeFrappe) -> None:
 	)
 	assert status == 200
 	validate("bulk.create", body)
+
+
+def test_list_pages_newest_first_and_filters_by_status(ff: FakeFrappe) -> None:
+	names: builtins.list[str] = []
+	for canary in ("s1.iq", "s2.iq"):
+		status, body = call(
+			bulk_api.create,
+			playbook="site.backup",
+			targets=[{"target_doctype": "Site", "target_name": canary}],
+			canary_target={"target_doctype": "Site", "target_name": canary},
+		)
+		assert status == 200
+		names.append(body["bulk"]["name"])
+	status, page = call(bulk_api.list)
+	assert status == 200
+	validate("bulk.list", page)
+	assert [b["name"] for b in page["items"]] == list(reversed(names))
+	assert page["next_cursor"] is None
+	status, page = call(bulk_api.list, status="Success")
+	assert status == 200 and page["items"] == []
+	status, page = call(bulk_api.list, limit=1)
+	assert status == 200 and len(page["items"]) == 1 and page["next_cursor"]

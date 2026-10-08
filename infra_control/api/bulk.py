@@ -1,4 +1,4 @@
-"""bulk.create / pause / resume / cancel / get (A3.4): thin wrappers over `bulk.engine`.
+"""bulk.create / pause / resume / cancel / get / list (A3.4): thin wrappers over `bulk.engine`.
 
 The handlers validate and shape; all orchestration and provider work happens in the job engine
 through the bulk driver. Bodies match `contracts/openapi.yaml`: `{ "bulk": BulkOperation }` for
@@ -7,6 +7,7 @@ the mutating endpoints and `BulkOperationDetail` (with `targets`) for `get`.
 
 from __future__ import annotations
 
+import builtins
 import json
 from typing import Any
 
@@ -14,8 +15,9 @@ import frappe
 
 from infra_control.api import _serialize as ser
 from infra_control.api import api, dict_param, enum_param, int_param, str_param
+from infra_control.api._pagination import LIMIT_DEFAULT, LIMIT_MAX, page_newest_first
 from infra_control.bulk import engine as bulk_engine
-from infra_control.core.enums import FailurePolicy, TargetDoctype
+from infra_control.core.enums import BulkStatus, FailurePolicy, TargetDoctype
 from infra_control.core.errors import NotFound, ValidationError
 from infra_control.core.permissions import INFRA_OPERATOR
 
@@ -48,15 +50,15 @@ def _target_ref(name: str, value: Any, *, required: bool = False) -> dict[str, s
 	return {"target_doctype": doctype, "target_name": target_name}
 
 
-def _target_list(name: str, value: Any) -> list[dict[str, str]]:
+def _target_list(name: str, value: Any) -> builtins.list[dict[str, str]]:
 	if isinstance(value, str):
 		try:
 			value = json.loads(value)
 		except ValueError:
 			raise ValidationError(f"{name} must be a list of TargetRef", {"field": name}) from None
-	if not isinstance(value, list) or not value:
+	if not isinstance(value, builtins.list) or not value:
 		raise ValidationError(f"{name} must be a non-empty list", {"field": name})
-	refs: list[dict[str, str]] = []
+	refs: builtins.list[dict[str, str]] = []
 	for item in value:
 		ref = _target_ref(name, item, required=True)
 		assert ref is not None
@@ -124,3 +126,26 @@ def get(bulk: str | None = None) -> dict[str, Any]:
 	)
 	out["targets"] = [ser.bulk_target(dict(t)) for t in targets]
 	return out
+
+
+@api()
+def list(
+	status: str | None = None,
+	playbook: str | None = None,
+	limit: Any = None,
+	cursor: str | None = None,
+) -> dict[str, Any]:
+	"""Summary rows newest first (no targets); the detail is `bulk.get`."""
+	filters: dict[str, Any] = {}
+	if s := enum_param("status", status, BulkStatus):
+		filters["status"] = s
+	if key := str_param("playbook", playbook):
+		filters["playbook"] = key
+	return page_newest_first(
+		"Bulk Operation",
+		filters=filters,
+		fields=ser.BULK_FIELDS,
+		limit=int_param("limit", limit, default=LIMIT_DEFAULT, minimum=1, maximum=LIMIT_MAX),
+		cursor=cursor,
+		serialize=ser.bulk,
+	)

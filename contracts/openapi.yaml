@@ -662,6 +662,33 @@ paths:
         "429": { $ref: "#/components/responses/RateLimited" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/method/infra_control.api.bulk.list:
+    get:
+      tags: [bulk]
+      operationId: bulk_list
+      summary: List bulk operations, newest first (summary rows, no targets)
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/BulkStatus" }
+        - name: playbook
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          description: Page of bulk operations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkPage" }
+              examples:
+                default: { $ref: "#/components/examples/BulkPage" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
   # ---------------------------------------------------------------------------
   # alerts
   # ---------------------------------------------------------------------------
@@ -1594,6 +1621,13 @@ components:
       required: [bulk]
       properties:
         bulk: { $ref: "#/components/schemas/BulkOperation" }
+    BulkPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/BulkOperation" } }
+        next_cursor: { $ref: "#/components/schemas/NextCursor" }
     BulkCreateRequest:
       type: object
       additionalProperties: false
@@ -2285,6 +2319,27 @@ components:
           created_at: "2026-10-07T09:40:00Z"
           started_at: null
           ended_at: null
+    BulkPage:
+      value:
+        items:
+          - name: BULK-0007
+            playbook: site.migrate
+            playbook_title: Migrate site
+            status: Queued
+            phase: backup
+            failure_policy: halt
+            batch_size: 2
+            canary_target: { target_doctype: Site, target_name: demo.smartchoice-iq.com }
+            total: 3
+            done: 0
+            failed: 0
+            current_batch: 0
+            batches_total: 1
+            triggered_by: ameen@smartchoice-iq.com
+            created_at: "2026-10-07T09:40:00Z"
+            started_at: null
+            ended_at: null
+        next_cursor: null
     BulkOperationDetail:
       value:
         name: BULK-0007

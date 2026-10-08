@@ -9,8 +9,6 @@ from frappe.utils import add_to_date, now_datetime
 from infra_control.install import after_install
 from infra_control.monitoring import alerts
 
-RULE = "RULE-A32-DISK"
-
 
 class TestA32Alerts(FrappeTestCase):
 	@classmethod
@@ -38,24 +36,25 @@ class TestA32Alerts(FrappeTestCase):
 				}
 			).insert(ignore_permissions=True)
 		cls._server = frappe.db.get_value("Server", {"hostname": "a32-01.fra1"}, "name")
-		if not frappe.db.exists("Alert Rule", RULE):
-			rule = frappe.get_doc(
-				{
-					"doctype": "Alert Rule",
-					"title": "A32 disk high",
-					"kind": "metric",
-					"severity": "critical",
-					"target_doctype": "Server",
-					"metric": "disk",
-					"operator": "gt",
-					"threshold": 85.0,
-					"for_minutes": 2,
-					"enabled": 1,
-				}
-			)
-			rule.append("channels", {"channel": "telegram"})
-			rule.insert(ignore_permissions=True)
-			rule.db_set("name", RULE)  # stable name for the test
+		for old in frappe.get_all("Alert Rule", filters={"title": "A32 disk high"}, pluck="name"):
+			frappe.delete_doc("Alert Rule", old, force=True, ignore_permissions=True)
+		rule = frappe.get_doc(
+			{
+				"doctype": "Alert Rule",
+				"title": "A32 disk high",
+				"kind": "metric",
+				"severity": "critical",
+				"target_doctype": "Server",
+				"metric": "disk",
+				"operator": "gt",
+				"threshold": 85.0,
+				"for_minutes": 2,
+				"enabled": 1,
+			}
+		)
+		rule.append("channels", {"channel": "telegram"})
+		rule.insert(ignore_permissions=True)
+		cls._rule = rule.name
 		frappe.db.commit()
 
 	@classmethod
@@ -64,9 +63,8 @@ class TestA32Alerts(FrappeTestCase):
 			frappe.delete_doc("Alert", alert, force=True, ignore_permissions=True)
 		for metric in frappe.get_all("Server Metric", filters={"server": cls._server}, pluck="name"):
 			frappe.delete_doc("Server Metric", metric, force=True, ignore_permissions=True)
-		for name in (RULE,):
-			if frappe.db.exists("Alert Rule", name):
-				frappe.delete_doc("Alert Rule", name, force=True, ignore_permissions=True)
+		if frappe.db.exists("Alert Rule", cls._rule):
+			frappe.delete_doc("Alert Rule", cls._rule, force=True, ignore_permissions=True)
 		if frappe.db.exists("Server", cls._server):
 			frappe.delete_doc("Server", cls._server, force=True, ignore_permissions=True)
 		if frappe.db.exists("Provider Account", "DO-A32"):
@@ -93,27 +91,34 @@ class TestA32Alerts(FrappeTestCase):
 		frappe.db.commit()
 		super().tearDown()
 
+	def _mine(self, status: str) -> int:
+		# Scope to this rule+target: the live site has other rules/servers whose
+		# alerts must not sway the count.
+		return frappe.db.count("Alert", {"rule": self._rule, "target_name": self._server, "status": status})
+
 	def test_fire_dedup_and_resolve(self) -> None:
 		self._metric(90.0, 1)
 		self._metric(92.0, 0)
-		self.assertEqual(alerts.evaluate_rules(), {"fired": 1, "resolved": 0})
+		alerts.evaluate_rules()
 		alert = frappe.db.get_value(
 			"Alert",
-			{"rule": RULE, "target_name": self._server, "status": "firing"},
+			{"rule": self._rule, "target_name": self._server, "status": "firing"},
 			["severity", "metric"],
 			as_dict=True,
 		)
+		self.assertIsNotNone(alert, "a firing alert should exist for the breaching rule")
 		self.assertEqual((alert["severity"], alert["metric"]), ("critical", "disk"))
 
-		# Still breaching: no duplicate.
+		# Still breaching: no duplicate for this rule+target.
 		self._metric(95.0, 0)
-		self.assertEqual(alerts.evaluate_rules(), {"fired": 0, "resolved": 0})
-		self.assertEqual(frappe.db.count("Alert", {"rule": RULE, "status": "firing"}), 1)
+		alerts.evaluate_rules()
+		self.assertEqual(self._mine("firing"), 1)
 
-		# Recovered: resolved once.
+		# Recovered: the alert resolves, none left firing.
 		self._metric(40.0, 0)
-		self.assertEqual(alerts.evaluate_rules(), {"fired": 0, "resolved": 1})
-		self.assertEqual(frappe.db.count("Alert", {"rule": RULE, "status": "resolved"}), 1)
+		alerts.evaluate_rules()
+		self.assertEqual(self._mine("firing"), 0)
+		self.assertEqual(self._mine("resolved"), 1)
 
 	def test_drift_alert_lifecycle(self) -> None:
 		findings = [{"kind": "server_missing", "doctype": "Server", "name": "SRV-X", "detail": "gone"}]

@@ -42,7 +42,8 @@ export const useAlertsStore = defineStore("alerts", () => {
 					body: { alert: name },
 				})
 			);
-			Object.assign(target, alert);
+			// The API echoes the same alert; keep the optimistic row if a mock answers with another.
+			if (alert.name === name) Object.assign(target, alert);
 			return true;
 		});
 		if (!ok) Object.assign(target, before);

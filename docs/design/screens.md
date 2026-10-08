@@ -74,3 +74,19 @@ Source: `features/jobs/JobsView.vue`, `features/jobs/JobDetailView.vue`, store `
 | Controls | Operators only. Cancel (typed confirmation of the job id, `cancel_requested` badge until the worker observes it); Retry on failed jobs (new job linked by `retry_of`, badge links to it). Viewers see no controls. |
 | Error | The masked failure reason as an alert under the progress bar. |
 | Parameters | Masked `params` as a definition list (`********` for write-only fields). |
+
+## Alerts and rule editor (B3.2)
+
+Source: `features/alerts/AlertsView.vue`, `features/alerts/RuleDialog.vue`, `features/alerts/ruleForm.ts`,
+stores `stores/alerts.ts` and `stores/alertRules.ts`.
+
+| Element | Behaviour |
+|---|---|
+| Tabs | `Alerts` (count = firing) and `Rules` (count = rules). |
+| Alerts list | Firing first then newest (API order); severity accent on the start edge; severity and status badges; message; target links to the server or site; rule title; fired / acknowledged by / resolved relative times. Resolved rows are dimmed. Status and severity filters refetch with the query; "Load more" follows `next_cursor`. |
+| Acknowledge | Operators only, firing alerts only. Optimistic (plan §10.4): the badge flips at once, the row is rolled back and a toast shows the error on failure. The store keeps the optimistic row if the response names another alert. |
+| Realtime | `infra:alert.fired` refetches the list (the event carries ids only); `infra:alert.resolved` patches the row in place. |
+| Rules list | Title, severity, kind, `built-in` badge, id, target doctype, a one-line condition (`CPU above 90% for 5 min`, `No heartbeat for 3 min`, …) and channels. Enable switch is optimistic with rollback; edit and delete are Infra Admin only; built-in rules have no delete. |
+| Rule editor | Create = `metric` rule on `Server` (title, metric, condition, threshold, for-minutes, severity, channels, enabled). Edit shows only the fields the kind allows (contract `AlertRule`): every kind edits title, severity, channels, enabled; `metric` its four fields; `heartbeat` minutes; `ssl_expiry` days. The update body carries only changed, allowed fields so a built-in rule never triggers `400 validation_error`. Client validation mirrors the contract ranges (0–1440 minutes, ≥1 for heartbeat, ≥1 day for ssl). |
+| Delete | Typed confirmation of the rule id; historical alerts are kept (API contract). |
+| States | Skeletons while loading, empty states per tab, `ErrorState` with retry. |

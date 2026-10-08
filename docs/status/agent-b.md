@@ -3,7 +3,7 @@
 Since 2026-10-07 the same agent owns backend and frontend; the authoritative resume file is
 `docs/STATUS.md`. This file is kept for the frontend branch map.
 
-Last updated: 2026-10-07
+Last updated: 2026-10-08
 
 | Task | Branch | PR | State |
 |---|---|---|---|
@@ -14,6 +14,10 @@ Last updated: 2026-10-07
 | B2.1 Overview + Topology screens (ADR 0002, Q-B8/Q-B9, docs/design/screens.md) | `agent-b/B2.1-overview-topology` | [#18](https://github.com/AMN-2/infra_control/pull/18) | full local CI green: 68 vitest, 15 Playwright, 132 KB gz initial |
 | B2.2 lists, server/site detail, capability-driven actions, run-playbook dialog (schema form, typed confirmation); IcTable clickable-row fix | `agent-b/B2.2-detail-screens` | [#19](https://github.com/AMN-2/infra_control/pull/19) | full local CI green: 79 vitest, 16 Playwright (+1 skipped on mock lock), 132 KB gz initial |
 | B2.3 jobs list, job viewer (timeline + live terminal), cancel with typed confirmation, retry | `agent-b/B2.3-job-viewer` | [#20](https://github.com/AMN-2/infra_control/pull/20) | full local CI green |
+| B3.1 live metric charts (lazy ECharts, five contracted series, realtime heartbeat append) | `agent-b/B3.1-live-charts-continue` | — | full local CI green, 133 KB gz initial |
+| A3.4b `bulk.list` (contract + API + runbook; backend, same agent) | `agent-b/B3.1-live-charts-continue` | — | contract tests green |
+| B3.3 bulk rollout screen (create with canary/batches/typed confirmation, pause/resume/cancel, live targets) | `agent-b/B3.1-live-charts-continue` | — | full local CI green |
+| B3.2 alerts screen + rule editor (filters, optimistic ack, per-kind rule editing, optimistic enable, typed-confirmation delete) | `agent-b/B3.2-alerts-rules` (on B3.1-continue) | — | full local CI green: 91 vitest, 19 Playwright (+1 skipped), 133 KB gz initial |
 
 Full local CI: `cd frontend && npm run check:api && npm run format:check && npm run lint &&
 npm run typecheck && npm test && npm run build && npm run check:size && CI=true npm run test:e2e`.

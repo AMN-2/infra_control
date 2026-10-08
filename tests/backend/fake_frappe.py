@@ -17,6 +17,13 @@ SERIES = {
 	"Server": "SRV-",
 	"Bench": "BENCH-",
 	"Alert Rule": "RULE-",
+	"Bulk Operation": "BULK-",
+}
+
+# Child tables materialised when their parent is inserted with the rows inline, mirroring how
+# Frappe persists `get_all_children()` on insert (field name -> child doctype).
+CHILD_TABLES: dict[str, dict[str, str]] = {
+	"Bulk Operation": {"targets": "Bulk Operation Target"},
 }
 
 
@@ -84,6 +91,17 @@ class FakeDoc:
 				self._data["name"] = f"{SERIES.get(dt, dt + '-')}{next(self._frappe.counter):05d}"
 		self._data.setdefault("creation", self._frappe.now())
 		self._frappe.store.setdefault(dt, {})[self._data["name"]] = self
+		for field, child_dt in CHILD_TABLES.get(dt, {}).items():
+			rows = self._data.get(field) or []
+			for idx, row in enumerate(rows):
+				self._frappe.add(
+					child_dt,
+					parent=self._data["name"],
+					parenttype=dt,
+					parentfield=field,
+					idx=idx + 1,
+					**{k: v for k, v in dict(row).items() if k != "doctype"},
+				)
 		return self
 
 	def save(self, ignore_permissions: bool = False) -> FakeDoc:

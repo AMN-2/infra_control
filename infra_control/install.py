@@ -140,6 +140,35 @@ PLAYBOOKS: tuple[dict[str, Any], ...] = (
 		params_schema=_schema([], skip_search_index={"type": "boolean", "default": False}),
 	),
 	_pb(
+		"bench.update",
+		"Update bench apps",
+		"Pull new app code on the bench (fast-forward only), install requirements, then back up and migrate every site on it, build assets and restart.",
+		TargetDoctype.BENCH,
+		Risk.MEDIUM,
+		required_capability=Capability.SSH,
+		provider_method="update_bench",
+		params_schema=_schema(
+			[],
+			apps={
+				"type": "array",
+				"items": {"type": "string"},
+				"default": [],
+				"description": "Apps to pull; empty = every app on the bench",
+			},
+			branch={
+				"type": "string",
+				"default": "",
+				"description": "Switch the selected apps to this branch first",
+			},
+			migrate={
+				"type": "boolean",
+				"default": True,
+				"description": "Back up and migrate every site on the bench",
+			},
+			build={"type": "boolean", "default": True},
+		),
+	),
+	_pb(
 		"site.maintenance",
 		"Maintenance mode",
 		"Turn maintenance mode on or off.",

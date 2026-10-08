@@ -254,10 +254,12 @@ def test_creation_flows_are_explicit(spec: dict[str, Any]) -> None:
 	assert playbooks["server.provision"]["creates"] == "Server"
 	assert playbooks["site.create"]["target_doctype"] == "Bench"
 	assert playbooks["site.create"]["creates"] == "Site"
+	assert playbooks["bench.update"]["target_doctype"] == "Bench"
+	assert playbooks["bench.update"]["required_capability"] == "ssh"
 	run_examples = spec["paths"][BASE + "jobs.run"]["post"]["requestBody"]["content"]["application/json"][
 		"examples"
 	]
-	assert {"provision_server", "create_site"} <= set(run_examples)
+	assert {"provision_server", "create_site", "update_bench"} <= set(run_examples)
 
 
 def test_alert_rule_kinds_cover_every_builtin_rule(spec: dict[str, Any]) -> None:

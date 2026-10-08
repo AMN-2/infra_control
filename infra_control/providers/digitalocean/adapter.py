@@ -55,6 +55,7 @@ SITE_PLAYBOOKS: dict[str, str] = {
 	"add_domain": "site_add_domain.yml",
 	"suspend_site": "site_suspend.yml",
 }
+BENCH_PLAYBOOKS: dict[str, str] = {"update_bench": "bench_update.yml"}
 SERVICE_PLAYBOOK = "service_control.yml"
 ALLOWED_SERVICES: frozenset[str] = frozenset({"nginx", "supervisor", "mariadb", "redis"})
 ALLOWED_SERVICE_ACTIONS: frozenset[str] = frozenset({"restart", "reload"})
@@ -242,6 +243,29 @@ class DigitalOceanProvider(Provider):
 		ref = self.runner.start(server, SITE_PLAYBOOKS["create_site"], extra_vars)
 		self._pending[ref.external_id] = _Pending("site", site, {"bench": bench})
 		return ref
+
+	def update_bench(
+		self,
+		bench: str,
+		apps: list[str] | None = None,
+		branch: str = "",
+		migrate: bool = True,
+		build: bool = True,
+	) -> OpRef:
+		"""`bench.update`: the playbook pulls fast-forward only and, with `migrate`, backs up every
+		site before migrating (plan 13.7: the job fails if a backup fails)."""
+		b = self._bench_loader(bench)
+		if not b.get("server"):
+			raise ProviderError("Bench has no server on DigitalOcean", {"bench": bench})
+		server = self._server(str(b["server"]))
+		extra_vars = {
+			"bench_path": b.get("path"),
+			"apps": list(apps or []),
+			"branch": branch or "",
+			"migrate": bool(migrate),
+			"build": bool(build),
+		}
+		return self.runner.start(server, BENCH_PLAYBOOKS["update_bench"], extra_vars)
 
 	def backup_site(self, site: str, with_files: bool = True) -> OpRef:
 		urls, locations = self._backup_targets(site, with_files)

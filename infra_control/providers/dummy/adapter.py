@@ -82,6 +82,24 @@ class DummyProvider(Provider):
 			"update_site", ["Enable maintenance mode", "bench migrate", "Disable maintenance mode"], site=site
 		)
 
+	def update_bench(
+		self,
+		bench: str,
+		apps: list[str] | None = None,
+		branch: str = "",
+		migrate: bool = True,
+		build: bool = True,
+	) -> OpRef:
+		steps = ["Fetch", "Pull (fast-forward only)", "Install requirements"]
+		if migrate:
+			steps += ["Backup every site before migrating", "bench migrate"]
+		if build:
+			steps.append("bench build")
+		steps.append("bench restart")
+		return self._start(
+			"update_bench", steps, bench=bench, apps=apps, branch=branch, migrate=migrate, build=build
+		)
+
 	def set_maintenance(self, site: str, on: bool) -> OpRef:
 		return self._start("set_maintenance", ["Set maintenance"], site=site, on=on)
 

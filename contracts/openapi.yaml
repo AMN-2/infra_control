@@ -411,6 +411,13 @@ paths:
                   target_doctype: Bench
                   target_name: BENCH-0001
                   params: { domain: erp.client-d.iq, apps: [erpnext], admin_password: "********" }
+              update_bench:
+                summary: Roll new app code out to every site on a bench (backup + migrate per site)
+                value:
+                  playbook: bench.update
+                  target_doctype: Bench
+                  target_name: BENCH-0001
+                  params: { apps: [erpnext, smart_features], branch: "", migrate: true, build: true }
       responses:
         "200":
           description: The queued job
@@ -2165,6 +2172,21 @@ components:
                 domain: { type: string, format: hostname }
                 apps: { type: array, items: { type: string }, default: [] }
                 admin_password: { type: string, format: password, writeOnly: true, minLength: 12 }
+          - key: bench.update
+            title: Update bench apps
+            description: Pull new app code on the bench (fast-forward only), install requirements, then back up and migrate every site on it, build assets and restart.
+            target_doctype: Bench
+            creates: null
+            risk: medium
+            required_capability: ssh
+            params_schema:
+              type: object
+              additionalProperties: false
+              properties:
+                apps: { type: array, items: { type: string }, default: [], description: "Apps to pull; empty = every app on the bench" }
+                branch: { type: string, default: "", description: Switch the selected apps to this branch first }
+                migrate: { type: boolean, default: true, description: Back up and migrate every site on the bench }
+                build: { type: boolean, default: true }
           - key: site.migrate
             title: Migrate site
             description: Takes a backup, then runs bench migrate. Fails if the backup fails.

@@ -100,6 +100,7 @@ METHOD_CAPABILITY: dict[str, Capability | None] = {
 	"backup_site": Capability.SITE,
 	"restore_site": Capability.SITE,
 	"update_site": Capability.SITE,
+	"update_bench": Capability.SSH,
 	"set_maintenance": Capability.SITE,
 	"add_domain": Capability.SITE,
 	"suspend_site": Capability.SITE,
@@ -155,6 +156,18 @@ class Provider(ABC):
 
 	@abstractmethod
 	def set_maintenance(self, site: str, on: bool) -> OpRef: ...
+
+	# --- bench level --------------------------------------------------------------------
+	@abstractmethod
+	def update_bench(
+		self,
+		bench: str,
+		apps: list[str] | None = None,
+		branch: str = "",
+		migrate: bool = True,
+		build: bool = True,
+	) -> OpRef:
+		"""`bench.update`: pull app code, then (by default) back up and migrate every site."""
 
 	@abstractmethod
 	def add_domain(self, site: str, domain: str) -> OpRef: ...

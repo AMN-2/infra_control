@@ -14,7 +14,7 @@ from test_digitalocean import SERVER, FakeRecords, _FakeRunner, adapter, url
 
 from infra_control.core.errors import NotFound, ProviderError
 from infra_control.providers.base import OpState
-from infra_control.providers.digitalocean.adapter import SITE_PLAYBOOKS
+from infra_control.providers.digitalocean.adapter import BENCH_PLAYBOOKS, SITE_PLAYBOOKS
 from infra_control.providers.digitalocean.ansible import default_playbooks_dir
 
 PLAYBOOKS = default_playbooks_dir()
@@ -192,8 +192,36 @@ def task_files() -> list[Path]:
 
 
 def test_every_site_method_has_its_playbook() -> None:
-	for method, playbook in SITE_PLAYBOOKS.items():
+	for method, playbook in {**SITE_PLAYBOOKS, **BENCH_PLAYBOOKS}.items():
 		assert (PLAYBOOKS / playbook).is_file(), method
+
+
+def test_update_bench_runs_on_the_bench_server_with_its_path() -> None:
+	runner = _FakeRunner()
+	a = adapter(runner)
+	ref = a.call("update_bench", bench="BENCH-0001", apps=["erpnext"], branch="version-15")
+	server, playbook, extra = runner.started[0]
+	assert playbook == "bench_update.yml" and server["name"] == "SRV-0001"
+	assert extra == {
+		"bench_path": "/home/frappe/v15",
+		"apps": ["erpnext"],
+		"branch": "version-15",
+		"migrate": True,
+		"build": True,
+	}
+	finish(runner)
+	assert a.get_status(ref).state is OpState.SUCCESS
+
+
+def test_bench_update_backs_up_before_migrating_and_never_resets() -> None:
+	"""Plan 13.7 for updates: backup first, fail if it fails; the pull is fast-forward only."""
+	names = [t.get("name", "") for t in tasks_in(PLAYBOOKS / "bench_update.yml")]
+	assert names.index("Backup every site before migrating") < names.index("bench migrate")
+	argv = [
+		str(t.get("ansible.builtin.command", {}).get("argv", ""))
+		for t in tasks_in(PLAYBOOKS / "bench_update.yml")
+	]
+	assert any("--ff-only" in a for a in argv) and not any("reset" in a or "--force" in a for a in argv)
 
 
 SECRET_MARKERS = (

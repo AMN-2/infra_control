@@ -33,6 +33,16 @@ class _FcLike(Provider):
 	def update_site(self, site: str) -> OpRef:
 		return OpRef(self.name, "press_job", "4")
 
+	def update_bench(
+		self,
+		bench: str,
+		apps: list[str] | None = None,
+		branch: str = "",
+		migrate: bool = True,
+		build: bool = True,
+	) -> OpRef:
+		return OpRef(self.name, "press_job", "4b")
+
 	def set_maintenance(self, site: str, on: bool) -> OpRef:
 		return OpRef(self.name, "press_job", "5")
 

@@ -375,6 +375,7 @@ infra_control/                  # Frappe app root
 | `site.maintenance` | Site | low | on/off |
 | `site.add_domain` | Site | low | DO: nginx + certbot + DNS |
 | `site.suspend` | Site | medium | on/off |
+| `bench.update` | Bench | medium | pull app code (ff-only), requirements, backup + migrate every site, build, restart (ADR 0004) |
 | `metrics.collect` | Server | low | scheduled every minute |
 | `inventory.sync` | Provider Account | low | scheduled hourly, feeds drift detection |
 

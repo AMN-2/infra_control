@@ -1,0 +1,147 @@
+---
+# bench.update (A3.5): pull new app code on a bench and roll it out to every site on it.
+#
+#   1. preflight: the bench exists; record each app's commit before the pull
+#   2. git fetch + fast-forward pull per app (all apps, or the `apps` list); `branch` switches
+#      every selected app to that branch first. A diverged checkout fails the job: no reset.
+#   3. bench setup requirements (python + node deps of the apps)
+#   4. with `migrate` (default): maintenance on for all sites, `bench --site all backup`
+#      (plan 13.7: the job fails here if a backup fails), `bench --site all migrate`,
+#      maintenance off. `bench build` when `build` (default), then `bench restart`.
+#   5. report the commit each app moved to
+#
+# Idempotent: with nothing new upstream every git task reports changed=0 and the
+# migrate/build steps are no-ops for the sites.
+- name: Update bench
+  hosts: all
+  become: true
+  become_user: frappe
+  gather_facts: false
+  environment:
+    PATH: "/home/frappe/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  vars:
+    update_apps: "{{ apps | default([]) }}"
+    update_branch: "{{ branch | default('') }}"
+    do_build: "{{ build | default(true) }}"
+    do_migrate: "{{ migrate | default(true) }}"
+  tasks:
+    - name: Check the bench
+      ansible.builtin.stat:
+        path: "{{ bench_path }}/apps/frappe"
+      register: preflight_bench
+      failed_when: not preflight_bench.stat.exists
+
+    - name: List the apps on the bench
+      ansible.builtin.find:
+        paths: "{{ bench_path }}/apps"
+        file_type: directory
+        recurse: false
+      register: app_dirs
+
+    - name: Choose the apps to update
+      ansible.builtin.set_fact:
+        selected_apps: >-
+          {{ (update_apps | length > 0) | ternary(update_apps, app_dirs.files | map(attribute='path') | map('basename') | list) }}
+
+    - name: Check that every requested app exists
+      ansible.builtin.assert:
+        that: item in (app_dirs.files | map(attribute='path') | map('basename') | list)
+        fail_msg: "app {{ item }} is not on this bench"
+        quiet: true
+      loop: "{{ selected_apps }}"
+
+    - name: Record the commit before the update
+      ansible.builtin.command:
+        argv: [git, -C, "{{ bench_path }}/apps/{{ item }}", rev-parse, --short, HEAD]
+      loop: "{{ selected_apps }}"
+      register: before
+      changed_when: false
+
+    - name: Fetch
+      ansible.builtin.command:
+        argv: [git, -C, "{{ bench_path }}/apps/{{ item }}", fetch, --quiet, --prune]
+      loop: "{{ selected_apps }}"
+      changed_when: false
+
+    - name: Switch branch
+      ansible.builtin.command:
+        argv: [git, -C, "{{ bench_path }}/apps/{{ item }}", checkout, --quiet, "{{ update_branch }}"]
+      loop: "{{ selected_apps }}"
+      when: update_branch | length > 0
+      register: switched
+      changed_when: "'Already on' not in (switched.stderr | default(''))"
+
+    - name: Pull (fast-forward only)
+      ansible.builtin.command:
+        argv: [git, -C, "{{ bench_path }}/apps/{{ item }}", pull, --quiet, --ff-only]
+      loop: "{{ selected_apps }}"
+      register: pulled
+      changed_when: false
+
+    - name: Record the commit after the update
+      ansible.builtin.command:
+        argv: [git, -C, "{{ bench_path }}/apps/{{ item }}", rev-parse, --short, HEAD]
+      loop: "{{ selected_apps }}"
+      register: after
+      changed_when: false
+
+    - name: Apps that moved
+      ansible.builtin.set_fact:
+        moved: >-
+          {{ dict(selected_apps | zip(after.results | map(attribute='stdout')))
+             | dict2items | rejectattr('value', 'in', before.results | map(attribute='stdout')) | list }}
+
+    - name: Install requirements
+      ansible.builtin.command:
+        argv: [bench, setup, requirements]
+        chdir: "{{ bench_path }}"
+      when: moved | length > 0
+      changed_when: true
+
+    - name: Migrate every site
+      when: do_migrate | bool and moved | length > 0
+      block:
+        - name: Enable maintenance mode
+          ansible.builtin.command:
+            argv: [bench, --site, all, set-maintenance-mode, "on"]
+            chdir: "{{ bench_path }}"
+          changed_when: true
+
+        - name: Backup every site before migrating
+          ansible.builtin.command:
+            argv: [bench, --site, all, backup]
+            chdir: "{{ bench_path }}"
+          changed_when: true
+
+        - name: bench migrate
+          ansible.builtin.command:
+            argv: [bench, --site, all, migrate]
+            chdir: "{{ bench_path }}"
+          changed_when: true
+      always:
+        - name: Disable maintenance mode
+          ansible.builtin.command:
+            argv: [bench, --site, all, set-maintenance-mode, "off"]
+            chdir: "{{ bench_path }}"
+          changed_when: true
+
+    - name: bench build
+      ansible.builtin.command:
+        argv: [bench, build]
+        chdir: "{{ bench_path }}"
+      when: do_build | bool and moved | length > 0
+      changed_when: true
+
+    - name: bench restart
+      ansible.builtin.command:
+        argv: [bench, restart]
+        chdir: "{{ bench_path }}"
+      when: moved | length > 0
+      changed_when: true
+
+    - name: Report
+      ansible.builtin.debug:
+        msg: >-
+          {{ (moved | length > 0)
+             | ternary('updated: ' ~ (moved | map(attribute='key') | zip(moved | map(attribute='value')) | map('join', ' -> ') | join(', ')),
+                       'nothing to update: every selected app is already at its upstream commit') }}

@@ -12,6 +12,7 @@ ansible/
 ├── ansible.cfg
 ├── playbooks/          server_provision.yml, service_control.yml, server_apt_security.yml,
 │                       site_{create,backup,restore,migrate,maintenance,add_domain,suspend}.yml,
+│                       bench_update.yml (pull app code, backup + migrate every site, build, restart),
 │                       tasks/ (site_preflight, backup_upload)
 ├── roles/              base, mariadb, redis, nginx, bench (built-in modules only)
 └── molecule/default/   converge, idempotence, verify in Ubuntu 24.04 (systemd container)

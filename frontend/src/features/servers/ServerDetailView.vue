@@ -72,11 +72,12 @@ const jobHistory = computed<Job[]>(() =>
 	jobs.items.filter((j) => j.target_doctype === "Server" && j.target_name === name.value)
 );
 
-type BenchRow = Bench & { apps_label: string };
+type BenchRow = Bench & { apps_label: string; actions: null };
 const benchRows = computed<BenchRow[]>(() =>
 	(server.value?.benches ?? []).map((b) => ({
 		...b,
 		apps_label: b.apps.map((a) => a.app).join(", "),
+		actions: null,
 	}))
 );
 const benchColumns: Column<BenchRow>[] = [
@@ -84,6 +85,7 @@ const benchColumns: Column<BenchRow>[] = [
 	{ key: "frappe_version", label: "Frappe", mono: true },
 	{ key: "apps_label", label: "Apps" },
 	{ key: "site_count", label: "Sites", align: "end" },
+	{ key: "actions", label: "", align: "end" },
 ];
 type JobRow = Job & { when: string };
 const jobRows = computed<JobRow[]>(() =>
@@ -267,7 +269,21 @@ const metricLabel = {
 							(b: BenchRow) =>
 								router.push({ path: '/sites', query: { bench: b.name } })
 						"
-					/>
+					>
+						<template #cell-actions="{ row }">
+							<!-- Bench-level actions (bench.update, site.create): the bench has no screen of its own. -->
+							<div @click.stop>
+								<TargetActions
+									compact
+									target-doctype="Bench"
+									:target-name="row.name"
+									:target-label="row.title"
+									:capabilities="row.capabilities"
+									:running-job="server.running_job"
+								/>
+							</div>
+						</template>
+					</IcTable>
 				</div>
 				<div v-else-if="tab === 'jobs'" id="panel-jobs" role="tabpanel">
 					<IcTable

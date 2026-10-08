@@ -23,6 +23,8 @@ const props = defineProps<{
 	targetLabel?: string;
 	capabilities: readonly Capability[];
 	runningJob?: string | null;
+	/** Inline in a table cell: no heading, no "no actions" text. */
+	compact?: boolean;
 }>();
 
 const playbooks = usePlaybooksStore();
@@ -55,8 +57,13 @@ const riskVariant = { low: "secondary", medium: "secondary", high: "danger" } as
 </script>
 
 <template>
-	<div v-if="session.canOperate" class="flex flex-col gap-3" data-testid="target-actions">
-		<div class="flex items-center gap-2">
+	<div
+		v-if="session.canOperate"
+		class="flex flex-col gap-3"
+		:class="{ 'items-end': compact }"
+		data-testid="target-actions"
+	>
+		<div v-if="!compact" class="flex items-center gap-2">
 			<span class="eyebrow">Actions</span>
 			<RouterLink
 				v-if="runningJob"
@@ -68,7 +75,7 @@ const riskVariant = { low: "secondary", medium: "secondary", high: "danger" } as
 			</RouterLink>
 		</div>
 		<IcSkeleton v-if="!loaded && playbooks.loading" :lines="2" />
-		<p v-else-if="!available.length" class="text-xs text-fg-subtle">
+		<p v-else-if="!available.length && !compact" class="text-xs text-fg-subtle">
 			No actions are available for this {{ targetDoctype.toLowerCase() }}.
 		</p>
 		<div v-else class="flex flex-wrap gap-2">

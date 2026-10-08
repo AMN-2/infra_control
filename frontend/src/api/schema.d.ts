@@ -483,6 +483,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/infra_control.api.git.connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Configured Git connections (tokens never returned) */
+        get: operations["git_connections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.git.connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify a GitHub access token and store it as a connection (Infra Admin) */
+        post: operations["git_connect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.git.disconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete a Git connection (Infra Admin) */
+        post: operations["git_disconnect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.git.repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Repositories the connection can see, newest pushed first */
+        get: operations["git_repos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.git.refs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Branches and tags of a repository (the "version" picker) */
+        get: operations["git_refs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/method/infra_control.api.audit.list": {
         parameters: {
             query?: never;
@@ -1063,6 +1148,48 @@ export interface components {
         };
         AlertRuleEnvelope: {
             rule: components["schemas"]["AlertRule"];
+        };
+        GitConnection: {
+            name: string;
+            label: string;
+            /** @enum {string} */
+            provider: "github";
+            enabled: boolean;
+            login: string | null;
+            /** @description User or Organization */
+            account_type: string | null;
+            scopes: string[];
+            /** Format: date-time */
+            verified_at: string | null;
+        };
+        GitConnectionList: {
+            items: components["schemas"]["GitConnection"][];
+        };
+        GitRepo: {
+            full_name: string;
+            name: string;
+            owner: string;
+            private: boolean;
+            default_branch: string;
+            /** Format: uri */
+            clone_url: string;
+            description: string | null;
+            /** Format: date-time */
+            pushed_at: string | null;
+        };
+        GitRepoPage: {
+            items: components["schemas"]["GitRepo"][];
+            next_page: number | null;
+        };
+        GitRef: {
+            name: string;
+            /** @enum {string} */
+            kind: "branch" | "tag";
+            sha: string;
+        };
+        GitRefList: {
+            repo: components["schemas"]["GitRepo"];
+            items: components["schemas"]["GitRef"][];
         };
         AuditEntry: {
             name: string;
@@ -2062,6 +2189,155 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    git_connections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Connections */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitConnectionList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    git_connect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Stable id, e.g. GH-SMARTCHOICE; an existing label replaces its token */
+                    label: string;
+                    /** Format: password */
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The verified connection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        connection: components["schemas"]["GitConnection"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    git_disconnect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    connection: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        connection: string;
+                        /** @constant */
+                        deleted: true;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    git_repos: {
+        parameters: {
+            query: {
+                connection: string;
+                query?: string;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Page of repositories */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitRepoPage"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    git_refs: {
+        parameters: {
+            query: {
+                connection: string;
+                repo: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Repository and its refs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitRefList"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
         };
     };

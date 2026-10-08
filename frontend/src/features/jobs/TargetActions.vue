@@ -61,7 +61,7 @@ const riskVariant = { low: "secondary", medium: "secondary", high: "danger" } as
 		v-if="session.canOperate"
 		class="flex flex-col gap-3"
 		:class="{ 'items-end': compact }"
-		data-testid="target-actions"
+		:data-testid="compact ? 'target-actions-inline' : 'target-actions'"
 	>
 		<div v-if="!compact" class="flex items-center gap-2">
 			<span class="eyebrow">Actions</span>

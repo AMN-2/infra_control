@@ -13,6 +13,7 @@ import {
 } from "@/design/components";
 import { toneFor } from "@/design/status";
 import { useJobsStore } from "@/stores/jobs";
+import GitPickers from "./GitPickers.vue";
 import type { Playbook, TargetDoctype } from "@/stores/playbooks";
 import {
 	fieldsFrom,
@@ -42,6 +43,17 @@ const jobs = useJobsStore();
 const router = useRouter();
 
 const fields = computed(() => fieldsFrom(props.playbook.params_schema));
+/** Fields with an `x-picker` are rendered together by GitPickers (ADR 0005). */
+const pickerFields = computed(() => fields.value.filter((f) => f.picker));
+const plainFields = computed(() => fields.value.filter((f) => !f.picker));
+const pickerWants = computed(() => ({
+	connection: pickerFields.value.some((f) => f.picker === "git_connection"),
+	repo: pickerFields.value.some((f) => f.picker === "git_repo"),
+	branch: pickerFields.value.some((f) => f.picker === "git_ref"),
+}));
+function pickerName(kind: "git_connection" | "git_repo" | "git_ref"): string {
+	return pickerFields.value.find((f) => f.picker === kind)?.name ?? kind;
+}
 const values = ref<ParamValues>({});
 const listText = ref<Record<string, string>>({});
 const touched = ref(false);
@@ -134,8 +146,27 @@ async function submit(): Promise<void> {
 				>
 			</div>
 
+			<GitPickers
+				v-if="pickerFields.length"
+				:connection="stringValue(pickerName('git_connection'))"
+				:repo="stringValue(pickerName('git_repo'))"
+				:branch="stringValue(pickerName('git_ref'))"
+				:wants="pickerWants"
+				:invalid-repo="touched && !!errors[pickerName('git_repo')]"
+				@update:connection="(v: string) => (values[pickerName('git_connection')] = v)"
+				@update:repo="(v: string) => (values[pickerName('git_repo')] = v)"
+				@update:branch="(v: string) => (values[pickerName('git_ref')] = v)"
+			/>
+			<p
+				v-if="touched && pickerWants.repo && errors[pickerName('git_repo')]"
+				class="text-xs text-down"
+				role="alert"
+			>
+				Repository: {{ errors[pickerName("git_repo")] }}
+			</p>
+
 			<IcField
-				v-for="f in fields"
+				v-for="f in plainFields"
 				:key="f.name"
 				:label="f.label"
 				:for-id="`param-${f.name}`"

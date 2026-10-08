@@ -75,6 +75,12 @@ export const routes: RouteRecordRaw[] = [
 		meta: { title: "Alerts" },
 	},
 	{
+		path: "/settings/github",
+		name: "settings-github",
+		component: () => import("@/features/settings/GitHubView.vue"),
+		meta: { title: "GitHub", requiresRole: "Infra Admin", hidden: true },
+	},
+	{
 		// Living design-system showcase; Infra Admin only (Q-B7).
 		path: "/_design",
 		name: "design",

@@ -20,6 +20,8 @@ export interface Field {
 	format?: string;
 	minimum?: number;
 	maximum?: number;
+	/** `x-picker` (ADR 0005): the dialog renders a GitHub picker instead of a plain input. */
+	picker?: "git_connection" | "git_repo" | "git_ref";
 }
 
 export type ParamValues = Record<string, unknown>;
@@ -32,6 +34,10 @@ function str(v: unknown): string | undefined {
 }
 function num(v: unknown): number | undefined {
 	return typeof v === "number" ? v : undefined;
+}
+
+function pickerOf(v: unknown): Field["picker"] {
+	return v === "git_connection" || v === "git_repo" || v === "git_ref" ? v : undefined;
 }
 
 /** "admin_password" → "Admin password". */
@@ -73,6 +79,7 @@ export function fieldsFrom(schema: unknown): Field[] {
 			format: str(p.format),
 			minimum: num(p.minimum),
 			maximum: num(p.maximum),
+			picker: pickerOf(p["x-picker"]),
 		};
 	});
 }

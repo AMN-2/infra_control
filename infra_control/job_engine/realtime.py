@@ -10,7 +10,7 @@ from typing import Any
 
 import frappe
 
-from infra_control.core.enums import JobStatus, StepStatus
+from infra_control.core.enums import JobStatus, ServerStatus, Severity, StepStatus
 
 LOG_CHUNK_MAX = 4096
 
@@ -41,6 +41,41 @@ def bulk_updated(
 		"done": done,
 		"total": total,
 		"current_batch": current_batch,
+	}
+
+
+def server_heartbeat(
+	server: str, status: str, cpu: float, ram: float, disk: float, ts: str
+) -> tuple[str, dict[str, Any]]:
+	return "infra:server.heartbeat", {
+		"server": server,
+		"status": str(ServerStatus(status)),
+		"cpu": round(float(cpu), 1),
+		"ram": round(float(ram), 1),
+		"disk": round(float(disk), 1),
+		"ts": ts,
+	}
+
+
+def alert_fired(
+	alert: str, rule: str, target_doctype: str, target_name: str, severity: str
+) -> tuple[str, dict[str, Any]]:
+	return "infra:alert.fired", {
+		"alert": alert,
+		"rule": rule,
+		"target": {"target_doctype": target_doctype, "target_name": target_name},
+		"severity": str(Severity(severity)),
+	}
+
+
+def alert_resolved(
+	alert: str, rule: str, target_doctype: str, target_name: str, severity: str
+) -> tuple[str, dict[str, Any]]:
+	return "infra:alert.resolved", {
+		"alert": alert,
+		"rule": rule,
+		"target": {"target_doctype": target_doctype, "target_name": target_name},
+		"severity": str(Severity(severity)),
 	}
 
 

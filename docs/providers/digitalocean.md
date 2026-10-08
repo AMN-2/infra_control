@@ -119,3 +119,41 @@ is added by the collector in A3.1.
 2. Add the controller's SSH public key under Settings → Security, named `infra-control`.
 3. Create a `Provider Account` (`provider = digitalocean`, `is_staging = 1`, the token).
 4. Fill `Infra Settings.controller_ip` and, for backups, the Spaces bucket, region, key and secret.
+
+## 10. inventory.sync (A2.5)
+
+Reconciles the whole tree, not just servers. Two halves, run as one `Infra Job`:
+
+1. **API** — droplets tagged `infra-control` become the server list (status, address, size,
+   region, role).
+2. **Hosts** — one Ansible run (`inventory_discover.yml`) scans every reachable, active server
+   in parallel with a read-only Python script, listing each bench (path, Frappe version, apps)
+   and site (domain, maintenance mode). `ignore_unreachable` keeps the run green; a server that
+   did not answer becomes a `server_unreachable` finding.
+
+`infra_control/inventory/plan.py` is pure: provider inventory plus the account's documents in, a
+plan of creates, updates and findings out. `apply.py` is the only writer and emits
+`infra:inventory.changed`.
+
+| Match | By |
+|---|---|
+| Server | `provider_ref` (droplet id) |
+| Bench | (server, path) |
+| Site | domain |
+
+Rules (plan 9.4): the provider owns existence and provider facts; documents are created and
+updated to match. **Nothing is deleted or archived automatically.** A droplet the provider no
+longer lists, or a bench or site missing on a server discovery actually scanned, is a finding for
+a human (`server_missing`, `bench_missing`, `site_missing`). Human-set states (`Archived`,
+`Suspended`) are never overwritten, and a bench or site on a server discovery could not reach is
+never reported missing.
+
+Scheduled hourly on every enabled `Provider Account` by
+`infra_control.inventory.schedule.sync_all_providers` (hooks). It creates `Infra Job`s as the
+`scheduler` user, so runs are audited, locked per account and visible in the UI; an account with
+a sync already queued or running is skipped. The engine lets the scheduler user run only
+low-risk playbooks.
+
+Verified live (2026-10-08): `inventory.sync` on `DO-STAGING-LIVE` discovered gate-02 and gate-03,
+filled in both benches' Frappe version and apps (the provision recorder leaves them empty), and
+left the archived server, its bench and site untouched with no false findings.

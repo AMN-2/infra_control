@@ -45,6 +45,17 @@ class TestA25Inventory(FrappeTestCase):
 				}
 			).insert(ignore_permissions=True)
 
+	def tearDown(self) -> None:
+		# reconcile() commits, so its documents survive the test transaction; clear them.
+		for site in frappe.get_all("Site", filters={"provider_account": ACCOUNT}, pluck="name"):
+			frappe.delete_doc("Site", site, force=True, ignore_permissions=True)
+		for bench in frappe.get_all("Bench", filters={"provider_account": ACCOUNT}, pluck="name"):
+			frappe.delete_doc("Bench", bench, force=True, ignore_permissions=True)
+		for server in frappe.get_all("Server", filters={"provider_account": ACCOUNT}, pluck="name"):
+			frappe.delete_doc("Server", server, force=True, ignore_permissions=True)
+		frappe.db.commit()
+		super().tearDown()
+
 	def _inventory(self, size: str = "s-2vcpu-4gb", version: str = "15.1.0") -> dict[str, Any]:
 		return {
 			"servers": [_droplet("701", "inv-01.fra1", size)],

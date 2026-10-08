@@ -35,6 +35,7 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	"bulk.pause": "post",
 	"bulk.resume": "post",
 	"bulk.cancel": "post",
+	"bulk.list": "get",
 	"bulk.get": "get",
 	"alerts.list": "get",
 	"alerts.ack": "post",

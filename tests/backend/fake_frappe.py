@@ -17,10 +17,17 @@ SERIES = {
 	"Server": "SRV-",
 	"Bench": "BENCH-",
 	"Alert Rule": "RULE-",
+	"Bulk Operation": "BULK-",
 }
 
 # Child tables the fake persists on insert/save: {parent doctype: {fieldname: child doctype}}.
-CHILD_DOCTYPES: dict[str, dict[str, str]] = {"Alert Rule": {"channels": "Alert Rule Channel"}}
+# Rows may arrive via doc.append(field, {...}) (kept in self._children) or inline in the doc dict
+# (self._data[field]); _sync_children persists whichever is present, mirroring how Frappe
+# materialises `get_all_children()` on insert.
+CHILD_DOCTYPES: dict[str, dict[str, str]] = {
+	"Alert Rule": {"channels": "Alert Rule Channel"},
+	"Bulk Operation": {"targets": "Bulk Operation Target"},
+}
 
 
 class FakeRedis:
@@ -104,14 +111,15 @@ class FakeDoc:
 			table = self._frappe.store.setdefault(child_dt, {})
 			for stale in [n for n, d in table.items() if d.get("parent") == self._data["name"]]:
 				table.pop(stale, None)
-			for idx, row in enumerate(self._children.get(fieldname, []), start=1):
+			rows = self._children.get(fieldname) or self._data.get(fieldname) or []
+			for idx, row in enumerate(rows, start=1):
 				self._frappe.add(
 					child_dt,
 					parent=self._data["name"],
 					parenttype=self._data["doctype"],
 					parentfield=fieldname,
 					idx=idx,
-					**row,
+					**{k: v for k, v in dict(row).items() if k != "doctype"},
 				)
 
 	def save(self, ignore_permissions: bool = False) -> FakeDoc:

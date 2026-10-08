@@ -260,6 +260,67 @@ def step(row: dict[str, Any]) -> dict[str, Any]:
 	}
 
 
+# ----- bulk ----------------------------------------------------------------------------------
+BULK_FIELDS = [
+	"name",
+	"playbook",
+	"playbook_title",
+	"status",
+	"phase",
+	"failure_policy",
+	"batch_size",
+	"canary_doctype",
+	"canary_name",
+	"total",
+	"done",
+	"failed",
+	"current_batch",
+	"batches_total",
+	"triggered_by",
+	"creation",
+	"started_at",
+	"ended_at",
+]
+BULK_TARGET_FIELDS = ["target_doctype", "target_name", "status", "job", "batch"]
+
+
+def bulk(row: dict[str, Any]) -> dict[str, Any]:
+	return {
+		"name": row["name"],
+		"playbook": row["playbook"],
+		"playbook_title": row.get("playbook_title")
+		or frappe.db.get_value("Playbook", row["playbook"], "title")
+		or row["playbook"],
+		"status": row["status"],
+		"phase": row["phase"],
+		"failure_policy": row["failure_policy"],
+		"batch_size": int(row.get("batch_size") or 1),
+		"canary_target": {
+			"target_doctype": str(row["canary_doctype"]),
+			"target_name": str(row["canary_name"]),
+		},
+		"total": int(row.get("total") or 0),
+		"done": int(row.get("done") or 0),
+		"failed": int(row.get("failed") or 0),
+		"current_batch": int(row.get("current_batch") or 0),
+		"batches_total": int(row.get("batches_total") or 0),
+		"triggered_by": row.get("triggered_by") or "",
+		"created_at": iso_utc(row.get("creation")) or "",
+		"started_at": iso_utc(row.get("started_at")),
+		"ended_at": iso_utc(row.get("ended_at")),
+	}
+
+
+def bulk_target(row: dict[str, Any]) -> dict[str, Any]:
+	return {
+		"target_doctype": str(row["target_doctype"]),
+		"target_name": str(row["target_name"]),
+		"status": row.get("status") or "Pending",
+		"job": row.get("job") or None,
+		"batch": int(row.get("batch") or 0),
+	}
+
+
 # ----- alerts --------------------------------------------------------------------------------
 ALERT_FIELDS = [
 	"name",

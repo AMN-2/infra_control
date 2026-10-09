@@ -1,0 +1,43 @@
+---
+# server.exec (A3.9): run one shell command as the bench user, as a job. The output comes
+# back in the job log; a non-zero exit fails the job after the output is reported.
+#   command  the shell command (bash -c); the engine applies core/exec_guard.py first
+#   cwd      working directory (default the bench; must exist)
+#   timeout  seconds, 1..600 (default 120)
+- name: Run command
+  hosts: all
+  become: true
+  become_user: frappe
+  gather_facts: false
+  environment:
+    PATH: "/home/frappe/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    TERM: dumb
+  vars:
+    workdir: "{{ cwd | default('/home/frappe/frappe-bench') }}"
+    limit: "{{ [[(timeout | default(120)) | int, 1] | max, 600] | min }}"
+  tasks:
+    - name: Check the working directory
+      ansible.builtin.stat:
+        path: "{{ workdir }}"
+      register: wd
+      failed_when: not wd.stat.exists or not wd.stat.isdir
+
+    - name: Run
+      ansible.builtin.shell:
+        cmd: "{{ command }}"
+        chdir: "{{ workdir }}"
+        executable: /bin/bash
+      register: run
+      changed_when: true
+      failed_when: false
+      timeout: "{{ limit | int }}"
+
+    - name: Output
+      ansible.builtin.debug:
+        msg: "{{ (run.stdout | default('')) ~ ((run.stderr | default('') | length > 0) | ternary('\n[stderr]\n' ~ run.stderr | default(''), '')) }}"
+
+    - name: Exit status
+      ansible.builtin.assert:
+        that: run.rc | default(1) == 0
+        fail_msg: "exit status {{ run.rc | default('?') }}"
+        quiet: true

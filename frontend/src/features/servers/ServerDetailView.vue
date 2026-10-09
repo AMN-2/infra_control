@@ -24,6 +24,7 @@ import { relativeTime } from "@/lib/time";
 import { useInventoryStore, type Bench } from "@/stores/inventory";
 import { useJobsStore, type Job } from "@/stores/jobs";
 import { METRICS, useMetricsStore } from "@/stores/metrics";
+import CommandRunner from "./CommandRunner.vue";
 import LogReader from "./LogReader.vue";
 import MetricChart from "./MetricChart.vue";
 
@@ -68,6 +69,7 @@ const tabs = computed<TabItem[]>(() => [
 	{ id: "benches", label: "Benches", count: server.value?.benches.length },
 	{ id: "jobs", label: "Jobs", count: jobHistory.value.length },
 	{ id: "logs", label: "Logs" },
+	{ id: "console", label: "Console" },
 	{ id: "details", label: "Details" },
 ]);
 const jobHistory = computed<Job[]>(() =>
@@ -325,6 +327,18 @@ const metricLabel = {
 					aria-labelledby="tab-logs"
 				>
 					<LogReader
+						:server="server.name"
+						:benches="server.benches"
+						:running-job="server.running_job"
+					/>
+				</div>
+				<div
+					v-else-if="tab === 'console'"
+					id="panel-console"
+					role="tabpanel"
+					aria-labelledby="tab-console"
+				>
+					<CommandRunner
 						:server="server.name"
 						:benches="server.benches"
 						:running-job="server.running_job"

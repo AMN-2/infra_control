@@ -60,6 +60,17 @@ under recent reads and in the job history. Nothing on the server changes.
 Job steps now carry what each task did (command stdout, report messages, loop items), not
 only `ok: [host]`, capped at 16 KB per task; `no_log` tasks stay censored.
 
+## 7. Run a command without SSH
+
+Servers → the server → **Console**: type a shell command, choose the bench as working
+directory and a timeout (max 600 s), **Run** (Ctrl+Enter). It runs as the `frappe` user through
+a `server.exec` job (medium risk, Infra Operator): one at a time per server, audited, output in
+the terminal and in the job history, a non-zero exit fails the job after showing the output.
+The backend guard (`core/exec_guard.py`) refuses the destructive handful before a job exists:
+recursive deletes of root/home, mkfs, raw device writes, power control, fork bombs,
+`bench drop-site`, `DROP DATABASE`, world-writable root, account or firewall teardown, and
+piping downloads into a shell. Commands are recorded verbatim: never put a password in one.
+
 ## What to check when a job fails
 
 - The failing step's output is in the job viewer; secrets are masked.

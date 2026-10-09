@@ -114,6 +114,21 @@ PLAYBOOKS: tuple[dict[str, Any], ...] = (
 		),
 	),
 	_pb(
+		"server.exec",
+		"Run command",
+		"Run one shell command as the bench user and return its output. Destructive commands are refused; everything is audited.",
+		TargetDoctype.SERVER,
+		Risk.MEDIUM,
+		required_capability=Capability.SSH,
+		ansible_file="server_exec.yml",
+		params_schema=_schema(
+			["command"],
+			command={"type": "string", "minLength": 1, "maxLength": 4000},
+			cwd={"type": "string", "default": "/home/frappe/frappe-bench"},
+			timeout={"type": "integer", "minimum": 1, "maximum": 600, "default": 120},
+		),
+	),
+	_pb(
 		"service.control",
 		"Control a service",
 		"Restart or reload nginx, supervisor, mariadb or redis.",

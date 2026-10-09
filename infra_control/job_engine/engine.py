@@ -206,6 +206,10 @@ def create_job(
 			if playbook.required_capability not in {str(c) for c in caps}:
 				raise NotSupported(playbook.required_capability, target.provider)
 		schema = _load_schema(playbook)
+		if playbook_key == "server.exec":
+			from infra_control.core.exec_guard import check_command
+
+			params = {**params, "command": check_command(str(params.get("command") or ""))}
 		# Keys starting with "_" are engine-internal (e.g. `_resume_from` on a retry), not user params.
 		validate_params({k: v for k, v in params.items() if not k.startswith("_")}, schema)
 		check_confirmation(playbook.risk, target_name, confirm)

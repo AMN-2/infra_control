@@ -87,6 +87,7 @@ def test_playbook_catalogue_matches_plan_section_9_2() -> None:
 		"server.apt_security": ("Server", "medium"),
 		"service.control": ("Server", "medium"),
 		"server.logs": ("Server", "low"),  # A3.8 log reader
+		"server.exec": ("Server", "medium"),  # A3.9 command runner
 		"site.create": ("Bench", "low"),
 		"site.backup": ("Site", "low"),
 		"site.restore": ("Site", "high"),

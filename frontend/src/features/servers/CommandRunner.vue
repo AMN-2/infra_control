@@ -62,9 +62,7 @@ const output = computed(() => {
 const canRun = computed(() => !busy.value && !props.runningJob && command.value.trim().length > 0);
 
 function commandOf(p: unknown): string {
-	return p && typeof p === "object" && "command" in p
-		? String((p).command)
-		: "";
+	return p && typeof p === "object" && "command" in p ? String(p.command) : "";
 }
 async function run(): Promise<void> {
 	if (!canRun.value) return;

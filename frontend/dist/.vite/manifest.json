@@ -1,6 +1,6 @@
 {
-  "_CreateSiteDialog-DP9kC1YH.js": {
-    "file": "assets/CreateSiteDialog-DP9kC1YH.js",
+  "_CreateSiteDialog-DAJUzbCT.js": {
+    "file": "assets/CreateSiteDialog-DAJUzbCT.js",
     "name": "CreateSiteDialog",
     "imports": [
       "_components-Cxfhysdj.js",
@@ -83,8 +83,8 @@
       "_components-Cxfhysdj.js"
     ]
   },
-  "_TargetActions-BzFseZIA.js": {
-    "file": "assets/TargetActions-BzFseZIA.js",
+  "_TargetActions-CuKWsppJ.js": {
+    "file": "assets/TargetActions-CuKWsppJ.js",
     "name": "TargetActions",
     "imports": [
       "_components-Cxfhysdj.js",
@@ -157,6 +157,14 @@
     "file": "assets/rolldown-runtime-B0Z9INg1.js",
     "name": "rolldown-runtime"
   },
+  "_security-DrPwzsCD.js": {
+    "file": "assets/security-DrPwzsCD.js",
+    "name": "security",
+    "imports": [
+      "_components-Cxfhysdj.js",
+      "__async-Btkrcmvd.js"
+    ]
+  },
   "_tenants-LIEqq2WW.js": {
     "file": "assets/tenants-LIEqq2WW.js",
     "name": "tenants",
@@ -177,7 +185,7 @@
     ]
   },
   "index.html": {
-    "file": "assets/index-BulnyTol.js",
+    "file": "assets/index-I1U1dSw3.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -200,12 +208,14 @@
       "src/features/jobs/JobDetailView.vue",
       "src/features/bulk/BulkView.vue",
       "src/features/alerts/AlertsView.vue",
+      "src/features/settings/SecurityView.vue",
+      "src/features/audit/AuditView.vue",
       "src/features/settings/GitHubView.vue",
       "src/features/design/DesignShowcase.vue",
       "src/features/system/NotFoundView.vue"
     ],
     "css": [
-      "assets/index-DI78Fj-g.css"
+      "assets/index-VLuRJDl8.css"
     ],
     "assets": [
       "assets/space-grotesk-vietnamese-wght-normal-D0rl6rjA.woff2",
@@ -267,7 +277,7 @@
     "isDynamicEntry": true
   },
   "src/features/alerts/AlertsView.vue": {
-    "file": "assets/AlertsView-Bov39qGM.js",
+    "file": "assets/AlertsView-1gngYNcH.js",
     "name": "AlertsView",
     "src": "src/features/alerts/AlertsView.vue",
     "isDynamicEntry": true,
@@ -285,8 +295,24 @@
       "_time-Dc7ArAlC.js"
     ]
   },
+  "src/features/audit/AuditView.vue": {
+    "file": "assets/AuditView-GFCUXu2h.js",
+    "name": "AuditView",
+    "src": "src/features/audit/AuditView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-Cxfhysdj.js",
+      "_IcBadge-DRG5d0LT.js",
+      "_IcSkeleton-Dr8ICW4i.js",
+      "_IcEmptyState-DxkCQL0h.js",
+      "_IcSelect-V6jAxYa0.js",
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js",
+      "_security-DrPwzsCD.js"
+    ]
+  },
   "src/features/bulk/BulkView.vue": {
-    "file": "assets/BulkView-B2QkrxBd.js",
+    "file": "assets/BulkView-BjYRC6zC.js",
     "name": "BulkView",
     "src": "src/features/bulk/BulkView.vue",
     "isDynamicEntry": true,
@@ -305,7 +331,7 @@
     ]
   },
   "src/features/design/DesignShowcase.vue": {
-    "file": "assets/DesignShowcase-DwU0WFw0.js",
+    "file": "assets/DesignShowcase-DgqKHgWT.js",
     "name": "DesignShowcase",
     "src": "src/features/design/DesignShowcase.vue",
     "isDynamicEntry": true,
@@ -329,7 +355,7 @@
     ]
   },
   "src/features/jobs/JobDetailView.vue": {
-    "file": "assets/JobDetailView-COsbMF5S.js",
+    "file": "assets/JobDetailView-DpjuzQ64.js",
     "name": "JobDetailView",
     "src": "src/features/jobs/JobDetailView.vue",
     "isDynamicEntry": true,
@@ -344,7 +370,7 @@
     ]
   },
   "src/features/jobs/JobsView.vue": {
-    "file": "assets/JobsView-BsholiqN.js",
+    "file": "assets/JobsView-Du7KYlo4.js",
     "name": "JobsView",
     "src": "src/features/jobs/JobsView.vue",
     "isDynamicEntry": true,
@@ -360,7 +386,7 @@
     ]
   },
   "src/features/overview/OverviewView.vue": {
-    "file": "assets/OverviewView-9j5lRU5u.js",
+    "file": "assets/OverviewView-EnlNdLSC.js",
     "name": "OverviewView",
     "src": "src/features/overview/OverviewView.vue",
     "isDynamicEntry": true,
@@ -375,7 +401,7 @@
     ]
   },
   "src/features/servers/ServerDetailView.vue": {
-    "file": "assets/ServerDetailView-JfmMZP7q.js",
+    "file": "assets/ServerDetailView-BITyqjbp.js",
     "name": "ServerDetailView",
     "src": "src/features/servers/ServerDetailView.vue",
     "isDynamicEntry": true,
@@ -394,8 +420,8 @@
       "index.html",
       "_ErrorState-CWZBkzE3.js",
       "_time-Dc7ArAlC.js",
-      "_TargetActions-BzFseZIA.js",
-      "_CreateSiteDialog-DP9kC1YH.js"
+      "_TargetActions-CuKWsppJ.js",
+      "_CreateSiteDialog-DAJUzbCT.js"
     ],
     "dynamicImports": [
       "node_modules/@xterm/xterm/lib/xterm.mjs",
@@ -404,7 +430,7 @@
     ]
   },
   "src/features/servers/ServersView.vue": {
-    "file": "assets/ServersView-CFypb7m8.js",
+    "file": "assets/ServersView-CysfKvzW.js",
     "name": "ServersView",
     "src": "src/features/servers/ServersView.vue",
     "isDynamicEntry": true,
@@ -447,8 +473,21 @@
       "_git-CNFHpnJk.js"
     ]
   },
+  "src/features/settings/SecurityView.vue": {
+    "file": "assets/SecurityView-D4W0m5bz.js",
+    "name": "SecurityView",
+    "src": "src/features/settings/SecurityView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-Cxfhysdj.js",
+      "_IcBadge-DRG5d0LT.js",
+      "_IcSkeleton-Dr8ICW4i.js",
+      "_ErrorState-CWZBkzE3.js",
+      "_security-DrPwzsCD.js"
+    ]
+  },
   "src/features/sites/SiteDetailView.vue": {
-    "file": "assets/SiteDetailView-DwNBzQOk.js",
+    "file": "assets/SiteDetailView-CRLtqC3v.js",
     "name": "SiteDetailView",
     "src": "src/features/sites/SiteDetailView.vue",
     "isDynamicEntry": true,
@@ -464,11 +503,11 @@
       "index.html",
       "_ErrorState-CWZBkzE3.js",
       "_time-Dc7ArAlC.js",
-      "_TargetActions-BzFseZIA.js"
+      "_TargetActions-CuKWsppJ.js"
     ]
   },
   "src/features/sites/SitesView.vue": {
-    "file": "assets/SitesView-OOkdHr3Z.js",
+    "file": "assets/SitesView-Cm0Asp0d.js",
     "name": "SitesView",
     "src": "src/features/sites/SitesView.vue",
     "isDynamicEntry": true,
@@ -481,7 +520,7 @@
       "index.html",
       "_ErrorState-CWZBkzE3.js",
       "_time-Dc7ArAlC.js",
-      "_CreateSiteDialog-DP9kC1YH.js"
+      "_CreateSiteDialog-DAJUzbCT.js"
     ]
   },
   "src/features/system/NotFoundView.vue": {
@@ -495,7 +534,7 @@
     ]
   },
   "src/features/tenants/TenantDetailView.vue": {
-    "file": "assets/TenantDetailView-clKCVScx.js",
+    "file": "assets/TenantDetailView-ClK7muoe.js",
     "name": "TenantDetailView",
     "src": "src/features/tenants/TenantDetailView.vue",
     "isDynamicEntry": true,
@@ -511,7 +550,7 @@
     ]
   },
   "src/features/tenants/TenantsView.vue": {
-    "file": "assets/TenantsView-ibLCV70Y.js",
+    "file": "assets/TenantsView-NPSa6gP2.js",
     "name": "TenantsView",
     "src": "src/features/tenants/TenantsView.vue",
     "isDynamicEntry": true,
@@ -529,7 +568,7 @@
     ]
   },
   "src/features/topology/TopologyView.vue": {
-    "file": "assets/TopologyView-CSnLjPoV.js",
+    "file": "assets/TopologyView-Sb_LAoU2.js",
     "name": "TopologyView",
     "src": "src/features/topology/TopologyView.vue",
     "isDynamicEntry": true,

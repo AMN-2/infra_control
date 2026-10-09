@@ -653,6 +653,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/infra_control.api.backups.policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The site's backup policy, or null */
+        get: operations["backups_policy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.backups.set_policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or replace the site's backup policy (Infra Operator); next_run is recomputed */
+        post: operations["backups_set_policy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.backups.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every backup of a site (the detail screen shows the last 10) */
+        get: operations["backups_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/method/infra_control.api.audit.list": {
         parameters: {
             query?: never;
@@ -1368,6 +1419,46 @@ export interface components {
             /** @description Raw terminal bytes as UTF-8 (last 200 KB) */
             transcript: string;
             truncated: boolean;
+        };
+        /** @enum {string} */
+        BackupFrequency: "hourly" | "daily" | "weekly";
+        BackupPolicy: {
+            site: string;
+            enabled: boolean;
+            frequency: components["schemas"]["BackupFrequency"];
+            /** @description System-timezone hour for daily/weekly */
+            hour: number;
+            /** @enum {string} */
+            weekday: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+            with_files: boolean;
+            /** @description Backups kept per kind; 0 keeps everything */
+            retain: number;
+            /** Format: date-time */
+            last_run: string | null;
+            last_job: string | null;
+            /** Format: date-time */
+            next_run: string | null;
+        };
+        BackupPolicyInput: {
+            site: string;
+            /** @default true */
+            enabled: boolean;
+            frequency?: components["schemas"]["BackupFrequency"];
+            /** @default 2 */
+            hour: number;
+            /**
+             * @default sun
+             * @enum {string}
+             */
+            weekday: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+            /** @default true */
+            with_files: boolean;
+            /** @default 14 */
+            retain: number;
+        };
+        BackupPage: {
+            items: components["schemas"]["Backup"][];
+            next_cursor: components["schemas"]["NextCursor"];
         };
         AuditEntry: {
             name: string;
@@ -2646,6 +2737,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsoleTranscript"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    backups_policy: {
+        parameters: {
+            query: {
+                site: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Policy */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        policy: components["schemas"]["BackupPolicy"] | null;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    backups_set_policy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BackupPolicyInput"];
+            };
+        };
+        responses: {
+            /** @description The saved policy */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        policy: components["schemas"]["BackupPolicy"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    backups_list: {
+        parameters: {
+            query: {
+                site: string;
+                kind?: components["schemas"]["BackupKind"];
+                limit?: components["parameters"]["limit"];
+                /** @description Opaque cursor from a previous page's `next_cursor`. */
+                cursor?: components["parameters"]["cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Page of backups */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupPage"];
                 };
             };
             400: components["responses"]["ValidationError"];

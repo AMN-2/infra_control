@@ -17,6 +17,7 @@ import {
 } from "@/design/components";
 import { providerLabel, type Tone } from "@/design/status";
 import TargetActions from "@/features/jobs/TargetActions.vue";
+import BackupPolicyCard from "./BackupPolicyCard.vue";
 import ErrorState from "@/features/system/ErrorState.vue";
 import { relativeTime } from "@/lib/time";
 import type { components } from "@/api/schema";
@@ -207,7 +208,13 @@ const jobColumns: Column<JobRow>[] = [
 				<template #header>
 					<IcTabs v-model="tab" :tabs="tabs" label="Site sections" />
 				</template>
-				<div v-if="tab === 'backups'" id="panel-backups" role="tabpanel">
+				<div
+					v-if="tab === 'backups'"
+					id="panel-backups"
+					role="tabpanel"
+					class="flex flex-col gap-4"
+				>
+					<div class="px-4 pt-4"><BackupPolicyCard :site="site.name" /></div>
 					<IcTable
 						:columns="backupColumns"
 						:rows="backupRows"

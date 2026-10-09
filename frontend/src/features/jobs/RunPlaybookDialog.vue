@@ -13,6 +13,7 @@ import {
 } from "@/design/components";
 import { toneFor } from "@/design/status";
 import { useJobsStore } from "@/stores/jobs";
+import BackupPicker from "./BackupPicker.vue";
 import GitPickers from "./GitPickers.vue";
 import type { Playbook, TargetDoctype } from "@/stores/playbooks";
 import {
@@ -44,7 +45,8 @@ const router = useRouter();
 
 const fields = computed(() => fieldsFrom(props.playbook.params_schema));
 /** Fields with an `x-picker` are rendered together by GitPickers (ADR 0005). */
-const pickerFields = computed(() => fields.value.filter((f) => f.picker));
+const pickerFields = computed(() => fields.value.filter((f) => f.picker && f.picker !== "backup"));
+const backupField = computed(() => fields.value.find((f) => f.picker === "backup"));
 const plainFields = computed(() => fields.value.filter((f) => !f.picker));
 const pickerWants = computed(() => ({
 	connection: pickerFields.value.some((f) => f.picker === "git_connection"),
@@ -146,6 +148,13 @@ async function submit(): Promise<void> {
 				>
 			</div>
 
+			<BackupPicker
+				v-if="backupField && targetDoctype === 'Site'"
+				:site="targetName"
+				:model-value="stringValue(backupField.name)"
+				:invalid="touched && !!errors[backupField.name]"
+				@update:model-value="(v: string) => (values[backupField!.name] = v)"
+			/>
 			<GitPickers
 				v-if="pickerFields.length"
 				:connection="stringValue(pickerName('git_connection'))"

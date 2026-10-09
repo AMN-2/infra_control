@@ -107,6 +107,19 @@ Servers → the server → **Deprovision server** (typed confirmation of the ser
 while the server still has live sites, so nothing is lost by accident; then the droplet is
 destroyed at DigitalOcean (firewall and billing follow) and the Server record is archived.
 
+## 10. Scheduled backups and retention
+
+Sites → the site → **Backups** → **Schedule**: enable, pick hourly / daily (at an hour) /
+weekly (weekday + hour), whether files are included, and how many backups to keep per kind.
+Every hour the controller starts the `site.backup` jobs whose policy is due (a site with a job
+already queued or running is skipped until the next hour); every day retention deletes the
+backups beyond the kept count from Spaces first and from the list second, so a backup listed
+is a backup that exists. The card shows the last run (linked to its job) and the next run.
+
+**Restore, including onto another site:** the site's **Restore site** action lists its database
+backups; "Backups of" switches to another site's backups to clone that site's data onto this
+one (typed confirmation of the target domain applies).
+
 ## What to check when a job fails
 
 - The failing step's output is in the job viewer; secrets are masked.

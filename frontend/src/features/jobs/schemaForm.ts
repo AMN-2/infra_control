@@ -21,7 +21,7 @@ export interface Field {
 	minimum?: number;
 	maximum?: number;
 	/** `x-picker` (ADR 0005): the dialog renders a GitHub picker instead of a plain input. */
-	picker?: "git_connection" | "git_repo" | "git_ref";
+	picker?: "git_connection" | "git_repo" | "git_ref" | "backup";
 }
 
 export type ParamValues = Record<string, unknown>;
@@ -37,7 +37,9 @@ function num(v: unknown): number | undefined {
 }
 
 function pickerOf(v: unknown): Field["picker"] {
-	return v === "git_connection" || v === "git_repo" || v === "git_ref" ? v : undefined;
+	return v === "git_connection" || v === "git_repo" || v === "git_ref" || v === "backup"
+		? v
+		: undefined;
 }
 
 /** "admin_password" → "Admin password". */

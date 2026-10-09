@@ -64,8 +64,8 @@
       "_components-Bvpk12nt.js"
     ]
   },
-  "_TargetActions-Cc1f7xaU.js": {
-    "file": "assets/TargetActions-Cc1f7xaU.js",
+  "_TargetActions-CB0Es0MI.js": {
+    "file": "assets/TargetActions-CB0Es0MI.js",
     "name": "TargetActions",
     "imports": [
       "_components-Bvpk12nt.js",
@@ -152,7 +152,7 @@
     ]
   },
   "index.html": {
-    "file": "assets/index-D8foZZVO.js",
+    "file": "assets/index-B3eq8gKh.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -178,7 +178,7 @@
       "src/features/system/NotFoundView.vue"
     ],
     "css": [
-      "assets/index-BdL0Pncs.css"
+      "assets/index-BZhmjhX1.css"
     ],
     "assets": [
       "assets/space-grotesk-vietnamese-wght-normal-D0rl6rjA.woff2",
@@ -240,7 +240,7 @@
     "isDynamicEntry": true
   },
   "src/features/alerts/AlertsView.vue": {
-    "file": "assets/AlertsView-Y6gkuj3j.js",
+    "file": "assets/AlertsView-pqsxX_D4.js",
     "name": "AlertsView",
     "src": "src/features/alerts/AlertsView.vue",
     "isDynamicEntry": true,
@@ -258,7 +258,7 @@
     ]
   },
   "src/features/bulk/BulkView.vue": {
-    "file": "assets/BulkView-CphZX5fg.js",
+    "file": "assets/BulkView-BYp1Z8Bi.js",
     "name": "BulkView",
     "src": "src/features/bulk/BulkView.vue",
     "isDynamicEntry": true,
@@ -276,7 +276,7 @@
     ]
   },
   "src/features/design/DesignShowcase.vue": {
-    "file": "assets/DesignShowcase-oK2JAQBf.js",
+    "file": "assets/DesignShowcase-lAIPJlmv.js",
     "name": "DesignShowcase",
     "src": "src/features/design/DesignShowcase.vue",
     "isDynamicEntry": true,
@@ -300,7 +300,7 @@
     ]
   },
   "src/features/jobs/JobDetailView.vue": {
-    "file": "assets/JobDetailView-C-LYQoDO.js",
+    "file": "assets/JobDetailView-C89aK2qH.js",
     "name": "JobDetailView",
     "src": "src/features/jobs/JobDetailView.vue",
     "isDynamicEntry": true,
@@ -314,7 +314,7 @@
     ]
   },
   "src/features/jobs/JobsView.vue": {
-    "file": "assets/JobsView-CWFq0L1d.js",
+    "file": "assets/JobsView-DUPcaD_e.js",
     "name": "JobsView",
     "src": "src/features/jobs/JobsView.vue",
     "isDynamicEntry": true,
@@ -329,7 +329,7 @@
     ]
   },
   "src/features/overview/OverviewView.vue": {
-    "file": "assets/OverviewView-CWj3-gpi.js",
+    "file": "assets/OverviewView-0VNXbkek.js",
     "name": "OverviewView",
     "src": "src/features/overview/OverviewView.vue",
     "isDynamicEntry": true,
@@ -343,7 +343,7 @@
     ]
   },
   "src/features/servers/ServerDetailView.vue": {
-    "file": "assets/ServerDetailView-CgD1rRH5.js",
+    "file": "assets/ServerDetailView-BSSTjDpM.js",
     "name": "ServerDetailView",
     "src": "src/features/servers/ServerDetailView.vue",
     "isDynamicEntry": true,
@@ -361,14 +361,16 @@
       "_IcTable-DH6HMUyI.js",
       "index.html",
       "_time-Cch5MwlD.js",
-      "_TargetActions-Cc1f7xaU.js"
+      "_TargetActions-CB0Es0MI.js"
     ],
     "dynamicImports": [
+      "node_modules/@xterm/xterm/lib/xterm.mjs",
+      "node_modules/@xterm/addon-fit/lib/addon-fit.mjs",
       "src/features/servers/chartEngine.ts"
     ]
   },
   "src/features/servers/ServersView.vue": {
-    "file": "assets/ServersView-s_lAAL_x.js",
+    "file": "assets/ServersView-CDWWp8eT.js",
     "name": "ServersView",
     "src": "src/features/servers/ServersView.vue",
     "isDynamicEntry": true,
@@ -410,7 +412,7 @@
     ]
   },
   "src/features/sites/SiteDetailView.vue": {
-    "file": "assets/SiteDetailView-dpG6F_TN.js",
+    "file": "assets/SiteDetailView-Bh-pNkIt.js",
     "name": "SiteDetailView",
     "src": "src/features/sites/SiteDetailView.vue",
     "isDynamicEntry": true,
@@ -424,11 +426,11 @@
       "_IcTable-DH6HMUyI.js",
       "index.html",
       "_time-Cch5MwlD.js",
-      "_TargetActions-Cc1f7xaU.js"
+      "_TargetActions-CB0Es0MI.js"
     ]
   },
   "src/features/sites/SitesView.vue": {
-    "file": "assets/SitesView-B8aU6pWE.js",
+    "file": "assets/SitesView-D5Vwi6qc.js",
     "name": "SitesView",
     "src": "src/features/sites/SitesView.vue",
     "isDynamicEntry": true,
@@ -453,7 +455,7 @@
     ]
   },
   "src/features/topology/TopologyView.vue": {
-    "file": "assets/TopologyView-CnnrIos4.js",
+    "file": "assets/TopologyView-kMYndIIN.js",
     "name": "TopologyView",
     "src": "src/features/topology/TopologyView.vue",
     "isDynamicEntry": true,

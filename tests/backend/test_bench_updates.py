@@ -159,6 +159,8 @@ def ff(monkeypatch: pytest.MonkeyPatch) -> FakeFrappe:
 	)
 	monkeypatch.setattr(ser, "system_timezone", lambda: "UTC")
 	monkeypatch.setattr(audit, "now_datetime", lambda: f.now())
+	monkeypatch.setattr(updates, "now_datetime", lambda: f.now())
+	monkeypatch.setattr(preflight, "now_datetime", lambda: datetime.now(UTC).replace(tzinfo=None))
 	gh = _Gh()
 	monkeypatch.setattr(updates, "client", lambda: gh)
 	f.gh = gh  # type: ignore[attr-defined]

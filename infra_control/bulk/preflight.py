@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import frappe
+from frappe.utils import now_datetime
 
 from infra_control.api._inventory_helpers import running_job_for
 from infra_control.bulk import health
@@ -107,7 +108,7 @@ def preflight(playbook: str, targets: list[dict[str, str]], *, ping: bool = Fals
 	if not frappe.db.exists("Playbook", playbook):
 		raise NotFound("Playbook", playbook)
 	pb: Any = frappe.get_doc("Playbook", playbook)
-	now = datetime.now(UTC).replace(tzinfo=None)
+	now = now_datetime()  # system-timezone naive, like `last_backup`
 	items = [check_target(pb, t["target_doctype"], t["target_name"], ping=ping, now=now) for t in targets]
 	return {
 		"playbook": playbook,

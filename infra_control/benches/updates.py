@@ -13,10 +13,10 @@ there is one (private repositories, higher rate limit), else the anonymous API.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Any
 
 import frappe
+from frappe.utils import now_datetime
 
 from infra_control.core.errors import InfraError, NotFound, ValidationError
 from infra_control.integrations.github import GitHubClient, github_repo_of, major_of_branch
@@ -77,7 +77,7 @@ def check_bench(name: str) -> list[dict[str, Any]]:
 			"The bench has no discovered apps yet; run inventory discovery first", {"bench": name}
 		)
 	gh = client()
-	now = datetime.now(UTC).replace(tzinfo=None)
+	now = now_datetime()  # system-timezone naive, as Frappe stores Datetime fields
 	for row in rows:
 		result = check_app(gh, {f: row.get(f) for f in ("branch", "commit", "remote")})
 		# Child rows are Documents in Frappe and plain dicts in the unit-test fake: `update` works on both.

@@ -120,6 +120,14 @@ is a backup that exists. The card shows the last run (linked to its job) and the
 backups; "Backups of" switches to another site's backups to clone that site's data onto this
 one (typed confirmation of the target domain applies).
 
+## 11. Tenants: the client behind the sites
+
+**Tenants** (sidebar): one record per client with a stable id, name, plan, contact and
+notes, and the sites that belong to it (a site belongs to one tenant). On a tenant's page:
+attach or detach sites, edit the client's details, and **Suspend all sites** / **Activate all
+sites** with typed confirmation of the tenant id: one `site.suspend` job per site through the
+engine, sites locked by a running job are skipped and listed, and the tenant's status follows.
+
 ## What to check when a job fails
 
 - The failing step's output is in the job viewer; secrets are masked.

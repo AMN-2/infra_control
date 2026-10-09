@@ -704,6 +704,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/infra_control.api.tenants.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tenants with their site counts */
+        get: operations["tenants_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.tenants.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One tenant with its sites */
+        get: operations["tenants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.tenants.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a tenant (Infra Operator) */
+        post: operations["tenants_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.tenants.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Update a tenant's name, plan, contact or notes (Infra Operator); omitted fields keep their value */
+        post: operations["tenants_update"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.tenants.assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Attach a site to the tenant (one tenant per site) or detach it with `remove` (Infra Operator) */
+        post: operations["tenants_assign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.tenants.suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend or activate every site of the tenant, one site.suspend job per site (Infra Operator) */
+        post: operations["tenants_suspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/method/infra_control.api.audit.list": {
         parameters: {
             query?: never;
@@ -1458,6 +1560,49 @@ export interface components {
         };
         BackupPage: {
             items: components["schemas"]["Backup"][];
+            next_cursor: components["schemas"]["NextCursor"];
+        };
+        /** @enum {string} */
+        TenantStatus: "active" | "suspended";
+        Tenant: {
+            name: string;
+            label: string;
+            title: string;
+            status: components["schemas"]["TenantStatus"];
+            plan: string | null;
+            contact_email: string | null;
+            contact_phone: string | null;
+            notes: string | null;
+            site_count: number;
+            /** Format: date-time */
+            modified_at: string | null;
+        };
+        TenantSite: {
+            name: string;
+            domain: string;
+            status: components["schemas"]["SiteStatus"];
+            server: string | null;
+            bench: string | null;
+        };
+        TenantDetail: {
+            name: string;
+            label: string;
+            title: string;
+            status: components["schemas"]["TenantStatus"];
+            plan: string | null;
+            contact_email: string | null;
+            contact_phone: string | null;
+            notes: string | null;
+            site_count: number;
+            /** Format: date-time */
+            modified_at: string | null;
+            sites: components["schemas"]["TenantSite"][];
+        };
+        TenantEnvelope: {
+            tenant: components["schemas"]["TenantDetail"];
+        };
+        TenantPage: {
+            items: components["schemas"]["Tenant"][];
             next_cursor: components["schemas"]["NextCursor"];
         };
         AuditEntry: {
@@ -2831,6 +2976,209 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    tenants_list: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["TenantStatus"];
+                query?: string;
+                limit?: components["parameters"]["limit"];
+                /** @description Opaque cursor from a previous page's `next_cursor`. */
+                cursor?: components["parameters"]["cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Page of tenants */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantPage"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    tenants_get: {
+        parameters: {
+            query: {
+                tenant: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tenant detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantDetail"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    tenants_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Stable id, upper-cased, e.g. CLIENT-D */
+                    label: string;
+                    title?: string;
+                    plan?: string;
+                    contact_email?: string;
+                    contact_phone?: string;
+                    notes?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The tenant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantEnvelope"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    tenants_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tenant: string;
+                    title?: string;
+                    plan?: string;
+                    contact_email?: string;
+                    contact_phone?: string;
+                    notes?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The tenant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantEnvelope"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    tenants_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tenant: string;
+                    site: string;
+                    /** @default false */
+                    remove?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The tenant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantEnvelope"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["InvalidState"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    tenants_suspend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tenant: string;
+                    /** @default true */
+                    suspended?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The tenant, the jobs started, and the sites that could not be queued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tenant: components["schemas"]["TenantDetail"];
+                        jobs: string[];
+                        errors: {
+                            site: string;
+                            error: string;
+                        }[];
+                    };
+                };
+            };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];

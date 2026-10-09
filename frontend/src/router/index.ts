@@ -51,6 +51,18 @@ export const routes: RouteRecordRaw[] = [
 		meta: { title: "Site", hidden: true },
 	},
 	{
+		path: "/tenants",
+		name: "tenants",
+		component: () => import("@/features/tenants/TenantsView.vue"),
+		meta: { title: "Tenants" },
+	},
+	{
+		path: "/tenants/:name",
+		name: "tenant",
+		component: () => import("@/features/tenants/TenantDetailView.vue"),
+		meta: { title: "Tenant", hidden: true },
+	},
+	{
 		path: "/jobs",
 		name: "jobs",
 		component: () => import("@/features/jobs/JobsView.vue"),

@@ -1,5 +1,5 @@
 import type { Component } from "vue";
-import { Activity, Bell, Boxes, Globe, Layers, ListChecks, Server } from "lucide-vue-next";
+import { Activity, Bell, Boxes, Globe, Layers, ListChecks, Server, Users } from "lucide-vue-next";
 
 export interface NavItem {
 	name: string;
@@ -16,6 +16,7 @@ export const navigation: readonly NavItem[] = [
 	{ name: "topology", label: "Topology", to: "/topology", icon: Boxes, key: "t" },
 	{ name: "servers", label: "Servers", to: "/servers", icon: Server, key: "s" },
 	{ name: "sites", label: "Sites", to: "/sites", icon: Globe, key: "i" },
+	{ name: "tenants", label: "Tenants", to: "/tenants", icon: Users, key: "c" },
 	{ name: "jobs", label: "Jobs", to: "/jobs", icon: ListChecks, key: "j" },
 	{ name: "bulk", label: "Bulk rollouts", to: "/bulk", icon: Layers, key: "b" },
 	{ name: "alerts", label: "Alerts", to: "/alerts", icon: Bell, key: "a" },

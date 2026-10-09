@@ -1,0 +1,32 @@
+---
+# Trust the controller's console certificate authority (ADR 0007): user certificates signed by
+# it log in as `frappe` for the minutes they are valid. Idempotent; sshd is validated before reload.
+- name: Install the console CA public key
+  ansible.builtin.copy:
+    dest: /etc/ssh/infra_console_ca.pub
+    content: "{{ ca_public_key }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+  register: ca_key_file
+
+- name: sshd trusts the console CA
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/10-infra-console.conf
+    content: |
+      # Managed by infra_control (ADR 0007): short-lived console certificates for `frappe`.
+      TrustedUserCAKeys /etc/ssh/infra_console_ca.pub
+    owner: root
+    group: root
+    mode: "0644"
+  register: ca_sshd_conf
+
+- name: Validate sshd configuration
+  ansible.builtin.command: sshd -t
+  changed_when: false
+
+- name: Reload sshd
+  ansible.builtin.service:
+    name: ssh
+    state: reloaded
+  when: ca_key_file is changed or ca_sshd_conf is changed

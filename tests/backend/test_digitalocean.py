@@ -439,6 +439,7 @@ def adapter(
 			"server": "SRV-0001",
 		},
 		records=records or FakeRecords(),
+		console_ca_loader=lambda: "ssh-ed25519 AAAATESTCA console-ca",
 		clock=lambda: 1_000_000.0,
 	)
 
@@ -559,7 +560,11 @@ def test_create_server_end_to_end_with_firewall_and_configure() -> None:
 		("server", ("DO-STAGING", "999")),
 		("bench", ("DO-STAGING", "SRV-0009", "/home/frappe/frappe-bench")),
 	]
-	assert runner.started[0][2] == {"hostname": "app-03.fra1", "bench_init": True}
+	assert runner.started[0][2] == {
+		"hostname": "app-03.fra1",
+		"bench_init": True,
+		"ca_public_key": "ssh-ed25519 AAAATESTCA console-ca",
+	}
 	assert a.cancel(ref) is True
 
 

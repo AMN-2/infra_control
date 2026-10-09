@@ -36,6 +36,10 @@
       loop_control:
         loop_var: role_item
 
+    - name: Trust the console CA (ADR 0007)
+      ansible.builtin.include_tasks: tasks/trust_ca.yml
+      when: ca_public_key is defined and (ca_public_key | length > 0)
+
 # Verification (ADR 0006): a provision that leaves any of this unmet fails the job instead of
 # reporting a half-built server.
 - name: Verify server

@@ -4,6 +4,7 @@
 #   web     gunicorn for the staging site only, 127.0.0.1:8011, no debugger
 #   edge    node edge proxy, 127.0.0.1:8010 (the address you open), routes /socket.io
 #   worker  bench worker --queue infra (runs Infra Jobs)
+#   console WebSocket<->SSH bridge for the web console, 127.0.0.1:8012 (ADR 0007)
 #
 # Everything binds to 127.0.0.1; reach it through an SSH / VS Code port forward of 8010.
 # Processes are stopped only through their own PID files, never by matching command lines.
@@ -76,6 +77,8 @@ start() {
 		EDGE_PUBLIC="${EDGE_PUBLIC:-0}" EDGE_ALLOW="${EDGE_ALLOW:-}" WEB_PORT="$WEB_PORT" \
 		"${tls_env[@]}" "$NODE" "$HERE/edge.mjs"
 	COMPONENT=worker want "$@" && start_one worker "$BENCH_CLI" worker --queue infra
+	COMPONENT=console want "$@" && start_one console env BENCH="$BENCH" CONSOLE_PORT="${CONSOLE_PORT:-8012}" \
+		"$BENCH/env/bin/python" -m infra_control.console.service
 	return 0
 }
 
@@ -83,11 +86,12 @@ stop() {
 	COMPONENT=edge want "$@" && stop_one edge
 	COMPONENT=web want "$@" && stop_one web
 	COMPONENT=worker want "$@" && stop_one worker
+	COMPONENT=console want "$@" && stop_one console
 	return 0
 }
 
 status() {
-	for name in web edge worker; do
+	for name in web edge worker console; do
 		if alive "$name"; then echo "$name: running (pid $(cat "$RUN/$name.pid"))"; else echo "$name: stopped"; fi
 	done
 	local scheme=http; [ "${EDGE_TLS:-0}" = 1 ] && scheme=https

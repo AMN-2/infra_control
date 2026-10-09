@@ -369,6 +369,7 @@ infra_control/                  # Frappe app root
 | `server.snapshot` | Server | low | DO action, polled |
 | `server.apt_security` | Server | medium | unattended security updates |
 | `service.control` | Server | medium | nginx/supervisor/mariadb/redis × restart/reload |
+| `server.trust_ca` | Server | low | install the console certificate authority on an existing server (ADR 0007; new servers get it at provision) |
 | `server.exec` | Server | medium | one shell command as the bench user, output in the job log, destructive commands refused by `core/exec_guard.py` (A3.9 command runner) |
 | `server.logs` | Server | low | read-only tail of nginx / MariaDB / Redis / supervisor / journal / bench / Frappe / database / site logs with a filter (A3.8 log reader) |
 | `site.create` | Site | low | both providers |

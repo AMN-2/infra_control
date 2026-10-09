@@ -242,6 +242,16 @@ def record_domain(site: str, domain: str) -> None:
 	doc.save(ignore_permissions=True)
 
 
+def console_ca_public_key() -> str:
+	"""The console CA's public key (ADR 0007); empty when the CA cannot be created."""
+	try:
+		from infra_control.console import ca
+
+		return ca.public_key()
+	except Exception:  # provisioning must not fail because the console CA is unavailable
+		return ""
+
+
 def git_token(connection: str) -> str:
 	from infra_control.api.git import token_for
 

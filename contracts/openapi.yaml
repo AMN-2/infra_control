@@ -72,6 +72,7 @@ tags:
   - name: search
   - name: git
   - name: providers
+  - name: console
 
 x-realtime-events:
   - infra:job.updated
@@ -1068,6 +1069,87 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/CapabilityMissing" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  # ---------------------------------------------------------------------------
+  # console (ADR 0007): web SSH console with short-lived certificates
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.console.ticket:
+    post:
+      tags: [console]
+      operationId: console_ticket
+      summary: One-time ticket (60 s) carrying a fresh CA-signed SSH certificate for one server (Infra Admin; audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [server]
+              properties:
+                server: { type: string }
+      responses:
+        "200":
+          description: Ticket; connect a WebSocket to `<path>?ticket=<ticket>` on the app origin
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConsoleTicket" }
+              examples:
+                default: { $ref: "#/components/examples/ConsoleTicket" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/CapabilityMissing" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.console.sessions:
+    get:
+      tags: [console]
+      operationId: console_sessions
+      summary: Console sessions (who, which server, when, how it ended), newest first
+      parameters:
+        - name: server
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: Sessions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConsoleSessionList" }
+              examples:
+                default: { $ref: "#/components/examples/ConsoleSessionList" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.console.transcript:
+    get:
+      tags: [console]
+      operationId: console_transcript
+      summary: What happened in one console session (last 200 KB of the terminal transcript)
+      parameters:
+        - name: session
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Session with its transcript
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConsoleTranscript" }
+              examples:
+                default: { $ref: "#/components/examples/ConsoleTranscript" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
   # ---------------------------------------------------------------------------
@@ -2107,6 +2189,57 @@ components:
             size: { type: string }
             image: { type: string }
 
+    # ----- console (ADR 0007) --------------------------------------------------
+    ConsoleTicket:
+      type: object
+      additionalProperties: false
+      required: [ticket, path, expires_in, session, server, hostname, user, certificate_valid_for]
+      properties:
+        ticket: { type: string, description: "Single use; 60 s" }
+        path: { type: string, description: "WebSocket path on the app origin, e.g. /console/ws" }
+        expires_in: { type: integer }
+        session: { type: string, description: "Id of the session's transcript" }
+        server: { type: string }
+        hostname: { type: string }
+        user: { type: string, description: "SSH user on the server" }
+        certificate_valid_for: { type: string, description: "ssh-keygen validity, e.g. +10m" }
+    ConsoleSession:
+      type: object
+      additionalProperties: false
+      required: [session, server, hostname, by, started_at, ended_at, bytes, status, reason]
+      properties:
+        session: { type: string }
+        server: { type: string }
+        hostname: { type: string }
+        by: { type: string, description: "Operator who opened it" }
+        started_at: { type: [string, "null"], format: date-time }
+        ended_at: { type: [string, "null"], format: date-time }
+        bytes: { type: integer }
+        status: { type: string, enum: [open, closed] }
+        reason: { type: [string, "null"], description: "client closed | ssh exited | idle timeout | maximum session length" }
+    ConsoleSessionList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/ConsoleSession" } }
+    ConsoleTranscript:
+      type: object
+      additionalProperties: false
+      required: [session, server, hostname, by, started_at, ended_at, bytes, status, reason, transcript, truncated]
+      properties:
+        session: { type: string }
+        server: { type: string }
+        hostname: { type: string }
+        by: { type: string }
+        started_at: { type: [string, "null"], format: date-time }
+        ended_at: { type: [string, "null"], format: date-time }
+        bytes: { type: integer }
+        status: { type: string, enum: [open, closed] }
+        reason: { type: [string, "null"] }
+        transcript: { type: string, description: "Raw terminal bytes as UTF-8 (last 200 KB)" }
+        truncated: { type: boolean }
+
     # ----- audit ---------------------------------------------------------------
     AuditEntry:
       type: object
@@ -2440,6 +2573,34 @@ components:
           - { ts: "2026-10-07T09:28:00Z", value: 35.7 }
           - { ts: "2026-10-07T09:29:00Z", value: 24.1 }
           - { ts: "2026-10-07T09:30:00Z", value: 23.5 }
+    ConsoleTicket:
+      value:
+        ticket: 9Qf3k2JpX1yT7wLm4nR8sV0aB6cD5eF2gH1iJ3kL
+        path: /console/ws
+        expires_in: 60
+        session: 20261009-081500-a1b2c3
+        server: SRV-0001
+        hostname: app-01.fra1
+        user: frappe
+        certificate_valid_for: +10m
+    ConsoleSessionList:
+      value:
+        items:
+          - { session: 20261009-081500-a1b2c3, server: SRV-0001, hostname: app-01.fra1, by: ameen@smartchoice-iq.com, started_at: "2026-10-09T08:15:00Z", ended_at: "2026-10-09T08:21:40Z", bytes: 18422, status: closed, reason: client closed }
+          - { session: 20261008-231000-d4e5f6, server: SRV-0001, hostname: app-01.fra1, by: ameen@smartchoice-iq.com, started_at: "2026-10-08T23:10:00Z", ended_at: "2026-10-08T23:40:00Z", bytes: 2048, status: closed, reason: idle timeout }
+    ConsoleTranscript:
+      value:
+        session: 20261009-081500-a1b2c3
+        server: SRV-0001
+        hostname: app-01.fra1
+        by: ameen@smartchoice-iq.com
+        started_at: "2026-10-09T08:15:00Z"
+        ended_at: "2026-10-09T08:21:40Z"
+        bytes: 18422
+        status: closed
+        reason: client closed
+        transcript: "# console session 20261009-081500-a1b2c3\r\nfrappe@app-01:~$ bench version\r\nerpnext 15.95.2\r\nfrappe 15.98.1\r\nfrappe@app-01:~$ exit\r\n# session ended: client closed\r\n"
+        truncated: false
     ProviderAccountList:
       value:
         items:
@@ -2540,6 +2701,14 @@ components:
                 domain: { type: string, format: hostname }
                 apps: { type: array, items: { type: string }, default: [] }
                 admin_password: { type: string, format: password, writeOnly: true, minLength: 12 }
+          - key: server.trust_ca
+            title: Trust console certificates
+            description: Install the controller's console certificate authority on the server so web console sessions can log in with short-lived certificates.
+            target_doctype: Server
+            creates: null
+            risk: low
+            required_capability: ssh
+            params_schema: { type: object, additionalProperties: false, properties: {} }
           - key: server.exec
             title: Run command
             description: Run one shell command as the bench user and return its output. Destructive commands are refused; everything is audited.

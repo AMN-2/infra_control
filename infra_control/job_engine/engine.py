@@ -436,6 +436,10 @@ def _build_call(playbook: Any, target: Target, params: dict[str, Any]) -> tuple[
 	if playbook.ansible_file and not playbook.provider_method:
 		if not target.server:
 			raise NotSupported("ssh", target.provider)
+		if str(playbook.ansible_file) == "server_trust_ca.yml":
+			from infra_control.console import ca
+
+			kwargs["ca_public_key"] = ca.public_key()
 		call: dict[str, Any] = {
 			"server": target.server,
 			"playbook_file": playbook.ansible_file,

@@ -1,0 +1,16 @@
+---
+# server.trust_ca (ADR 0007): make an existing server accept the console's certificates.
+# `ca_public_key` is injected by the job engine from the controller's CA; new servers get it
+# during server.provision.
+- name: Trust the console CA
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Check the request
+      ansible.builtin.assert:
+        that: ca_public_key is defined and ca_public_key is match('^ssh-(ed25519|rsa|ecdsa)')
+        fail_msg: "ca_public_key must be an OpenSSH public key"
+        quiet: true
+    - name: Trust the CA
+      ansible.builtin.include_tasks: tasks/trust_ca.yml

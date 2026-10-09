@@ -114,6 +114,15 @@ PLAYBOOKS: tuple[dict[str, Any], ...] = (
 		),
 	),
 	_pb(
+		"server.trust_ca",
+		"Trust console certificates",
+		"Install the controller's console certificate authority on the server so web console sessions can log in with short-lived certificates.",
+		TargetDoctype.SERVER,
+		Risk.LOW,
+		required_capability=Capability.SSH,
+		ansible_file="server_trust_ca.yml",
+	),
+	_pb(
 		"server.exec",
 		"Run command",
 		"Run one shell command as the bench user and return its output. Destructive commands are refused; everything is audited.",

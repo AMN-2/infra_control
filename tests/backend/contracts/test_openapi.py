@@ -55,6 +55,10 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	# ADR 0006: provider accounts and the live provisioning catalogue.
 	"providers.accounts": "get",
 	"providers.options": "get",
+	# ADR 0007: web SSH console with short-lived certificates.
+	"console.ticket": "post",
+	"console.sessions": "get",
+	"console.transcript": "get",
 }
 
 # Plan section 5 unified enums.

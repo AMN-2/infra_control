@@ -26,6 +26,8 @@ const EDGE_HOST = process.env.EDGE_HOST ?? "127.0.0.1";
 const EDGE_PORT = Number(process.env.EDGE_PORT ?? 8010);
 const WEB = { host: process.env.WEB_HOST ?? "127.0.0.1", port: Number(process.env.WEB_PORT ?? 8011) };
 const RT = { host: process.env.RT_HOST ?? "127.0.0.1", port: Number(process.env.RT_PORT ?? 9000) };
+// Web console (ADR 0007): WebSocket upgrades under /console/ go to the console service.
+const CONSOLE = { host: process.env.CONSOLE_HOST ?? "127.0.0.1", port: Number(process.env.CONSOLE_PORT ?? 8012) };
 const WEB_ORIGIN = `http://${WEB.host}:${WEB.port}`;
 const LOOPBACK = ["127.0.0.1", "::1", "localhost"];
 const PUBLIC = !LOOPBACK.includes(EDGE_HOST);
@@ -56,6 +58,7 @@ const allowed = (socket) => {
 	return ALLOW_ANY || LOOPBACK.includes(ip) || ALLOW.length === 0 || ALLOW.includes(ip);
 };
 const isRealtime = (url = "") => url.startsWith("/socket.io");
+const isConsole = (url = "") => url.startsWith("/console/");
 
 function upstreamHeaders(req, realtime) {
 	const headers = { ...req.headers, "x-frappe-site-name": SITE };
@@ -95,11 +98,12 @@ const server = TLS ? https.createServer(TLS, handler) : http.createServer(handle
 
 // WebSocket upgrades (Socket.IO): replay the request line and rewritten headers, then splice.
 server.on("upgrade", (req, client, head) => {
-	if (!allowed(req.socket) || !isRealtime(req.url)) {
+	if (!allowed(req.socket) || !(isRealtime(req.url) || isConsole(req.url))) {
 		client.destroy();
 		return;
 	}
-	const upstream = net.connect(RT.port, RT.host, () => {
+	const target = isConsole(req.url) ? CONSOLE : RT;
+	const upstream = net.connect(target.port, target.host, () => {
 		const headers = upstreamHeaders(req, true);
 		const lines = [`${req.method} ${req.url} HTTP/1.1`];
 		for (const [k, v] of Object.entries(headers)) {

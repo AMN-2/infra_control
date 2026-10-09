@@ -156,6 +156,7 @@ class DigitalOceanProvider(Provider):
 		site_loader: Callable[[str], dict[str, Any]] = settings.load_site,
 		bench_loader: Callable[[str], dict[str, Any]] = settings.load_bench,
 		git_token_loader: Callable[[str], str] = settings.git_token,
+		console_ca_loader: Callable[[], str] = settings.console_ca_public_key,
 		records: Records | None = None,
 		clock: Callable[[], float] = time.time,
 	) -> None:
@@ -167,6 +168,7 @@ class DigitalOceanProvider(Provider):
 		self._site_loader = site_loader
 		self._bench_loader = bench_loader
 		self._git_token_loader = git_token_loader
+		self._console_ca_loader = console_ca_loader
 		self._clock = clock
 		self._records: Records = records or _SettingsRecords()
 		self._provisions: dict[str, _Provision] = {}
@@ -700,7 +702,9 @@ class DigitalOceanProvider(Provider):
 			# A provisioned server ends with an initialised, production-ready bench (plan 9.2, exit
 			# gate: "a new DO server reaches a working site in one action").
 			p.configure = self.runner.start(
-				server, PROVISION_PLAYBOOK, {"hostname": p.hostname, "bench_init": True}
+				server,
+				PROVISION_PLAYBOOK,
+				{"hostname": p.hostname, "bench_init": True, "ca_public_key": self._console_ca_loader()},
 			)
 		inner = self.runner.status(p.configure)
 		if inner.steps:

@@ -142,6 +142,16 @@ Live DigitalOcean resources (staging team): droplets gate-02.fra1 (SRV-0003) and
 - Q8: live Press sample captures blocked on a staging Frappe Cloud team (plan open question 5).
 - Q-B2 (Agent B's): answered by A0.5; Agent B should mark it decided once #7 merges.
 
+## Login experience (ADR 0008, 2026-10-09)
+
+- `/infra/login` is the in-app sign-in: real live-action concert-hall footage (Pexels 37600731,
+  provenance in `docs/design/login-media.md`), the form over it, Frappe's own `/api/method/login`
+  (two-factor honoured), then `session.boot` and a 2.5 s film into the dashboard. Media never
+  gates sign-in; reduced motion and broken media fall back to a fade.
+- Gates: backend suite + contract; vitest `login.spec.ts`; Playwright `login.spec.ts` (12 cases:
+  success, invalid credentials, slow auth with repeated clicks, missing video, autoplay refused,
+  reduced motion, mobile keyboard, two-factor, redirect validation, pause control, signed-in bounce).
+
 ## Environment notes
 
 - Push over HTTPS (`git push https://github.com/AMN-2/infra_control.git <branch>`); SSH keys

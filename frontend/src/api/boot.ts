@@ -9,6 +9,8 @@ export interface InfraBoot {
 	socketio_path: string;
 	/** Set only when Frappe's dev server (`bench serve`) renders the page; see realtimeOrigin(). */
 	socketio_port: number | null;
+	/** Guest boot only (the login page): Frappe's own login page offers social login or LDAP. */
+	login_alternatives?: boolean;
 }
 
 declare global {
@@ -45,6 +47,7 @@ export function readBoot(): InfraBoot | null {
 		api_base: raw.api_base ?? "/api/method/infra_control.api.",
 		socketio_path: raw.socketio_path ?? "/socket.io",
 		socketio_port: typeof raw.socketio_port === "number" ? raw.socketio_port : null,
+		login_alternatives: raw.login_alternatives === true,
 	};
 }
 

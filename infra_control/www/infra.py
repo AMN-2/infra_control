@@ -1,6 +1,7 @@
 """`/infra` and `/infra/<anything>`: the page that boots the Vue SPA (Q-B2).
 
-- Requires a logged-in user; guests are redirected to `/login?redirect-to=<path>`.
+- Requires a logged-in user; guests are sent to the in-app login (`/infra/login?redirect-to=`,
+  ADR 0008), which renders this same page with guest boot data.
 - Injects `window.csrf_token` and `window.infra_boot` for the frontend's API client.
 - Loads the hashed bundle via the Vite manifest in `infra_control/public/frontend/`.
 - Any sub-path renders this same page (`website_route_rules` in hooks.py), so the
@@ -13,32 +14,30 @@ from typing import Any
 from urllib.parse import quote_plus
 
 import frappe
-import frappe.sessions
 
-from infra_control.core.permissions import ROLES, user_roles
-from infra_control.core.spa import SpaBoot, SpaNotBuiltError, load_assets
+from infra_control.core.boot import LOGIN_PATH, build_boot, guest_boot
+from infra_control.core.spa import SpaNotBuiltError, load_assets
 
 no_cache = 1
 sitemap = 0
 
 
+def is_login_path(path: str) -> bool:
+	return path.rstrip("/") == LOGIN_PATH
+
+
 def get_context(context: Any) -> None:
 	path: str = getattr(getattr(frappe.local, "request", None), "path", None) or "/infra"
-	if frappe.session.user == "Guest":
-		frappe.flags.redirect_location = f"/login?redirect-to={quote_plus(path)}"
+	guest = frappe.session.user == "Guest"
+	if guest and not is_login_path(path):
+		frappe.flags.redirect_location = f"{LOGIN_PATH}?redirect-to={quote_plus(path)}"
 		redirect = frappe.Redirect()
 		redirect.http_status_code = 302  # temporary: the same URL works once logged in
 		raise redirect
 
 	context.no_cache = 1
 	context.title = "Infra Control"
-	boot = SpaBoot(
-		csrf_token=frappe.sessions.get_csrf_token(),
-		site_name=frappe.local.site,
-		session_user=frappe.session.user,
-		roles=tuple(r for r in ROLES if r in user_roles()),
-		socketio_port=dev_socketio_port(),
-	)
+	boot = guest_boot() if guest else build_boot()
 	context.boot = boot.as_dict()
 	context.csrf_token = boot.csrf_token
 
@@ -51,11 +50,3 @@ def get_context(context: Any) -> None:
 		frappe.log_error(title="Infra Control frontend not built", message=str(exc))
 		return
 	context.assets = assets
-
-
-def dev_socketio_port() -> int | None:
-	"""Frappe's dev server (`bench serve`, DEV_SERVER=1) has no nginx routing /socket.io."""
-	if not getattr(frappe.local, "dev_server", 0):
-		return None
-	port = frappe.conf.get("socketio_port")
-	return int(port) if port else 9000

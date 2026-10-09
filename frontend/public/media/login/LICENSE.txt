@@ -1,0 +1,6 @@
+conductor-*.mp4 / .webm / .webp: derived from Pexels video 37600731 by Sandin Redzo,
+https://www.pexels.com/video/classical-orchestra-performance-on-stage-37600731/
+used under the Pexels License (https://www.pexels.com/license/). Edited (trimmed, looped,
+cropped, re-encoded). The people shown do not endorse this product.
+smart-choice-logo.png: Smart Choice IQ brand asset.
+Details: docs/design/login-media.md

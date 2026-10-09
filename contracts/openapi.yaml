@@ -76,6 +76,7 @@ tags:
   - name: backups
   - name: tenants
   - name: security
+  - name: session
 
 x-realtime-events:
   - infra:job.updated
@@ -1560,6 +1561,23 @@ paths:
         "429": { $ref: "#/components/responses/RateLimited" }
 
 # =============================================================================
+  /api/method/infra_control.api.session.boot:
+    get:
+      tags: [session]
+      operationId: session_boot
+      summary: Boot data for the current session (what the /infra page injects), for the in-app login (ADR 0008)
+      responses:
+        "200":
+          description: CSRF token, site, user and Infra roles of the session
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionBoot" }
+              examples:
+                default: { $ref: "#/components/examples/SessionBoot" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
 components:
   securitySchemes:
     sessionCookie:
@@ -2756,10 +2774,34 @@ components:
       properties:
         items: { type: array, items: { $ref: "#/components/schemas/SearchResult" } }
 
+    SessionBoot:
+      type: object
+      additionalProperties: false
+      required: [csrf_token, site_name, session_user, roles, base_path, api_base, socketio_path, socketio_port]
+      properties:
+        csrf_token: { type: string, description: Send as X-Frappe-CSRF-Token on every POST }
+        site_name: { type: string }
+        session_user: { type: string }
+        roles: { type: array, items: { type: string, enum: [Infra Admin, Infra Operator, Infra Viewer] } }
+        base_path: { type: string, description: Where the SPA is mounted, e.g. /infra/ }
+        api_base: { type: string }
+        socketio_path: { type: string }
+        socketio_port: { type: [integer, "null"], description: Only on Frappe's dev server; null behind nginx }
+
   # ---------------------------------------------------------------------------
   # Examples (also served by the Prism mock). Keep ids consistent across examples.
   # ---------------------------------------------------------------------------
   examples:
+    SessionBoot:
+      value:
+        csrf_token: 7f3c2a9e4b1d8c6f5a2e9d0b3c7f1a4e
+        site_name: ops.smartchoice-iq.com
+        session_user: ameen@smartchoice-iq.com
+        roles: [Infra Admin, Infra Operator, Infra Viewer]
+        base_path: /infra/
+        api_base: /api/method/infra_control.api.
+        socketio_path: /socket.io
+        socketio_port: null
     OverviewSummary:
       value:
         servers: { total: 3, by_status: { Provisioning: 0, Active: 2, Degraded: 1, Down: 0, Archived: 0 } }

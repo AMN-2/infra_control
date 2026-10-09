@@ -13,7 +13,12 @@ const APP_TITLE = "Infra Control";
 export function installGuards(router: Router): void {
 	router.beforeEach((to) => {
 		const session = useSessionStore();
-		if (!session.authenticated && !session.load()) {
+		const authenticated = session.authenticated || session.load();
+		if (to.meta.public) {
+			// A signed-in user has no business on the login page.
+			return authenticated ? { name: "overview" } : true;
+		}
+		if (!authenticated) {
 			session.reauthenticate();
 			return false;
 		}

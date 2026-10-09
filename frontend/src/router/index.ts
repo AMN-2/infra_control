@@ -8,12 +8,21 @@ declare module "vue-router" {
 		requiresRole?: "Infra Admin" | "Infra Operator";
 		/** Hidden from navigation and the palette. */
 		hidden?: boolean;
+		/** Renders without a session (the login page). */
+		public?: boolean;
 	}
 }
 
 /** The SPA is served at /infra (plan §2). Every feature route is lazy-loaded (plan §10.4). */
 export const routes: RouteRecordRaw[] = [
 	{ path: "/", redirect: "/overview" },
+	{
+		// In-app login (ADR 0008). Full-page scene; App.vue keeps it outside the shell.
+		path: "/login",
+		name: "login",
+		component: () => import("@/features/login/LoginView.vue"),
+		meta: { title: "Sign in", hidden: true, public: true },
+	},
 	{
 		path: "/overview",
 		name: "overview",

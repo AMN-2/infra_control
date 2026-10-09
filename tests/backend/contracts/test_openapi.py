@@ -73,6 +73,8 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	# A4.1 security posture and the 2FA switch.
 	"security.posture": "get",
 	"security.enable_2fa": "post",
+	# ADR 0008: in-app login picks up the session's boot data without a page reload.
+	"session.boot": "get",
 }
 
 # Plan section 5 unified enums.

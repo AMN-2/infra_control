@@ -10,6 +10,8 @@
   gather_facts: false
   environment:
     PATH: "/home/frappe/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  vars:
+    db_admin_cnf: /home/frappe/.config/infra-control/db-admin.cnf
   tasks:
     - name: Preflight
       ansible.builtin.include_tasks: tasks/site_preflight.yml

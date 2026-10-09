@@ -381,3 +381,12 @@ def test_deprovision_refuses_live_sites_then_deletes_the_droplet_and_archives() 
 		assert mock.calls[0].request.method == "DELETE"
 	assert ref.kind == "done" and a.get_status(ref).state is OpState.SUCCESS
 	assert records.calls == [("archive_server", ("SRV-0001",))]
+
+
+def test_playbooks_define_every_variable_they_reference_for_db_credentials() -> None:
+	"""Live JOB-00071: site_delete referenced db_admin_cnf without defining it."""
+	for path in PLAYBOOKS.glob("site_*.yml"):
+		text = path.read_text()
+		if "{{ db_admin_cnf }}" in text:
+			doc = yaml.safe_load(text)
+			assert any("db_admin_cnf" in (play.get("vars") or {}) for play in doc), path.name

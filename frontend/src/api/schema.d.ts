@@ -602,6 +602,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/infra_control.api.console.ticket": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** One-time ticket (60 s) carrying a fresh CA-signed SSH certificate for one server (Infra Admin; audited) */
+        post: operations["console_ticket"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.console.sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Console sessions (who, which server, when, how it ended), newest first */
+        get: operations["console_sessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.console.transcript": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What happened in one console session (last 200 KB of the terminal transcript) */
+        get: operations["console_transcript"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/method/infra_control.api.audit.list": {
         parameters: {
             query?: never;
@@ -1266,6 +1317,57 @@ export interface components {
                 size: string;
                 image: string;
             };
+        };
+        ConsoleTicket: {
+            /** @description Single use; 60 s */
+            ticket: string;
+            /** @description WebSocket path on the app origin, e.g. /console/ws */
+            path: string;
+            expires_in: number;
+            /** @description Id of the session's transcript */
+            session: string;
+            server: string;
+            hostname: string;
+            /** @description SSH user on the server */
+            user: string;
+            /** @description ssh-keygen validity, e.g. +10m */
+            certificate_valid_for: string;
+        };
+        ConsoleSession: {
+            session: string;
+            server: string;
+            hostname: string;
+            /** @description Operator who opened it */
+            by: string;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            ended_at: string | null;
+            bytes: number;
+            /** @enum {string} */
+            status: "open" | "closed";
+            /** @description client closed | ssh exited | idle timeout | maximum session length */
+            reason: string | null;
+        };
+        ConsoleSessionList: {
+            items: components["schemas"]["ConsoleSession"][];
+        };
+        ConsoleTranscript: {
+            session: string;
+            server: string;
+            hostname: string;
+            by: string;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            ended_at: string | null;
+            bytes: number;
+            /** @enum {string} */
+            status: "open" | "closed";
+            reason: string | null;
+            /** @description Raw terminal bytes as UTF-8 (last 200 KB) */
+            transcript: string;
+            truncated: boolean;
         };
         AuditEntry: {
             name: string;
@@ -2465,6 +2567,91 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["CapabilityMissing"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    console_ticket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    server: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Ticket; connect a WebSocket to `<path>?ticket=<ticket>` on the app origin */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleTicket"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["CapabilityMissing"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    console_sessions: {
+        parameters: {
+            query?: {
+                server?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sessions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleSessionList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    console_transcript: {
+        parameters: {
+            query: {
+                session: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Session with its transcript */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleTranscript"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
         };
     };

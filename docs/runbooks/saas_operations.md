@@ -71,6 +71,21 @@ recursive deletes of root/home, mkfs, raw device writes, power control, fork bom
 `bench drop-site`, `DROP DATABASE`, world-writable root, account or firewall teardown, and
 piping downloads into a shell. Commands are recorded verbatim: never put a password in one.
 
+## 8. Interactive terminal (web console)
+
+Servers → the server → **Console** → **Open terminal** (Infra Admin). Behind the button
+(ADR 0007): `console.ticket` issues a fresh SSH key pair signed by the controller's
+certificate authority for 10 minutes, with your user name in the certificate identity, and a
+single-use ticket; the browser's xterm connects over the app origin to the console bridge,
+which runs `ssh` with that certificate as `frappe` on the server. The session ends when you
+disconnect, after 30 minutes idle, or after 4 hours. Every session is recorded: **Sessions**
+below the terminal lists who opened what and when, how it ended, and replays the transcript
+(`console.sessions`, `console.transcript`). The server's auth log shows the same identity.
+
+Servers provisioned before ADR 0007 need `Trust console certificates` (`server.trust_ca`)
+once from their Actions; new servers trust the CA at provision. Staging runs the bridge as
+the `console` component of `deploy/staging/staging.sh`.
+
 ## What to check when a job fails
 
 - The failing step's output is in the job viewer; secrets are masked.

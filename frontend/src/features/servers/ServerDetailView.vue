@@ -23,8 +23,11 @@ import ErrorState from "@/features/system/ErrorState.vue";
 import { relativeTime } from "@/lib/time";
 import { useInventoryStore, type Bench } from "@/stores/inventory";
 import { useJobsStore, type Job } from "@/stores/jobs";
+import { useSessionStore } from "@/stores/session";
 import { METRICS, useMetricsStore } from "@/stores/metrics";
 import CommandRunner from "./CommandRunner.vue";
+import ConsoleSessions from "./ConsoleSessions.vue";
+import SshTerminal from "./SshTerminal.vue";
 import LogReader from "./LogReader.vue";
 import MetricChart from "./MetricChart.vue";
 
@@ -38,6 +41,7 @@ const router = useRouter();
 const inventory = useInventoryStore();
 const jobs = useJobsStore();
 const metrics = useMetricsStore();
+const session = useSessionStore();
 
 const name = computed(() => String(route.params.name ?? ""));
 const server = computed(() => inventory.serverDetails[name.value]);
@@ -65,6 +69,7 @@ watch(
 );
 
 const tab = ref("benches");
+const consoleRefresh = ref(0);
 const tabs = computed<TabItem[]>(() => [
 	{ id: "benches", label: "Benches", count: server.value?.benches.length },
 	{ id: "jobs", label: "Jobs", count: jobHistory.value.length },
@@ -338,6 +343,15 @@ const metricLabel = {
 					role="tabpanel"
 					aria-labelledby="tab-console"
 				>
+					<div class="flex flex-col gap-6 p-5">
+						<SshTerminal
+							v-if="session.isAdmin"
+							:server="server.name"
+							:hostname="server.hostname"
+							@closed="consoleRefresh++"
+						/>
+						<ConsoleSessions :server="server.name" :refresh-key="consoleRefresh" />
+					</div>
 					<CommandRunner
 						:server="server.name"
 						:benches="server.benches"

@@ -53,6 +53,8 @@ def api(
 		whitelisted: Callable[P, None] = frappe.whitelist(methods=list(methods))(wrapper)
 		# Frappe wraps the function with request-time argument validation; tests call `.handler`.
 		whitelisted.handler = wrapper  # type: ignore[attr-defined]
+		# The role the wrapper enforces, for the permission matrix test (A4.1).
+		whitelisted.required_role = role  # type: ignore[attr-defined]
 		return whitelisted
 
 	return decorate

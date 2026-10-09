@@ -31,6 +31,20 @@ CHILD_DOCTYPES: dict[str, dict[str, str]] = {
 }
 
 
+def _coerce(value: Any, arg: Any) -> Any:
+	"""MariaDB compares a datetime column with a string literal as a datetime; mirror that."""
+	from datetime import datetime
+
+	if isinstance(value, datetime) and isinstance(arg, str):
+		try:
+			return datetime.fromisoformat(arg)
+		except ValueError:
+			return arg
+	if isinstance(value, str) and isinstance(arg, datetime):
+		return arg.isoformat(sep=" ")
+	return arg
+
+
 class FakeRedis:
 	def __init__(self) -> None:
 		self.store: dict[str, str] = {}
@@ -260,21 +274,35 @@ class FakeFrappe:
 				return value != arg
 			if value is None:
 				return False
-			return {
-				">": value > arg,
-				">=": value >= arg,
-				"<": value < arg,
-				"<=": value <= arg,
-				"=": value == arg,
-				"like": str(arg).strip("%") in str(value),
-			}[op]
+			if op == "like":
+				return str(arg).strip("%").lower() in str(value).lower()
+			if op == "between":
+				lo, hi = (
+					(_coerce(value, arg[0]), _coerce(value, arg[1]))
+					if isinstance(arg, list | tuple)
+					else (None, None)
+				)
+				return lo is not None and hi is not None and lo <= value <= hi
+			arg = _coerce(value, arg)
+			if op == ">":
+				return bool(value > arg)
+			if op == ">=":
+				return bool(value >= arg)
+			if op == "<":
+				return bool(value < arg)
+			if op == "<=":
+				return bool(value <= arg)
+			return bool(value == arg)
 		return value == cond
 
-	def _rows(self, doctype: str, filters: dict[str, Any] | None) -> list[FakeDoc]:
+	def _rows(
+		self, doctype: str, filters: dict[str, Any] | None, or_filters: dict[str, Any] | None = None
+	) -> list[FakeDoc]:
 		return [
 			d
 			for d in self.store.get(doctype, {}).values()
 			if all(self._match(d, k, v) for k, v in (filters or {}).items())
+			and (not or_filters or any(self._match(d, k, v) for k, v in or_filters.items()))
 		]
 
 	def get_all(
@@ -285,9 +313,10 @@ class FakeFrappe:
 		order_by: str = "",
 		limit: int | None = None,
 		pluck: str | None = None,
+		or_filters: dict[str, Any] | None = None,
 		**kw: Any,
 	) -> list[Any]:
-		rows = self._rows(doctype, filters)
+		rows = self._rows(doctype, filters, or_filters)
 		for clause in reversed([c.strip() for c in order_by.split(",") if c.strip()]):
 			field, _, direction = clause.partition(" ")
 			rows.sort(

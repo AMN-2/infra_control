@@ -65,7 +65,7 @@ def test_tenant_lifecycle_and_one_tenant_per_site(ff: FakeFrappe) -> None:
 	status, body = call(tenants.list)
 	validate("tenants.list", body)
 	assert [(x["name"], x["site_count"]) for x in body["items"]] == [("CLIENT-D", 1), ("CLIENT-E", 0)]
-	status, body = call(tenants.list, query="E")
+	status, body = call(tenants.list, query="client e")
 	assert [x["name"] for x in body["items"]] == ["CLIENT-E"]
 	status, body = call(tenants.get, tenant="CLIENT-D")
 	validate("tenants.get", body)

@@ -419,6 +419,10 @@ def _secrets_for(doc: Any) -> list[str]:
 			from infra_control.api.git import token_for
 
 			out.append(token_for(str(params["connection"])))
+	# Controller-held secrets (Spaces, Telegram, off-site backups) are masked in every job (A4.1).
+	from infra_control.core.secrets import controller_secret_values
+
+	out.extend(controller_secret_values())
 	return out
 
 

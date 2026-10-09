@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-09 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": ["site", "enabled", "frequency", "hour", "weekday", "cb1", "with_files", "retain", "last_run", "last_job", "next_run"],
+ "fields": [
+  {"fieldname": "site", "fieldtype": "Link", "label": "Site", "options": "Site", "reqd": 1, "unique": 1, "in_list_view": 1},
+  {"fieldname": "enabled", "fieldtype": "Check", "label": "Enabled", "default": "1", "in_list_view": 1},
+  {"fieldname": "frequency", "fieldtype": "Select", "label": "Frequency", "options": "hourly\ndaily\nweekly", "default": "daily", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "hour", "fieldtype": "Int", "label": "Hour (UTC)", "default": "2", "description": "0-23, for daily and weekly"},
+  {"fieldname": "weekday", "fieldtype": "Select", "label": "Weekday", "options": "mon\ntue\nwed\nthu\nfri\nsat\nsun", "default": "sun", "description": "For weekly"},
+  {"fieldname": "cb1", "fieldtype": "Column Break"},
+  {"fieldname": "with_files", "fieldtype": "Check", "label": "With files", "default": "1"},
+  {"fieldname": "retain", "fieldtype": "Int", "label": "Retain (backups per kind)", "default": "14", "description": "Older backups are deleted from Spaces and the list; 0 keeps everything"},
+  {"fieldname": "last_run", "fieldtype": "Datetime", "label": "Last run", "read_only": 1},
+  {"fieldname": "last_job", "fieldtype": "Link", "label": "Last job", "options": "Infra Job", "read_only": 1},
+  {"fieldname": "next_run", "fieldtype": "Datetime", "label": "Next run", "read_only": 1}
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-09 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Infra Control",
+ "name": "Backup Policy",
+ "owner": "Administrator",
+ "permissions": [
+  {"role": "Infra Admin", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "print": 1, "email": 1, "share": 0},
+  {"role": "Infra Operator", "read": 1, "write": 1, "create": 1, "delete": 1, "report": 1, "export": 1, "print": 1, "email": 1, "share": 0},
+  {"role": "Infra Viewer", "read": 1, "write": 0, "create": 0, "delete": 0, "report": 1, "export": 1, "print": 1, "email": 1, "share": 0}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "field:site",
+ "naming_rule": "By fieldname",
+ "title_field": "site"
+}

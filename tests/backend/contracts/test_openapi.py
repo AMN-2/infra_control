@@ -59,6 +59,10 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	"console.ticket": "post",
 	"console.sessions": "get",
 	"console.transcript": "get",
+	# A4.2: per-site backup schedule + retention and the full backup list.
+	"backups.policy": "get",
+	"backups.set_policy": "post",
+	"backups.list": "get",
 }
 
 # Plan section 5 unified enums.

@@ -162,6 +162,12 @@ class AuditResult(StrEnum):
 	DENIED = "denied"
 
 
+class BackupFrequency(StrEnum):
+	HOURLY = "hourly"
+	DAILY = "daily"
+	WEEKLY = "weekly"
+
+
 class AlertRuleKind(StrEnum):
 	METRIC = "metric"
 	HEARTBEAT = "heartbeat"

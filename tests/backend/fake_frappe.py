@@ -140,6 +140,10 @@ class FakeDoc:
 	def save(self, ignore_permissions: bool = False) -> FakeDoc:
 		return self.insert()
 
+	def update(self, data: dict[str, Any]) -> FakeDoc:
+		self._data.update(data)
+		return self
+
 	def db_set(self, field: str | dict[str, Any], value: Any = None) -> None:
 		if isinstance(field, dict):
 			self._data.update(field)

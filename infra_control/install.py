@@ -194,7 +194,7 @@ PLAYBOOKS: tuple[dict[str, Any], ...] = (
 		Risk.HIGH,
 		required_capability=Capability.SITE,
 		provider_method="restore_site",
-		params_schema=_schema(["backup"], backup={"type": "string"}),
+		params_schema=_schema(["backup"], backup={"type": "string", "x-picker": "backup"}),
 	),
 	_pb(
 		"site.migrate",

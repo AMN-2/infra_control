@@ -73,6 +73,7 @@ tags:
   - name: git
   - name: providers
   - name: console
+  - name: backups
 
 x-realtime-events:
   - infra:job.updated
@@ -1154,6 +1155,97 @@ paths:
               schema: { $ref: "#/components/schemas/ConsoleTranscript" }
               examples:
                 default: { $ref: "#/components/examples/ConsoleTranscript" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  # ---------------------------------------------------------------------------
+  # backups (A4.2): per-site schedule + retention, full backup list
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.backups.policy:
+    get:
+      tags: [backups]
+      operationId: backups_policy
+      summary: The site's backup policy, or null
+      parameters:
+        - name: site
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Policy
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [policy]
+                properties:
+                  policy:
+                    oneOf:
+                      - $ref: "#/components/schemas/BackupPolicy"
+                      - type: "null"
+              examples:
+                default: { $ref: "#/components/examples/BackupPolicyEnvelope" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.backups.set_policy:
+    post:
+      tags: [backups]
+      operationId: backups_set_policy
+      summary: Create or replace the site's backup policy (Infra Operator); next_run is recomputed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BackupPolicyInput" }
+      responses:
+        "200":
+          description: The saved policy
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [policy]
+                properties:
+                  policy: { $ref: "#/components/schemas/BackupPolicy" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.backups.list:
+    get:
+      tags: [backups]
+      operationId: backups_list
+      summary: Every backup of a site (the detail screen shows the last 10)
+      parameters:
+        - name: site
+          in: query
+          required: true
+          schema: { type: string }
+        - name: kind
+          in: query
+          schema: { $ref: "#/components/schemas/BackupKind" }
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          description: Page of backups
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupPage" }
+              examples:
+                default: { $ref: "#/components/examples/BackupPage" }
         "400": { $ref: "#/components/responses/ValidationError" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -2248,6 +2340,45 @@ components:
         transcript: { type: string, description: "Raw terminal bytes as UTF-8 (last 200 KB)" }
         truncated: { type: boolean }
 
+    # ----- backups (A4.2) ------------------------------------------------------
+    BackupFrequency:
+      type: string
+      enum: [hourly, daily, weekly]
+    BackupPolicy:
+      type: object
+      additionalProperties: false
+      required: [site, enabled, frequency, hour, weekday, with_files, retain, last_run, last_job, next_run]
+      properties:
+        site: { type: string }
+        enabled: { type: boolean }
+        frequency: { $ref: "#/components/schemas/BackupFrequency" }
+        hour: { type: integer, minimum: 0, maximum: 23, description: "System-timezone hour for daily/weekly" }
+        weekday: { type: string, enum: [mon, tue, wed, thu, fri, sat, sun] }
+        with_files: { type: boolean }
+        retain: { type: integer, minimum: 0, maximum: 365, description: "Backups kept per kind; 0 keeps everything" }
+        last_run: { type: [string, "null"], format: date-time }
+        last_job: { type: [string, "null"] }
+        next_run: { type: [string, "null"], format: date-time }
+    BackupPolicyInput:
+      type: object
+      additionalProperties: false
+      required: [site]
+      properties:
+        site: { type: string }
+        enabled: { type: boolean, default: true }
+        frequency: { $ref: "#/components/schemas/BackupFrequency" }
+        hour: { type: integer, minimum: 0, maximum: 23, default: 2 }
+        weekday: { type: string, enum: [mon, tue, wed, thu, fri, sat, sun], default: sun }
+        with_files: { type: boolean, default: true }
+        retain: { type: integer, minimum: 0, maximum: 365, default: 14 }
+    BackupPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Backup" } }
+        next_cursor: { $ref: "#/components/schemas/NextCursor" }
+
     # ----- audit ---------------------------------------------------------------
     AuditEntry:
       type: object
@@ -2581,6 +2712,25 @@ components:
           - { ts: "2026-10-07T09:28:00Z", value: 35.7 }
           - { ts: "2026-10-07T09:29:00Z", value: 24.1 }
           - { ts: "2026-10-07T09:30:00Z", value: 23.5 }
+    BackupPolicyEnvelope:
+      value:
+        policy:
+          site: demo.smartchoice-iq.com
+          enabled: true
+          frequency: daily
+          hour: 2
+          weekday: sun
+          with_files: true
+          retain: 14
+          last_run: "2026-10-09T02:00:00Z"
+          last_job: JOB-00070
+          next_run: "2026-10-10T02:00:00Z"
+    BackupPage:
+      value:
+        items:
+          - { name: BKP-000016, site: demo.smartchoice-iq.com, kind: db, location: "spaces://infara/demo.smartchoice-iq.com/20261009_020000-database.sql.gz", size_mb: 0.25, created_at: "2026-10-09T02:00:10Z", last_restore_test: null, restore_test_ok: null }
+          - { name: BKP-000017, site: demo.smartchoice-iq.com, kind: files, location: "spaces://infara/demo.smartchoice-iq.com/20261009_020000-files.tar", size_mb: 12.5, created_at: "2026-10-09T02:00:12Z", last_restore_test: null, restore_test_ok: null }
+        next_cursor: null
     ConsoleTicket:
       value:
         ticket: 9Qf3k2JpX1yT7wLm4nR8sV0aB6cD5eF2gH1iJ3kL

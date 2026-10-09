@@ -39,9 +39,13 @@ scheduler_events = {
 		"infra_control.inventory.schedule.sync_all_providers",
 		# Roll 1m metrics up to 1h and 1d (A3.1).
 		"infra_control.monitoring.rollup.run_rollups",
+		# Scheduled site backups (A4.2): start the site.backup jobs whose policy is due.
+		"infra_control.backups.schedule.run_due_policies",
 	],
 	"daily": [
 		# Metric retention: 1m 7 days, 1h 90 days, 1d 2 years (A3.1).
 		"infra_control.monitoring.rollup.purge_old_metrics",
+		# Backup retention (A4.2): keep `retain` per kind per site, delete the rest from Spaces.
+		"infra_control.backups.retention.prune",
 	],
 }

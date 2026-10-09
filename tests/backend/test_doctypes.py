@@ -30,6 +30,7 @@ PLAN_DOCTYPES = {
 	"Infra Settings",
 	"Provider Account",
 	"Git Connection",  # ADR 0005
+	"Backup Policy",  # A4.2
 	"Server",
 	"Bench",
 	"Site",

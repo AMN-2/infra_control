@@ -21,6 +21,16 @@ bench, and ends with a verification play (services running, Node >= 20, bench an
 frappe present). The Server document appears when the job succeeds; the servers list links
 to it from the job.
 
+## 2b. Create a site for a client (Infra Operator)
+
+Sites → **New site** (or **New site** on a bench row of the server screen): server → bench →
+domain → the apps to install, offered from the bench's installed apps and preselected
+(frappe is always installed) → Administrator password (12+ characters, **Generate** makes one;
+it is sent write-only and never shown again). The job runs `bench new-site`, installs the
+chosen apps, enables the scheduler and reloads nginx; the Site document appears on success
+and the job links to it. An app missing from the bench is added first with
+**Add app to bench** (section 3).
+
 ## 3. Put an app on a bench (Infra Operator)
 
 Servers → the server → **Benches** → row action **Add app to bench**. With a GitHub

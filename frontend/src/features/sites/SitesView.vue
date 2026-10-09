@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
+	IcButton,
 	IcCard,
 	IcPageHeader,
 	IcProviderBadge,
@@ -13,9 +14,13 @@ import {
 import ErrorState from "@/features/system/ErrorState.vue";
 import { relativeTime } from "@/lib/time";
 import { useInventoryStore, type Site } from "@/stores/inventory";
+import { useSessionStore } from "@/stores/session";
+import CreateSiteDialog from "./CreateSiteDialog.vue";
 
 /** Sites list with the filters other screens link to (`status`, `bench`, `server`). */
 const inventory = useInventoryStore();
+const session = useSessionStore();
+const creating = ref(false);
 const route = useRoute();
 const router = useRouter();
 
@@ -74,7 +79,18 @@ const filterLabel = computed(() =>
 
 <template>
 	<div class="flex flex-col gap-4">
-		<IcPageHeader title="Sites" :subtitle="filterLabel || undefined" />
+		<IcPageHeader title="Sites" :subtitle="filterLabel || undefined">
+			<template #actions>
+				<IcButton
+					v-if="session.canOperate"
+					variant="primary"
+					data-testid="site-new"
+					@click="creating = true"
+					>New site</IcButton
+				>
+			</template>
+		</IcPageHeader>
+		<CreateSiteDialog v-model="creating" />
 		<div class="flex flex-wrap items-center gap-3">
 			<label class="text-xs text-fg-muted" for="sites-status">Status</label>
 			<div class="w-44">

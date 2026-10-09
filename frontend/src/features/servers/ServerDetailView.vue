@@ -25,6 +25,7 @@ import { useInventoryStore, type Bench } from "@/stores/inventory";
 import { useJobsStore, type Job } from "@/stores/jobs";
 import { useSessionStore } from "@/stores/session";
 import { METRICS, useMetricsStore } from "@/stores/metrics";
+import CreateSiteDialog from "@/features/sites/CreateSiteDialog.vue";
 import CommandRunner from "./CommandRunner.vue";
 import ConsoleSessions from "./ConsoleSessions.vue";
 import SshTerminal from "./SshTerminal.vue";
@@ -70,6 +71,7 @@ watch(
 
 const tab = ref("benches");
 const consoleRefresh = ref(0);
+const createSiteOn = ref<string | null>(null);
 const tabs = computed<TabItem[]>(() => [
 	{ id: "benches", label: "Benches", count: server.value?.benches.length },
 	{ id: "jobs", label: "Jobs", count: jobHistory.value.length },
@@ -262,6 +264,15 @@ const metricLabel = {
 				:running-job="server.running_job"
 			/>
 
+			<CreateSiteDialog
+				:model-value="createSiteOn !== null"
+				:bench="createSiteOn"
+				@update:model-value="
+					(v) => {
+						if (!v) createSiteOn = null;
+					}
+				"
+			/>
 			<IcCard :padded="false">
 				<template #header>
 					<IcTabs v-model="tab" :tabs="tabs" label="Server sections" />
@@ -281,7 +292,16 @@ const metricLabel = {
 					>
 						<template #cell-actions="{ row }">
 							<!-- Bench-level actions (bench.update, site.create): the bench has no screen of its own. -->
-							<div @click.stop>
+							<div class="flex items-start justify-end gap-2" @click.stop>
+								<IcButton
+									v-if="session.canOperate && row.capabilities.includes('site')"
+									size="sm"
+									variant="primary"
+									:disabled="!!server.running_job"
+									:data-testid="`bench-new-site-${row.name}`"
+									@click="createSiteOn = row.name"
+									>New site</IcButton
+								>
 								<TargetActions
 									compact
 									target-doctype="Bench"

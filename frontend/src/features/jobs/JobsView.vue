@@ -75,9 +75,7 @@ const filtered = computed(() => {
 	if (!q) return jobs.items;
 	return jobs.items.filter((j) =>
 		[j.name, j.playbook_title, j.playbook, j.target_name, j.triggered_by].some((v) =>
-			String(v ?? "")
-				.toLowerCase()
-				.includes(q)
+			v.toLowerCase().includes(q)
 		)
 	);
 });
@@ -98,7 +96,9 @@ const live = computed(() =>
 const history = computed(() =>
 	filtered.value
 		.filter((j) => j.status !== "Running" && j.status !== "Queued")
-		.sort((a, b) => b.created_at.localeCompare(a.created_at))
+		.sort(
+			(a, b) => order[a.status] - order[b.status] || b.created_at.localeCompare(a.created_at)
+		)
 );
 
 function duration(j: Job): string {
@@ -288,6 +288,7 @@ const doctypeTone = {
 								class="cursor-pointer border-b border-line hover:bg-surface-2"
 								:class="{ 'ic-glow': j.status === 'Running' }"
 								role="row"
+								data-testid="job-row"
 								tabindex="0"
 								:aria-label="`${j.name} ${j.playbook_title} ${j.target_name}`"
 								@click="router.push(`/jobs/${encodeURIComponent(j.name)}`)"
@@ -358,6 +359,7 @@ const doctypeTone = {
 								class="cursor-pointer border-b border-line hover:bg-surface-2"
 								:class="{ 'opacity-70': j.status === 'Cancelled' }"
 								role="row"
+								data-testid="job-row"
 								tabindex="0"
 								:aria-label="`${j.name} ${j.playbook_title} ${j.target_name}`"
 								@click="router.push(`/jobs/${encodeURIComponent(j.name)}`)"

@@ -140,7 +140,7 @@ describe("JobsView", () => {
 		await w.find('[data-testid="jobs-more"]').trigger("click");
 		await settle();
 		expect(GET).toHaveBeenCalledTimes(2);
-		expect(w.findAll("tbody tr")).toHaveLength(4);
+		expect(w.findAll('[data-testid="job-row"]')).toHaveLength(4);
 		expect(w.find('[data-testid="jobs-more"]').exists()).toBe(false);
 	});
 });

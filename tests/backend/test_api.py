@@ -485,6 +485,7 @@ def test_playbooks_list_filters_by_capability(ff: FakeFrappe) -> None:
 		"server.reboot",
 		"server.snapshot",
 		"server.apt_security",
+		"server.logs",
 		"service.control",
 		"metrics.collect",
 	}

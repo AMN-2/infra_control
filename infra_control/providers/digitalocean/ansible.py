@@ -72,11 +72,58 @@ def _ts(event: dict[str, Any]) -> datetime | None:
 
 
 def _result_message(res: dict[str, Any]) -> str:
-	for key in ("msg", "stderr", "module_stderr", "reason"):
+	# A command's generic "non-zero return code" says nothing; its stderr does.
+	keys = ("msg", "stderr", "module_stderr", "reason")
+	if str(res.get("msg") or "").strip() == "non-zero return code" and str(res.get("stderr") or "").strip():
+		keys = ("stderr", "msg", "module_stderr", "reason")
+	for key in keys:
 		value = res.get(key)
 		if isinstance(value, str) and value.strip():
 			return value.strip()
 	return "task failed"
+
+
+DETAIL_LIMIT = 16_000
+"""Per-task cap on detail text kept in a step (head and tail are kept around a marker)."""
+
+
+def _clip(text: str, limit: int = DETAIL_LIMIT) -> str:
+	if len(text) <= limit:
+		return text
+	half = limit // 2
+	return text[:half] + f"\n… [{len(text) - limit} characters omitted] …\n" + text[-half:]
+
+
+def _result_details(res: dict[str, Any]) -> str:
+	"""What a task actually did, for the job log: command output, debug messages, loop items.
+
+	Ansible's own line (`ok: [host]`) says only that a task ran; operators need the stdout of
+	`bench`/`git` commands and the `msg` of debug/report tasks. `no_log` tasks arrive censored
+	by Ansible, so nothing secret is added here."""
+	parts: list[str] = []
+	items = res.get("results")
+	if isinstance(items, list):
+		for item in items:
+			if isinstance(item, dict):
+				label = item.get("item")
+				inner = _result_details(item)
+				if inner:
+					parts.append((f"[{label}] " if label is not None else "") + inner)
+		return "\n".join(parts)
+	for key in ("stdout", "stderr", "msg"):
+		value = res.get(key)
+		if isinstance(value, list):
+			value = "\n".join(str(v) for v in value)
+		elif isinstance(value, dict):
+			value = json.dumps(value, ensure_ascii=False, indent=1)
+		if isinstance(value, str) and value.strip():
+			text = value.strip()
+			if key == "stderr":
+				text = "stderr: " + text
+			if key == "msg" and res.get("stdout"):
+				continue  # command tasks carry the stdout; `msg` would repeat "non-zero return code"
+			parts.append(text)
+	return "\n".join(parts)
 
 
 def unreachable_hosts(events: list[dict[str, Any]]) -> list[str]:
@@ -116,6 +163,10 @@ def steps_from_events(events: list[dict[str, Any]]) -> tuple[list[_Step], str | 
 			step.output.append(stdout.strip() + "\n")
 		raw_res = data.get("res")
 		res: dict[str, Any] = raw_res if isinstance(raw_res, dict) else {}
+		if kind in ("runner_on_ok", "runner_on_failed", "runner_item_on_ok", "runner_item_on_failed"):
+			details = _result_details(res)
+			if details:
+				step.output.append(_clip(details) + "\n")
 		if kind == "runner_on_ok":
 			step.state, step.ended_at = OpState.SUCCESS, _ts(ev)
 		elif kind == "runner_on_skipped":

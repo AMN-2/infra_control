@@ -8,6 +8,7 @@ from typing import Any
 import frappe
 
 from infra_control.core.enums import JobStatus
+from infra_control.job_engine.engine import READ_ONLY_PLAYBOOKS
 
 
 def count_by(doctype: str, field: str, filters: dict[str, Any] | None = None) -> dict[str, int]:
@@ -53,7 +54,7 @@ def running_jobs() -> list[dict[str, Any]]:
 	"""Running jobs with their target and the server lock they hold."""
 	rows: list[dict[str, Any]] = frappe.get_all(
 		"Infra Job",
-		filters={"status": JobStatus.RUNNING},
+		filters={"status": JobStatus.RUNNING, "playbook": ["not in", sorted(READ_ONLY_PLAYBOOKS)]},
 		fields=["name", "target_doctype", "target_name", "lock_key"],
 	)
 	return rows

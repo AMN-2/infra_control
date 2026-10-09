@@ -2540,6 +2540,23 @@ components:
                 domain: { type: string, format: hostname }
                 apps: { type: array, items: { type: string }, default: [] }
                 admin_password: { type: string, format: password, writeOnly: true, minLength: 12 }
+          - key: server.logs
+            title: Read logs
+            description: Tail a log on the server (nginx, MariaDB, Redis, supervisor, system journal, bench, Frappe, database queries, one site), optionally filtered. Read-only.
+            target_doctype: Server
+            creates: null
+            risk: low
+            required_capability: ssh
+            params_schema:
+              type: object
+              additionalProperties: false
+              required: [source]
+              properties:
+                source: { type: string, enum: [nginx_access, nginx_error, mariadb, redis, supervisor, system, bench_web, bench_worker, bench_schedule, bench_error, frappe, database, site] }
+                bench_path: { type: string, default: /home/frappe/frappe-bench }
+                site: { type: string, default: "", description: Site domain, for source = site }
+                lines: { type: integer, minimum: 1, maximum: 2000, default: 200 }
+                match: { type: string, default: "", description: Case-insensitive filter }
           - key: bench.update
             title: Update bench apps
             description: Pull new app code on the bench (fast-forward only), install requirements, then back up and migrate every site on it, build assets and restart.

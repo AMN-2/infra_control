@@ -66,7 +66,7 @@ def test_steps_from_events_one_step_per_task() -> None:
 		("Restart nginx", OpState.FAILED),
 	]
 	assert steps[0].output == ["changed: [SRV-0001]\n"]
-	assert steps[1].output == ["failed, ignored\n"]
+	assert steps[1].output == ["nope\n", "failed, ignored\n"]  # the message, then the marker
 	assert steps[2].output == ["skipped\n"]
 	assert steps[0].started_at == datetime(2026, 10, 7, 10, 0, 2, tzinfo=UTC)
 	assert error == "Restart nginx: Job for nginx.service failed"
@@ -351,3 +351,72 @@ def test_ignore_unreachable_run_stays_success_and_annotates_the_step(tmp_path: P
 	status = runner.status(ref)
 	assert status.state is OpState.SUCCESS and status.error is None
 	assert "unreachable, skipped: dead.fra1" in status.steps[0].output
+
+
+def test_step_output_carries_command_stdout_debug_messages_and_loop_items() -> None:
+	"""Operators asked to see what a task did, not only `ok: [host]`."""
+	from infra_control.providers.digitalocean.ansible import _clip, steps_from_events
+
+	events = [
+		ev(1, "playbook_on_task_start", "bench version", "t1"),
+		ev(
+			2,
+			"runner_on_ok",
+			"bench version",
+			"t1",
+			stdout="ok: [SRV-0001]",
+			res={"stdout": "frappe 15.98.1\nerpnext 15.95.2", "msg": "non-zero return code"},
+		),
+		ev(3, "playbook_on_task_start", "Report", "t2"),
+		ev(
+			4,
+			"runner_on_ok",
+			"Report",
+			"t2",
+			stdout="ok: [SRV-0001]",
+			res={"msg": "updated: erpnext 1a2b -> 3c4d"},
+		),
+		ev(5, "playbook_on_task_start", "Pull", "t3"),
+		ev(
+			6,
+			"runner_on_ok",
+			"Pull",
+			"t3",
+			stdout="ok: [SRV-0001]",
+			res={
+				"results": [
+					{"item": "frappe", "stdout": "Already up to date."},
+					{"item": "erpnext", "stdout": "Updating 1a2b..3c4d"},
+				]
+			},
+		),
+		ev(7, "playbook_on_task_start", "Secret", "t4"),
+		ev(
+			8,
+			"runner_on_ok",
+			"Secret",
+			"t4",
+			stdout="ok: [SRV-0001]",
+			res={"censored": "the output has been hidden due to the fact that 'no_log: true' was specified"},
+		),
+		ev(9, "playbook_on_task_start", "Fails", "t5"),
+		ev(
+			10,
+			"runner_on_failed",
+			"Fails",
+			"t5",
+			stdout="fatal: [SRV-0001]",
+			res={"stdout": "", "stderr": "fatal: not a git repository", "msg": "non-zero return code"},
+		),
+	]
+	steps, first_error = steps_from_events(events)
+	outputs = ["".join(s.output) for s in steps]
+	assert "frappe 15.98.1\nerpnext 15.95.2" in outputs[0] and "non-zero" not in outputs[0]
+	assert "updated: erpnext 1a2b -> 3c4d" in outputs[1]
+	assert "[frappe] Already up to date." in outputs[2] and "[erpnext] Updating 1a2b..3c4d" in outputs[2]
+	assert outputs[3].strip() == "ok: [SRV-0001]"  # censored results add nothing
+	assert (
+		"stderr: fatal: not a git repository" in outputs[4]
+		and first_error == "Fails: fatal: not a git repository"
+	)
+	assert "characters omitted" in _clip("x" * 40_000) and len(_clip("x" * 40_000)) < 17_000

@@ -508,3 +508,29 @@ def test_scheduler_user_may_not_run_a_high_risk_playbook(ff: FakeFrappe) -> None
 
 	with pytest.raises(PermissionDenied):
 		engine.create_job("server.reboot", "Server", "SRV-0001", user=engine.SCHEDULER_USER)
+
+
+def test_read_only_playbooks_run_without_the_server_lock(ff: FakeFrappe) -> None:
+	"""A3.8: a log read runs beside a mutating job instead of queueing behind it."""
+	from infra_control.job_engine import engine as eng
+
+	assert "server.logs" in eng.READ_ONLY_PLAYBOOKS
+	held = ff.cache().set("infra:lock:server:SRV-0001", "someone-else")
+	assert held is True
+	ff.add(
+		"Playbook",
+		name="server.logs",
+		key="server.logs",
+		title="Read logs",
+		target_doctype="Server",
+		risk="low",
+		required_capability="ssh",
+		ansible_file="logs_read.yml",
+		enabled=1,
+		params_schema='{"type": "object", "properties": {"source": {"type": "string"}}}',
+	)
+	job = eng.create_job("server.logs", "Server", "SRV-0001", {"source": "system"}, enqueue=False)
+	eng.run_job(job.name)
+	doc = ff.store["Infra Job"][job.name]
+	assert doc.get("status") in ("Success", "Failed") and not doc.get("lock_key")
+	assert ff.cache().get("infra:lock:server:SRV-0001") == "someone-else"

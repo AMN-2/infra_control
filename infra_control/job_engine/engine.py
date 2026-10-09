@@ -102,6 +102,12 @@ class Target:
 
 
 # ---------------------------------------------------------------------------------------
+# Read-only playbooks run beside a mutating job instead of queueing behind it (A3.8): looking
+# at a log while a migration runs is exactly when an operator needs it. They never change
+# the server, so the one-job-per-server lock does not apply to them.
+READ_ONLY_PLAYBOOKS: frozenset[str] = frozenset({"server.logs"})
+
+
 # Target resolution and lock keys (pure given a target)
 # ---------------------------------------------------------------------------------------
 def resolve_target(doctype: str, name: str) -> Target:
@@ -359,6 +365,13 @@ def run_job(job: str) -> None:
 		_finish(doc, JobStatus.CANCELLED)
 		return
 	target = resolve_target(doc.target_doctype, doc.target_name)
+	if str(doc.playbook) in READ_ONLY_PLAYBOOKS:
+		try:
+			_execute(doc, target)
+		except Exception as exc:
+			frappe.log_error(title=f"Infra Job {job} crashed", message=frappe.get_traceback())
+			_finish(doc, JobStatus.FAILED, error=mask_secrets(str(exc), _secrets_for(doc)))
+		return
 	key = lock_key_for(target)
 	client = redis_client()
 	if not _wait_for_lock(client, key, job, doc):

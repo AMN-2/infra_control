@@ -24,6 +24,7 @@ import { relativeTime } from "@/lib/time";
 import { useInventoryStore, type Bench } from "@/stores/inventory";
 import { useJobsStore, type Job } from "@/stores/jobs";
 import { METRICS, useMetricsStore } from "@/stores/metrics";
+import LogReader from "./LogReader.vue";
 import MetricChart from "./MetricChart.vue";
 
 /**
@@ -66,6 +67,7 @@ const tab = ref("benches");
 const tabs = computed<TabItem[]>(() => [
 	{ id: "benches", label: "Benches", count: server.value?.benches.length },
 	{ id: "jobs", label: "Jobs", count: jobHistory.value.length },
+	{ id: "logs", label: "Logs" },
 	{ id: "details", label: "Details" },
 ]);
 const jobHistory = computed<Job[]>(() =>
@@ -315,6 +317,18 @@ const metricLabel = {
 							/>
 						</template>
 					</IcTable>
+				</div>
+				<div
+					v-else-if="tab === 'logs'"
+					id="panel-logs"
+					role="tabpanel"
+					aria-labelledby="tab-logs"
+				>
+					<LogReader
+						:server="server.name"
+						:benches="server.benches"
+						:running-job="server.running_job"
+					/>
 				</div>
 				<dl
 					v-else

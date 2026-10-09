@@ -369,6 +369,7 @@ infra_control/                  # Frappe app root
 | `server.snapshot` | Server | low | DO action, polled |
 | `server.apt_security` | Server | medium | unattended security updates |
 | `service.control` | Server | medium | nginx/supervisor/mariadb/redis × restart/reload |
+| `server.logs` | Server | low | read-only tail of nginx / MariaDB / Redis / supervisor / journal / bench / Frappe / database / site logs with a filter (A3.8 log reader) |
 | `site.create` | Site | low | both providers |
 | `site.backup` | Site | low | DO: bench backup + Spaces upload |
 | `site.restore` | Site | high | confirm |

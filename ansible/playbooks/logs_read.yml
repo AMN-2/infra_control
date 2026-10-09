@@ -1,0 +1,79 @@
+---
+# server.logs (A3.8): read a log on a managed server without SSH, as a job. Read-only: tail or
+# journalctl, optionally filtered, at most `lines` lines. Nothing is changed on the server.
+#
+#   source   nginx_access | nginx_error | mariadb | redis | supervisor | system |
+#            bench_web | bench_worker | bench_schedule | bench_error | frappe | database | site
+#   bench_path  the bench for bench_* / frappe / database / site (default /home/frappe/frappe-bench)
+#   site     site domain for `site` (sites/<site>/logs/frappe.log)
+#   lines    1..2000 (default 200)
+#   match    optional case-insensitive substring filter (applied before the line limit)
+- name: Read logs
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    n: "{{ [[(lines | default(200)) | int, 1] | max, 2000] | min }}"
+    bp: "{{ bench_path | default('/home/frappe/frappe-bench') }}"
+    files:
+      nginx_access: ["/var/log/nginx/access.log"]
+      nginx_error: ["/var/log/nginx/error.log"]
+      supervisor: ["/var/log/supervisor/supervisord.log"]
+      bench_web: ["{{ bp }}/logs/web.log"]
+      bench_worker: ["{{ bp }}/logs/worker.log"]
+      bench_schedule: ["{{ bp }}/logs/schedule.log"]
+      bench_error: ["{{ bp }}/logs/web.error.log", "{{ bp }}/logs/worker.error.log"]
+      frappe: ["{{ bp }}/logs/frappe.log"]
+      database: ["{{ bp }}/logs/database.log"]
+      site: ["{{ bp }}/sites/{{ site | default('') }}/logs/frappe.log"]
+    units:
+      mariadb: mariadb
+      redis: redis-server
+      system: ""
+  tasks:
+    - name: Check the request
+      ansible.builtin.assert:
+        that:
+          - source in files or source in units
+          - source != 'site' or (site | default('') | length > 0)
+        fail_msg: "source must be one of {{ (files | list) + (units | list) }}; `site` needs a site"
+        quiet: true
+
+    - name: Which files exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ files[source] | default([]) }}"
+      register: present
+
+    - name: Read log files
+      # tail first (bounded I/O on multi-GB logs), filter second, then cap again.
+      ansible.builtin.shell:
+        cmd: >-
+          for f in {{ present.results | selectattr('stat.exists') | map(attribute='item') | map('quote') | join(' ') }}; do
+            echo "==> $f <=="; tail -n {{ [n | int * 20, 200000] | min }} "$f"
+            {% if match | default('') | length > 0 %} | grep -i -- {{ match | quote }} {% endif %}
+            | tail -n {{ n }};
+          done
+        executable: /bin/bash
+      register: file_read
+      changed_when: false
+      failed_when: false
+      when: source in files
+
+    - name: Read the journal
+      ansible.builtin.shell:
+        cmd: >-
+          journalctl --no-pager -o short-iso
+          {% if units[source] | length > 0 %} -u {{ units[source] }} {% endif %}
+          -n {{ [n | int * 20, 200000] | min }}
+          {% if match | default('') | length > 0 %} | grep -i -- {{ match | quote }} {% endif %}
+          | tail -n {{ n }}
+        executable: /bin/bash
+      register: journal_read
+      changed_when: false
+      failed_when: false
+      when: source in units
+
+    - name: Log
+      ansible.builtin.debug:
+        msg: "{{ (file_read.stdout if source in files else journal_read.stdout) | default('') or '(empty)' }}"

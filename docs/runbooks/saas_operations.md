@@ -48,6 +48,18 @@ Nothing new upstream = "nothing to update" and no site is touched.
 Fleet-wide: Bulk rollouts → playbook `bench.update` → the benches → canary → batch size.
 The canary runs first and a failure halts the rollout before any other bench is touched.
 
+## 6. Read logs without SSH
+
+Servers → the server → **Logs**: pick a source (nginx access/error, bench web/worker/
+scheduler/errors, `frappe.log`, `database.log` query log, one site's log, MariaDB, Redis,
+supervisor, system journal), the bench, a line count (max 2000) and an optional
+case-insensitive filter, then **Read**. Each read is a `server.logs` job (low risk, Infra
+Operator): tail/journalctl on the server, output masked and shown in the terminal, listed
+under recent reads and in the job history. Nothing on the server changes.
+
+Job steps now carry what each task did (command stdout, report messages, loop items), not
+only `ok: [host]`, capped at 16 KB per task; `no_log` tasks stay censored.
+
 ## What to check when a job fails
 
 - The failing step's output is in the job viewer; secrets are masked.

@@ -128,6 +128,22 @@ attach or detach sites, edit the client's details, and **Suspend all sites** / *
 sites** with typed confirmation of the tenant id: one `site.suspend` job per site through the
 engine, sites locked by a running job are skipped and listed, and the tenant's status follows.
 
+## 12. Security posture and the audit log
+
+**Security** (sidebar, Infra Admin): live checks for the plan's section 13: 2FA for the Infra
+roles, the admin circle, API keys on admin accounts, provider accounts, SSH key and console
+CA file modes, secrets masking, audit immutability, scheduler, backup schedule coverage,
+restore-test age (35 days), controller off-site backup, Spaces, open console sessions. Each
+`fail` carries the fix. **Enable 2FA** turns on Frappe's OTP-app 2FA for Infra Admin and
+Infra Operator only; make sure outgoing email works first (the enrolment link is emailed).
+
+**Audit log** (sidebar): every action, by whom, on what, with the job it produced; filters
+by user, action prefix, target. Rows are never edited or deleted.
+
+Monthly on the 1st, `site.restore_test` runs on the newest backup of every scheduled site;
+daily, the controller's own backup goes to the off-site bucket configured on Infra Settings.
+Runbooks: `controller_down.md`, `provider_api_down.md`, `failed_restore.md`.
+
 ## What to check when a job fails
 
 - The failing step's output is in the job viewer; secrets are masked.

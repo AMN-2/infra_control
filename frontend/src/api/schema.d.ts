@@ -806,6 +806,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/infra_control.api.security.posture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Security posture checks (2FA, admins, keys, masking, audit immutability, scheduler, backups, restore test, off-site controller backup, console sessions) */
+        get: operations["security_posture"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.security.enable_2fa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn on OTP-app two-factor authentication for Infra Admin and Infra Operator (Infra Admin; audited) */
+        post: operations["security_enable_2fa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/method/infra_control.api.audit.list": {
         parameters: {
             query?: never;
@@ -1604,6 +1638,30 @@ export interface components {
         TenantPage: {
             items: components["schemas"]["Tenant"][];
             next_cursor: components["schemas"]["NextCursor"];
+        };
+        SecurityCheck: {
+            id: string;
+            title: string;
+            /** @enum {string} */
+            status: "pass" | "warn" | "fail";
+            detail: string;
+            hint: string | null;
+        };
+        TwoFactorState: {
+            enabled: boolean;
+            roles: {
+                [key: string]: boolean;
+            };
+            method: string | null;
+        };
+        SecurityPosture: {
+            checks: components["schemas"]["SecurityCheck"][];
+            summary: {
+                pass: number;
+                warn: number;
+                fail: number;
+            };
+            two_factor: components["schemas"]["TwoFactorState"];
         };
         AuditEntry: {
             name: string;
@@ -3182,6 +3240,58 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    security_posture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Checks and summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityPosture"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    security_enable_2fa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Two-factor state after the change */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        two_factor: components["schemas"]["TwoFactorState"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             429: components["responses"]["RateLimited"];
         };
     };

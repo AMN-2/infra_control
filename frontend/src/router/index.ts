@@ -87,6 +87,18 @@ export const routes: RouteRecordRaw[] = [
 		meta: { title: "Alerts" },
 	},
 	{
+		path: "/settings/security",
+		name: "settings-security",
+		component: () => import("@/features/settings/SecurityView.vue"),
+		meta: { title: "Security", requiresRole: "Infra Admin", hidden: true },
+	},
+	{
+		path: "/audit",
+		name: "audit",
+		component: () => import("@/features/audit/AuditView.vue"),
+		meta: { title: "Audit log", hidden: true },
+	},
+	{
 		path: "/settings/github",
 		name: "settings-github",
 		component: () => import("@/features/settings/GitHubView.vue"),

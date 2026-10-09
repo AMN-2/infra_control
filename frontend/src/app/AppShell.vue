@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useTemplateRef } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
-import { Command, Github, Palette } from "lucide-vue-next";
+import { Command, Github, Palette, ScrollText, ShieldCheck } from "lucide-vue-next";
 import { IcIconButton, IcKbd } from "@/design/components";
 import { transitions } from "@/design/motion";
 import { useSessionStore } from "@/stores/session";
@@ -46,6 +46,21 @@ function isActive(to: string): boolean {
 			<div
 				class="mt-auto flex flex-col gap-3 border-t border-line px-5 py-4 text-xs text-fg-subtle"
 			>
+				<RouterLink
+					to="/audit"
+					class="flex items-center gap-2 hover:text-fg"
+					data-testid="nav-audit"
+				>
+					<ScrollText :size="14" aria-hidden="true" /> Audit log
+				</RouterLink>
+				<RouterLink
+					v-if="session.isAdmin"
+					to="/settings/security"
+					class="flex items-center gap-2 hover:text-fg"
+					data-testid="nav-security"
+				>
+					<ShieldCheck :size="14" aria-hidden="true" /> Security
+				</RouterLink>
 				<RouterLink
 					v-if="session.isAdmin"
 					to="/settings/github"

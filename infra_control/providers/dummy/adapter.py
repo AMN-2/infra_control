@@ -127,6 +127,14 @@ class DummyProvider(Provider):
 	def suspend_site(self, site: str, suspended: bool) -> OpRef:
 		return self._start("suspend_site", ["Suspend"], site=site, suspended=suspended)
 
+	def restore_test_site(self, site: str, backup_ref: str) -> OpRef:
+		return self._start(
+			"restore_test_site",
+			["Restore into a throwaway site", "Probe", "Drop the throwaway site"],
+			site=site,
+			backup_ref=backup_ref,
+		)
+
 	def delete_site(self, site: str) -> OpRef:
 		return self._start(
 			"delete_site", ["Last backup before deleting", "bench drop-site", "Reload nginx"], site=site

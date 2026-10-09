@@ -26,6 +26,8 @@ on_session_creation = ["infra_control.core.login.on_session_creation"]
 # 	"daily": ["infra_control.providers.frappe_cloud.contract_test.run"],
 scheduler_events = {
 	"cron": {
+		# Monthly restore test (A4.2, security requirement 10): newest backup of every scheduled site.
+		"0 3 1 * *": ["infra_control.backups.restore_test.run_monthly"],
 		"* * * * *": [
 			"infra_control.job_engine.recovery.run",
 			# Metric collector (A3.1): one Server Metric per managed server, per minute.
@@ -47,5 +49,7 @@ scheduler_events = {
 		"infra_control.monitoring.rollup.purge_old_metrics",
 		# Backup retention (A4.2): keep `retain` per kind per site, delete the rest from Spaces.
 		"infra_control.backups.retention.prune",
+		# Controller self-backup to an S3-compatible store outside DigitalOcean (A4.2, requirement 11).
+		"infra_control.backups.controller.run_daily",
 	],
 }

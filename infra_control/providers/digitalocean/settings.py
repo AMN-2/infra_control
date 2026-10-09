@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import frappe
+from frappe.utils import now_datetime
 
 from infra_control.providers.digitalocean.spaces import SpacesConfig
 
@@ -189,6 +190,16 @@ def record_site(domain: str, bench: str) -> str:
 	)
 	doc.insert(ignore_permissions=True)
 	return str(doc.name)
+
+
+def record_restore_test(backup: str, ok: bool) -> None:
+	"""Security requirement 10: the Backup row remembers its last restore test and verdict."""
+	if frappe.db.exists("Backup", backup):
+		frappe.db.set_value(
+			"Backup",
+			backup,
+			{"last_restore_test": now_datetime(), "restore_test_result": "ok" if ok else "failed"},
+		)
 
 
 def archive_site(site: str) -> None:

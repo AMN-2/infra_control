@@ -52,6 +52,9 @@ class _FcLike(Provider):
 	def delete_site(self, site: str) -> OpRef:
 		return OpRef(self.name, "press_job", "4e")
 
+	def restore_test_site(self, site: str, backup_ref: str) -> OpRef:
+		return OpRef(self.name, "press_job", "4g")
+
 	def deprovision_server(self, server: str) -> OpRef:
 		return OpRef(self.name, "press_job", "4f")
 

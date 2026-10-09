@@ -58,6 +58,7 @@ SITE_PLAYBOOKS: dict[str, str] = {
 	"suspend_site": "site_suspend.yml",
 	"install_app": "site_install_app.yml",
 	"delete_site": "site_delete.yml",
+	"restore_test_site": "site_restore_test.yml",
 }
 BENCH_PLAYBOOKS: dict[str, str] = {"update_bench": "bench_update.yml", "add_app": "bench_add_app.yml"}
 SERVICE_PLAYBOOK = "service_control.yml"
@@ -76,6 +77,7 @@ class Records(Protocol):
 	def record_domain(self, site: str, domain: str) -> None: ...
 	def record_bench_app(self, bench: str, app: str, branch: str) -> None: ...
 	def archive_site(self, site: str) -> None: ...
+	def record_restore_test(self, backup: str, ok: bool) -> None: ...
 	def archive_server(self, server: str) -> None: ...
 	def live_sites_on_server(self, server: str) -> list[str]: ...
 	def load_backup_set(self, backup: str) -> dict[str, str]: ...
@@ -354,6 +356,22 @@ class DigitalOceanProvider(Provider):
 	def suspend_site(self, site: str, suspended: bool) -> OpRef:
 		return self._start_site("suspend_site", site, {"suspended": bool(suspended)})
 
+	def restore_test_site(self, site: str, backup_ref: str) -> OpRef:
+		"""`site.restore_test`: the backup's database dump restored into a throwaway site on the
+		same bench and dropped again; the Backup row records the verdict."""
+		client = self._spaces()
+		files = self._records.load_backup_set(backup_ref)
+		if "db" not in files:
+			raise ProviderError("The backup has no database file", {"backup": backup_ref})
+		_bucket, key = spaces.parse_location(files["db"])
+		probe = f"rt-{datetime.fromtimestamp(self._clock(), UTC).strftime('%Y%m%d%H%M%S')}.restore.test"
+		return self._start_site(
+			"restore_test_site",
+			site,
+			{"restore_urls": {"database": spaces.presign_get(client, key)}, "probe_site": probe},
+			_Pending("restore_test", site, {"backup": backup_ref}),
+		)
+
 	def delete_site(self, site: str) -> OpRef:
 		"""`site.delete`: a last database + files backup offsite (the job fails if it fails), then
 		`bench drop-site`; on success the backups are recorded and the Site is archived."""
@@ -400,6 +418,11 @@ class DigitalOceanProvider(Provider):
 	def _record(self, op: OpRef, status: OpStatus) -> None:
 		"""Leave the operation's result in the DocTypes once, on success."""
 		pending = self._pending.get(op.external_id)
+		if pending is not None and pending.kind == "restore_test" and status.state.terminal:
+			# A restore test records its verdict either way: a failed test is the finding.
+			self._pending.pop(op.external_id)
+			self._records.record_restore_test(str(pending.extra["backup"]), status.state is OpState.SUCCESS)
+			return
 		if pending is None or status.state is not OpState.SUCCESS:
 			if status.state.terminal:
 				self._pending.pop(op.external_id, None)
@@ -814,6 +837,9 @@ class _SettingsRecords:
 
 	def archive_site(self, site: str) -> None:
 		settings.archive_site(site)
+
+	def record_restore_test(self, backup: str, ok: bool) -> None:
+		settings.record_restore_test(backup, ok)
 
 	def archive_server(self, server: str) -> None:
 		settings.archive_server(server)

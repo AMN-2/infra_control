@@ -397,6 +397,9 @@ class FakeRecords:
 	def archive_site(self, site: str) -> None:
 		self.calls.append(("archive_site", (site,)))
 
+	def record_restore_test(self, backup: str, ok: bool) -> None:
+		self.calls.append(("restore_test", (backup, ok)))
+
 	def archive_server(self, server: str) -> None:
 		self.calls.append(("archive_server", (server,)))
 

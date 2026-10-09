@@ -71,6 +71,7 @@ _TARGET_KWARG: dict[str, str] = {
 _METHOD_PARAM_MAP: dict[str, dict[str, str]] = {
 	"create_site": {"domain": "site"},
 	"restore_site": {"backup": "backup_ref"},
+	"restore_test_site": {"backup": "backup_ref"},
 }
 _OP_TO_JOB: dict[OpState, JobStatus] = {
 	OpState.QUEUED: JobStatus.RUNNING,

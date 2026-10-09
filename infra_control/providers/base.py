@@ -107,6 +107,7 @@ METHOD_CAPABILITY: dict[str, Capability | None] = {
 	"add_domain": Capability.SITE,
 	"suspend_site": Capability.SITE,
 	"delete_site": Capability.SITE,
+	"restore_test_site": Capability.SITE,
 	"deprovision_server": Capability.SERVER,
 	"get_status": None,
 	"sync_inventory": None,
@@ -186,6 +187,10 @@ class Provider(ABC):
 
 	@abstractmethod
 	def suspend_site(self, site: str, suspended: bool) -> OpRef: ...
+
+	@abstractmethod
+	def restore_test_site(self, site: str, backup_ref: str) -> OpRef:
+		"""`site.restore_test`: restore a backup into a throwaway site and drop it (proves backups)."""
 
 	@abstractmethod
 	def delete_site(self, site: str) -> OpRef:

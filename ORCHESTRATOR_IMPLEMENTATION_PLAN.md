@@ -381,6 +381,7 @@ infra_control/                  # Frappe app root
 | `site.maintenance` | Site | low | on/off |
 | `site.add_domain` | Site | low | DO: nginx + certbot + DNS |
 | `site.suspend` | Site | medium | on/off |
+| `site.restore_test` | Site | low | restore a backup into a throwaway site, verify, drop; monthly for scheduled sites (security requirement 10) |
 | `site.delete` | Site | high | last db + files backup offsite (fail stops it), `bench drop-site`, vhost removed, Site archived; confirm |
 | `server.deprovision` | Server | high | refused while live sites exist; droplet destroyed, Server archived; confirm |
 | `bench.update` | Bench | medium | pull app code (ff-only), requirements, backup + migrate every site, build, restart (ADR 0004) |

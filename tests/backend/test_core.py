@@ -97,6 +97,7 @@ def test_playbook_catalogue_matches_plan_section_9_2() -> None:
 		"site.add_domain": ("Site", "low"),
 		"site.suspend": ("Site", "medium"),
 		"site.delete": ("Site", "high"),  # safe deletion
+		"site.restore_test": ("Site", "low"),  # security requirement 10
 		"server.deprovision": ("Server", "high"),  # safe deletion
 		"bench.update": ("Bench", "medium"),  # ADR 0004
 		"bench.add_app": ("Bench", "medium"),  # ADR 0004

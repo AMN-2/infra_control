@@ -16,7 +16,17 @@
   "spaces_region",
   "cb_spaces",
   "spaces_key",
-  "spaces_secret"
+  "spaces_secret",
+  "sb_offsite",
+  "offsite_endpoint_url",
+  "offsite_bucket",
+  "offsite_region",
+  "offsite_retain_days",
+  "cb_offsite",
+  "offsite_key",
+  "offsite_secret",
+  "offsite_last_run",
+  "offsite_last_error"
  ],
  "fields": [
   {
@@ -75,6 +85,60 @@
    "fieldname": "spaces_secret",
    "fieldtype": "Password",
    "label": "Spaces Secret"
+  },
+  {
+   "fieldname": "sb_offsite",
+   "fieldtype": "Section Break",
+   "label": "Controller backup off DigitalOcean (S3-compatible)"
+  },
+  {
+   "fieldname": "offsite_endpoint_url",
+   "fieldtype": "Data",
+   "label": "Endpoint URL",
+   "description": "e.g. https://s3.eu-central-003.backblazeb2.com or https://s3.wasabisys.com"
+  },
+  {
+   "fieldname": "offsite_bucket",
+   "fieldtype": "Data",
+   "label": "Bucket"
+  },
+  {
+   "fieldname": "offsite_region",
+   "fieldtype": "Data",
+   "label": "Region",
+   "default": "auto"
+  },
+  {
+   "fieldname": "offsite_retain_days",
+   "fieldtype": "Int",
+   "label": "Retain (days)",
+   "default": "30"
+  },
+  {
+   "fieldname": "cb_offsite",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "offsite_key",
+   "fieldtype": "Password",
+   "label": "Access key"
+  },
+  {
+   "fieldname": "offsite_secret",
+   "fieldtype": "Password",
+   "label": "Secret key"
+  },
+  {
+   "fieldname": "offsite_last_run",
+   "fieldtype": "Datetime",
+   "label": "Last upload",
+   "read_only": 1
+  },
+  {
+   "fieldname": "offsite_last_error",
+   "fieldtype": "Small Text",
+   "label": "Last error",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 0,

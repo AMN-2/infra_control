@@ -75,6 +75,7 @@ tags:
   - name: console
   - name: backups
   - name: tenants
+  - name: security
 
 x-realtime-events:
   - infra:job.updated
@@ -1443,6 +1444,51 @@ paths:
         "429": { $ref: "#/components/responses/RateLimited" }
 
   # ---------------------------------------------------------------------------
+  # security (A4.1): posture checks and switches (Infra Admin)
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.security.posture:
+    get:
+      tags: [security]
+      operationId: security_posture
+      summary: Security posture checks (2FA, admins, keys, masking, audit immutability, scheduler, backups, restore test, off-site controller backup, console sessions)
+      responses:
+        "200":
+          description: Checks and summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SecurityPosture" }
+              examples:
+                default: { $ref: "#/components/examples/SecurityPosture" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.security.enable_2fa:
+    post:
+      tags: [security]
+      operationId: security_enable_2fa
+      summary: Turn on OTP-app two-factor authentication for Infra Admin and Infra Operator (Infra Admin; audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false, properties: {} }
+      responses:
+        "200":
+          description: Two-factor state after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [two_factor]
+                properties:
+                  two_factor: { $ref: "#/components/schemas/TwoFactorState" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  # ---------------------------------------------------------------------------
   # audit
   # ---------------------------------------------------------------------------
   /api/method/infra_control.api.audit.list:
@@ -2628,6 +2674,41 @@ components:
         items: { type: array, items: { $ref: "#/components/schemas/Tenant" } }
         next_cursor: { $ref: "#/components/schemas/NextCursor" }
 
+    # ----- security (A4.1) -----------------------------------------------------
+    SecurityCheck:
+      type: object
+      additionalProperties: false
+      required: [id, title, status, detail, hint]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        status: { type: string, enum: [pass, warn, fail] }
+        detail: { type: string }
+        hint: { type: [string, "null"] }
+    TwoFactorState:
+      type: object
+      additionalProperties: false
+      required: [enabled, roles, method]
+      properties:
+        enabled: { type: boolean }
+        roles: { type: object, additionalProperties: { type: boolean } }
+        method: { type: [string, "null"] }
+    SecurityPosture:
+      type: object
+      additionalProperties: false
+      required: [checks, summary, two_factor]
+      properties:
+        checks: { type: array, items: { $ref: "#/components/schemas/SecurityCheck" } }
+        summary:
+          type: object
+          additionalProperties: false
+          required: [pass, warn, fail]
+          properties:
+            pass: { type: integer }
+            warn: { type: integer }
+            fail: { type: integer }
+        two_factor: { $ref: "#/components/schemas/TwoFactorState" }
+
     # ----- audit ---------------------------------------------------------------
     AuditEntry:
       type: object
@@ -2961,6 +3042,16 @@ components:
           - { ts: "2026-10-07T09:28:00Z", value: 35.7 }
           - { ts: "2026-10-07T09:29:00Z", value: 24.1 }
           - { ts: "2026-10-07T09:30:00Z", value: 23.5 }
+    SecurityPosture:
+      value:
+        checks:
+          - { id: 2fa, title: Two-factor authentication, status: fail, detail: Off for the Infra roles, hint: "Enable it below; every Infra Admin and Operator then enrols an OTP app at next login (plan 13.1)." }
+          - { id: admins, title: Infra Admin accounts, status: pass, detail: "2 user(s): ameen@smartchoice-iq.com, ops@smartchoice-iq.com", hint: Keep the admin circle small; operators get Infra Operator. }
+          - { id: masking, title: Secrets masking, status: pass, detail: "3 controller secret(s) on every job's mask list, plus provider and Git tokens and write-only parameters", hint: null }
+          - { id: restore_test, title: Restore test, status: warn, detail: last successful test 12 day(s) ago, hint: "Run site.restore_test; the monthly job alerts after 35 days (security requirement 10)." }
+          - { id: controller_backup, title: Controller backup off DigitalOcean, status: fail, detail: not configured, hint: "Fill the off-site bucket on Infra Settings (any S3-compatible store outside DigitalOcean; security requirement 11)." }
+        summary: { pass: 2, warn: 1, fail: 2 }
+        two_factor: { enabled: false, roles: { Infra Admin: false, Infra Operator: false }, method: null }
     TenantPage:
       value:
         items:
@@ -3145,6 +3236,14 @@ components:
             risk: high
             required_capability: server
             params_schema: { type: object, additionalProperties: false, properties: {} }
+          - key: site.restore_test
+            title: Restore test
+            description: Restore a backup's database into a throwaway site on the same bench, verify it reads, drop it. The real site is untouched; the backup records the verdict.
+            target_doctype: Site
+            creates: null
+            risk: low
+            required_capability: site
+            params_schema: { type: object, additionalProperties: false, required: [backup], properties: { backup: { type: string, x-picker: backup } } }
           - key: site.delete
             title: Delete site
             description: Take a last database and files backup offsite (fails if that fails), then drop the site and its vhost. The Site record is archived, not deleted. Requires typed confirmation.

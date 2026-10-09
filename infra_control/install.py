@@ -272,6 +272,16 @@ PLAYBOOKS: tuple[dict[str, Any], ...] = (
 		params_schema=_schema(["app"], app={"type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$"}),
 	),
 	_pb(
+		"site.restore_test",
+		"Restore test",
+		"Restore a backup's database into a throwaway site on the same bench, verify it reads, drop it. The real site is untouched; the backup records the verdict.",
+		TargetDoctype.SITE,
+		Risk.LOW,
+		required_capability=Capability.SITE,
+		provider_method="restore_test_site",
+		params_schema=_schema(["backup"], backup={"type": "string", "x-picker": "backup"}),
+	),
+	_pb(
 		"site.delete",
 		"Delete site",
 		"Take a last database and files backup offsite (fails if that fails), then drop the site and its vhost. The Site record is archived, not deleted. Requires typed confirmation.",

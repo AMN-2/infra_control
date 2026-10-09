@@ -205,6 +205,12 @@ class _Db:
 		return self.f.singles.get(doctype, {}).get(field)
 
 	def set_value(self, doctype: str, name: Any, fieldname: Any, value: Any = None) -> None:
+		if name is None and doctype in self.f.singles:  # singles: frappe.db.set_value(dt, None, {...})
+			if isinstance(fieldname, dict):
+				self.f.singles[doctype].update(fieldname)
+			else:
+				self.f.singles[doctype][fieldname] = value
+			return
 		target = self.exists(doctype, name)
 		if not target:
 			return

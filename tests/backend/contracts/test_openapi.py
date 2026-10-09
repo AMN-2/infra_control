@@ -70,6 +70,9 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	"tenants.update": "post",
 	"tenants.assign": "post",
 	"tenants.suspend": "post",
+	# A4.1 security posture and the 2FA switch.
+	"security.posture": "get",
+	"security.enable_2fa": "post",
 }
 
 # Plan section 5 unified enums.

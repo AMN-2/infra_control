@@ -1578,6 +1578,97 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
+  /api/method/infra_control.api.benches.check_updates:
+    post:
+      tags: [benches]
+      operationId: benches_check_updates
+      summary: Ask upstream how far every app on the bench is behind (Infra Operator; read-only, audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [bench]
+              properties:
+                bench: { type: string }
+            examples:
+              default: { value: { bench: BENCH-0001 } }
+      responses:
+        "200":
+          description: The bench with refreshed app rows
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BenchDetail" }
+              examples:
+                default: { $ref: "#/components/examples/BenchDetail" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.benches.refs:
+    get:
+      tags: [benches]
+      operationId: benches_refs
+      summary: Branches and tags of one app's upstream repository (to switch its version)
+      parameters:
+        - name: bench
+          in: query
+          required: true
+          schema: { type: string }
+        - name: app
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Refs
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GitRefList" }
+              examples:
+                default: { $ref: "#/components/examples/GitRefList" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.bulk.preflight:
+    post:
+      tags: [bulk]
+      operationId: bulk_preflight
+      summary: Read-only checks per target before creating a rollout (exists, capability, status, lock, backup, optional ping)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BulkPreflightRequest" }
+            examples:
+              default:
+                value:
+                  playbook: site.migrate
+                  targets:
+                    - { target_doctype: Site, target_name: demo.smartchoice-iq.com }
+                    - { target_doctype: Site, target_name: erp.client-a.iq }
+                  ping: false
+      responses:
+        "200":
+          description: Per-target checks
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkPreflight" }
+              examples:
+                default: { $ref: "#/components/examples/BulkPreflight" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
 components:
   securitySchemes:
     sessionCookie:
@@ -1848,11 +1939,21 @@ components:
     InstalledApp:
       type: object
       additionalProperties: false
-      required: [app, version, branch]
+      required: [app, version, branch, commit, remote, upstream_commit, behind, latest_tag, checked_at, update_state]
       properties:
         app: { type: string }
         version: { type: [string, "null"] }
         branch: { type: [string, "null"] }
+        commit: { type: [string, "null"], description: Short SHA checked out on the bench }
+        remote: { type: [string, "null"], description: Token-free fetch URL of the app's repository }
+        upstream_commit: { type: [string, "null"], description: Tip of the branch upstream at the last check }
+        behind: { type: [integer, "null"], minimum: 0, description: Commits upstream has that the bench lacks }
+        latest_tag: { type: [string, "null"], description: Newest version tag of the same major upstream }
+        checked_at: { type: [string, "null"], format: date-time }
+        update_state: { $ref: "#/components/schemas/UpdateState" }
+    UpdateState:
+      type: string
+      enum: [update_available, up_to_date, unknown]
 
     # ----- inventory -----------------------------------------------------------
     Server:
@@ -2272,6 +2373,47 @@ components:
         failure_policy: { $ref: "#/components/schemas/FailurePolicy", default: halt }
         params: { type: object, additionalProperties: true, default: {} }
         confirm: { type: string, description: "For high-risk playbooks: must equal `\"<playbook key>:<number of targets>\"`, e.g. `site.restore:3`" }
+
+    BulkPreflightRequest:
+      type: object
+      additionalProperties: false
+      required: [playbook, targets]
+      properties:
+        playbook: { type: string }
+        targets: { type: array, minItems: 1, maxItems: 200, items: { $ref: "#/components/schemas/TargetRef" } }
+        ping: { type: boolean, default: false, description: Also ping each Site or Server (slower) }
+    PreflightCheck:
+      type: object
+      additionalProperties: false
+      required: [id, status, detail]
+      properties:
+        id: { type: string, enum: [exists, playbook_target, capability, status, lock, backup, health] }
+        status: { type: string, enum: [pass, warn, fail] }
+        detail: { type: string }
+    PreflightTarget:
+      type: object
+      additionalProperties: false
+      required: [target_doctype, target_name, ok, checks]
+      properties:
+        target_doctype: { $ref: "#/components/schemas/TargetDoctype" }
+        target_name: { type: string }
+        ok: { type: boolean, description: No check failed }
+        checks: { type: array, items: { $ref: "#/components/schemas/PreflightCheck" } }
+    BulkPreflight:
+      type: object
+      additionalProperties: false
+      required: [playbook, items, summary]
+      properties:
+        playbook: { type: string }
+        items: { type: array, items: { $ref: "#/components/schemas/PreflightTarget" } }
+        summary:
+          type: object
+          additionalProperties: false
+          required: [ok, warn, fail]
+          properties:
+            ok: { type: integer }
+            warn: { type: integer, description: Targets that pass with warnings }
+            fail: { type: integer }
 
     # ----- alerts --------------------------------------------------------------
     Alert:
@@ -2792,6 +2934,31 @@ components:
   # Examples (also served by the Prism mock). Keep ids consistent across examples.
   # ---------------------------------------------------------------------------
   examples:
+    BulkPreflight:
+      value:
+        playbook: site.migrate
+        items:
+          - target_doctype: Site
+            target_name: demo.smartchoice-iq.com
+            ok: true
+            checks:
+              - { id: exists, status: pass, detail: Site demo.smartchoice-iq.com on digitalocean }
+              - { id: playbook_target, status: pass, detail: site.migrate runs on a Site }
+              - { id: capability, status: pass, detail: ssh }
+              - { id: status, status: pass, detail: Maintenance }
+              - { id: lock, status: pass, detail: no running job }
+              - { id: backup, status: warn, detail: "last backup 2.1 days ago; the rollout backs up first" }
+          - target_doctype: Site
+            target_name: staging.client-c.frappe.cloud
+            ok: false
+            checks:
+              - { id: exists, status: pass, detail: Site staging.client-c.frappe.cloud on frappe_cloud }
+              - { id: playbook_target, status: pass, detail: site.migrate runs on a Site }
+              - { id: capability, status: fail, detail: frappe_cloud lacks ssh }
+              - { id: status, status: pass, detail: Active }
+              - { id: lock, status: pass, detail: no running job }
+              - { id: backup, status: pass, detail: last backup 3 h ago }
+        summary: { ok: 1, warn: 1, fail: 1 }
     SessionBoot:
       value:
         csrf_token: 7f3c2a9e4b1d8c6f5a2e9d0b3c7f1a4e
@@ -2933,8 +3100,8 @@ components:
             path: /home/frappe/v15-prod
             frappe_version: 15.98.1
             apps:
-              - { app: frappe, version: 15.98.1, branch: version-15 }
-              - { app: erpnext, version: 15.95.2, branch: version-15 }
+              - { app: frappe, version: 15.98.1, branch: version-15, commit: a1b2c3d4e5f6, remote: "https://github.com/frappe/frappe", upstream_commit: f6e5d4c3b2a1, behind: 12, latest_tag: v15.101.0, checked_at: "2026-10-09T03:00:00Z", update_state: update_available }
+              - { app: erpnext, version: 15.95.2, branch: version-15, commit: 0badc0ffee11, remote: "https://github.com/frappe/erpnext", upstream_commit: 0badc0ffee11, behind: 0, latest_tag: v15.95.2, checked_at: "2026-10-09T03:00:00Z", update_state: up_to_date }
             site_count: 2
             capabilities: [site, bench, server, ssh, snapshot, service_control, metrics, custom_playbook]
         latest_metrics: { ts: "2026-10-07T09:30:40Z", cpu: 23.5, ram: 61.2, disk: 54.0, load1: 0.82, queue_backlog: 3 }
@@ -2951,8 +3118,8 @@ components:
             path: /home/frappe/v15-prod
             frappe_version: 15.98.1
             apps:
-              - { app: frappe, version: 15.98.1, branch: version-15 }
-              - { app: erpnext, version: 15.95.2, branch: version-15 }
+              - { app: frappe, version: 15.98.1, branch: version-15, commit: a1b2c3d4e5f6, remote: "https://github.com/frappe/frappe", upstream_commit: f6e5d4c3b2a1, behind: 12, latest_tag: v15.101.0, checked_at: "2026-10-09T03:00:00Z", update_state: update_available }
+              - { app: erpnext, version: 15.95.2, branch: version-15, commit: 0badc0ffee11, remote: "https://github.com/frappe/erpnext", upstream_commit: 0badc0ffee11, behind: 0, latest_tag: v15.95.2, checked_at: "2026-10-09T03:00:00Z", update_state: up_to_date }
             site_count: 2
             capabilities: [site, bench, server, ssh, snapshot, service_control, metrics, custom_playbook]
           - name: BENCH-FC-01
@@ -2964,7 +3131,7 @@ components:
             path: null
             frappe_version: 15.98.1
             apps:
-              - { app: frappe, version: 15.98.1, branch: version-15 }
+              - { app: frappe, version: 15.98.1, branch: version-15, commit: a1b2c3d4e5f6, remote: "https://github.com/frappe/frappe", upstream_commit: f6e5d4c3b2a1, behind: 12, latest_tag: v15.101.0, checked_at: "2026-10-09T03:00:00Z", update_state: update_available }
             site_count: 1
             capabilities: [site, bench, managed_backup, managed_update]
         next_cursor: null
@@ -2979,7 +3146,7 @@ components:
         path: null
         frappe_version: 15.98.1
         apps:
-          - { app: frappe, version: 15.98.1, branch: version-15 }
+          - { app: frappe, version: 15.98.1, branch: version-15, commit: a1b2c3d4e5f6, remote: "https://github.com/frappe/frappe", upstream_commit: f6e5d4c3b2a1, behind: 12, latest_tag: v15.101.0, checked_at: "2026-10-09T03:00:00Z", update_state: update_available }
         site_count: 1
         capabilities: [site, bench, managed_backup, managed_update]
         sites:
@@ -3056,8 +3223,8 @@ components:
           path: /home/frappe/v15-prod
           frappe_version: 15.98.1
           apps:
-            - { app: frappe, version: 15.98.1, branch: version-15 }
-            - { app: erpnext, version: 15.95.2, branch: version-15 }
+            - { app: frappe, version: 15.98.1, branch: version-15, commit: a1b2c3d4e5f6, remote: "https://github.com/frappe/frappe", upstream_commit: f6e5d4c3b2a1, behind: 12, latest_tag: v15.101.0, checked_at: "2026-10-09T03:00:00Z", update_state: update_available }
+            - { app: erpnext, version: 15.95.2, branch: version-15, commit: 0badc0ffee11, remote: "https://github.com/frappe/erpnext", upstream_commit: 0badc0ffee11, behind: 0, latest_tag: v15.95.2, checked_at: "2026-10-09T03:00:00Z", update_state: up_to_date }
           site_count: 2
           capabilities: [site, bench, server, ssh, snapshot, service_control, metrics, custom_playbook]
         backups:

@@ -48,6 +48,18 @@ export const routes: RouteRecordRaw[] = [
 		meta: { title: "Server", hidden: true },
 	},
 	{
+		path: "/benches",
+		name: "benches",
+		component: () => import("@/features/benches/BenchesView.vue"),
+		meta: { title: "Benches" },
+	},
+	{
+		path: "/benches/:name",
+		name: "bench",
+		component: () => import("@/features/benches/BenchDetailView.vue"),
+		meta: { title: "Bench", hidden: true },
+	},
+	{
 		path: "/sites",
 		name: "sites",
 		component: () => import("@/features/sites/SitesView.vue"),

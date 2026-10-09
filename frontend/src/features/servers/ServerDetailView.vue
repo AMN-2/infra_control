@@ -339,12 +339,11 @@ const metricLabel = {
 						empty-title="No benches"
 						empty-description="Benches appear after inventory.sync or server.provision."
 						@row-click="
-							(b: BenchRow) =>
-								router.push({ path: '/sites', query: { bench: b.name } })
+							(b: BenchRow) => router.push(`/benches/${encodeURIComponent(b.name)}`)
 						"
 					>
 						<template #cell-actions="{ row }">
-							<!-- Bench-level actions (bench.update, site.create): the bench has no screen of its own. -->
+							<!-- Bench-level actions (bench.update, site.create); the bench screen has the apps and versions. -->
 							<div class="flex items-start justify-end gap-2" @click.stop>
 								<IcButton
 									v-if="session.canOperate && row.capabilities.includes('site')"

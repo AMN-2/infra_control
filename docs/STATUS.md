@@ -152,6 +152,16 @@ Live DigitalOcean resources (staging team): droplets gate-02.fra1 (SRV-0003) and
   success, invalid credentials, slow auth with repeated clicks, missing video, autoplay refused,
   reduced motion, mobile keyboard, two-factor, redirect validation, pause control, signed-in bounce).
 
+## Benches and bulk rollouts (ADR 0009, 2026-10-09)
+
+- `/benches` and `/benches/<name>`: apps with branch, version, commit and upstream state;
+  "Check for updates" (GitHub compare + newest tag of the same major), per-app "Update" and
+  "Switch version…" (both `bench.update` jobs), sites and job history. Discovery now records
+  each app's commit and token-free remote.
+- `/bulk`: four-step wizard (operation → tick targets from the inventory → preflight checks →
+  canary/batches/params), "Drop blocked", status tiles, batches grouped in the detail.
+- Gates: backend suite incl. `test_bench_updates.py`; Playwright `benches.spec.ts`, `bulk.spec.ts`.
+
 ## Environment notes
 
 - Push over HTTPS (`git push https://github.com/AMN-2/infra_control.git <branch>`); SSH keys

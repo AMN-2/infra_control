@@ -26,6 +26,7 @@ SERIES = {
 # materialises `get_all_children()` on insert.
 CHILD_DOCTYPES: dict[str, dict[str, str]] = {
 	"Tenant": {"sites": "Tenant Site"},
+	"Bench": {"apps": "Bench App"},
 	"Alert Rule": {"channels": "Alert Rule Channel"},
 	"Bulk Operation": {"targets": "Bulk Operation Target"},
 }

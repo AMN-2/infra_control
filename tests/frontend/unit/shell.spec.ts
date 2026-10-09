@@ -69,6 +69,7 @@ describe("command palette", () => {
 			"Overview",
 			"Topology",
 			"Servers",
+			"Benches",
 			"Sites",
 			"Tenants",
 			"Jobs",

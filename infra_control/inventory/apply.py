@@ -41,11 +41,17 @@ def load_documents(account: str) -> dict[str, list[dict[str, Any]]]:
 		for row in frappe.get_all(
 			"Bench App",
 			filters={"parent": ["in", [b["name"] for b in benches]], "parenttype": "Bench"},
-			fields=["parent", "app", "version", "branch"],
+			fields=["parent", "app", "version", "branch", "commit", "remote"],
 			order_by="idx asc",
 		):
 			apps_by_bench.setdefault(str(row["parent"]), []).append(
-				{"app": row["app"], "version": row["version"], "branch": row["branch"]}
+				{
+					"app": row["app"],
+					"version": row["version"],
+					"branch": row["branch"],
+					"commit": row.get("commit"),
+					"remote": row.get("remote"),
+				}
 			)
 	for b in benches:
 		b["apps"] = apps_by_bench.get(str(b["name"]), [])
@@ -58,6 +64,16 @@ def load_documents(account: str) -> dict[str, list[dict[str, Any]]]:
 		"servers": [dict(s) for s in servers],
 		"benches": [dict(b) for b in benches],
 		"sites": [dict(s) for s in sites],
+	}
+
+
+def _app_row(a: dict[str, Any]) -> dict[str, Any]:
+	return {
+		"app": a["app"],
+		"version": a.get("version"),
+		"branch": a.get("branch"),
+		"commit": a.get("commit"),
+		"remote": a.get("remote"),
 	}
 
 
@@ -102,9 +118,7 @@ def apply_plan(plan: SyncPlan) -> dict[str, Any]:
 				"server": server,
 				"path": spec["path"],
 				"frappe_version": spec.get("frappe_version"),
-				"apps": [
-					{"app": a["app"], "version": a.get("version"), "branch": a.get("branch")} for a in apps
-				],
+				"apps": [_app_row(a) for a in apps],
 			}
 		)
 		doc.insert(ignore_permissions=True)
@@ -115,9 +129,16 @@ def apply_plan(plan: SyncPlan) -> dict[str, Any]:
 		if "frappe_version" in changes:
 			doc.frappe_version = changes["frappe_version"]
 		if "apps" in changes:
+			# Keep the last update check for apps whose commit did not move.
+			previous = {str(r.app): r for r in doc.get("apps") or []}
 			doc.set("apps", [])
 			for a in changes["apps"]:
-				doc.append("apps", {"app": a["app"], "version": a.get("version"), "branch": a.get("branch")})
+				row = _app_row(a)
+				old = previous.get(str(a["app"]))
+				if old is not None and (old.commit or None) == (a.get("commit") or None):
+					for f in ("upstream_commit", "behind", "latest_tag", "checked_at"):
+						row[f] = old.get(f)
+				doc.append("apps", row)
 		doc.save(ignore_permissions=True)
 		updated["Bench"].append(name)
 

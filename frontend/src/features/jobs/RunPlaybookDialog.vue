@@ -36,6 +36,8 @@ const props = defineProps<{
 	targetName: string;
 	/** Shown in the title; defaults to the target name. */
 	targetLabel?: string;
+	/** Values to start the form with (e.g. `{ apps: ["erpnext"] }` for one app's update). */
+	initialParams?: Record<string, unknown>;
 }>();
 const open = defineModel<boolean>({ default: false });
 const emit = defineEmits<{ queued: [job: string] }>();
@@ -64,7 +66,7 @@ const submitError = ref<string | null>(null);
 const busy = ref(false);
 
 function reset(): void {
-	values.value = initialValues(fields.value);
+	values.value = { ...initialValues(fields.value), ...(props.initialParams ?? {}) };
 	listText.value = Object.fromEntries(
 		fields.value
 			.filter((f) => f.kind === "strings")

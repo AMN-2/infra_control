@@ -1,5 +1,15 @@
 import type { Component } from "vue";
-import { Activity, Bell, Boxes, Globe, Layers, ListChecks, Server, Users } from "lucide-vue-next";
+import {
+	Activity,
+	Bell,
+	Boxes,
+	Globe,
+	Layers,
+	ListChecks,
+	Package,
+	Server,
+	Users,
+} from "lucide-vue-next";
 
 export interface NavItem {
 	name: string;
@@ -15,6 +25,7 @@ export const navigation: readonly NavItem[] = [
 	{ name: "overview", label: "Overview", to: "/overview", icon: Activity, key: "o" },
 	{ name: "topology", label: "Topology", to: "/topology", icon: Boxes, key: "t" },
 	{ name: "servers", label: "Servers", to: "/servers", icon: Server, key: "s" },
+	{ name: "benches", label: "Benches", to: "/benches", icon: Package, key: "h" },
 	{ name: "sites", label: "Sites", to: "/sites", icon: Globe, key: "i" },
 	{ name: "tenants", label: "Tenants", to: "/tenants", icon: Users, key: "c" },
 	{ name: "jobs", label: "Jobs", to: "/jobs", icon: ListChecks, key: "j" },

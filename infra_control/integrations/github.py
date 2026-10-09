@@ -8,6 +8,7 @@ rate-limit aware. The token never appears in errors or logs.
 from __future__ import annotations
 
 import random
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -35,7 +36,7 @@ class GitIdentity:
 class GitHubClient:
 	def __init__(
 		self,
-		token: str,
+		token: str | None,
 		*,
 		base_url: str = API_BASE,
 		timeout: float = DEFAULT_TIMEOUT_SECONDS,
@@ -43,19 +44,22 @@ class GitHubClient:
 		sleep: Callable[[float], None] = time.sleep,
 		max_attempts: int = MAX_ATTEMPTS,
 	) -> None:
-		if not token or not token.strip():
+		# `None` is the anonymous client (public repositories, 60 requests/hour); an empty
+		# string is a mistake.
+		if token is not None and not token.strip():
 			raise ValidationError("A GitHub access token is required", {"field": "token"})
 		self._base = base_url.rstrip("/")
 		self._timeout = timeout
 		self._session = session or requests.Session()
 		self._session.headers.update(
 			{
-				"Authorization": f"Bearer {token.strip()}",
 				"Accept": "application/vnd.github+json",
 				"X-GitHub-Api-Version": "2022-11-28",
 				"User-Agent": "infra-control/0.1",
 			}
 		)
+		if token is not None:
+			self._session.headers["Authorization"] = f"Bearer {token.strip()}"
 		self._sleep = sleep
 		self._max_attempts = max(1, max_attempts)
 
@@ -177,6 +181,37 @@ class GitHubClient:
 				)
 		return refs
 
+	def branch_head(self, full_name: str, branch: str) -> str:
+		"""Short SHA at the tip of `branch`."""
+		owner, name = _split(full_name)
+		body, _ = self.request("GET", f"repos/{owner}/{name}/commits/{branch}")
+		sha = str(body.get("sha") or "") if isinstance(body, dict) else ""
+		if not sha:
+			raise ProviderError("GitHub returned no commit for the branch", {"branch": branch})
+		return sha[:12]
+
+	def commits_behind(self, full_name: str, local_commit: str, branch: str) -> int:
+		"""How many commits `branch` has that `local_commit` lacks (0 = up to date)."""
+		owner, name = _split(full_name)
+		body, _ = self.request("GET", f"repos/{owner}/{name}/compare/{local_commit}...{branch}")
+		if not isinstance(body, dict):
+			raise ProviderError("GitHub returned an unexpected compare body", {})
+		return int(body.get("ahead_by") or 0)
+
+	def latest_tag(self, full_name: str, major: int | None = None) -> str | None:
+		"""Highest version-like tag (optionally of one major, e.g. 15 for `version-15`)."""
+		owner, name = _split(full_name)
+		body, _ = self.request("GET", f"repos/{owner}/{name}/tags", params={"per_page": 100})
+		best: tuple[tuple[int, ...], str] | None = None
+		for t in body if isinstance(body, list) else []:
+			tag = str(t.get("name") or "") if isinstance(t, dict) else ""
+			parsed = _version_tuple(tag)
+			if parsed is None or (major is not None and parsed[0] != major):
+				continue
+			if best is None or parsed > best[0]:
+				best = (parsed, tag)
+		return best[1] if best else None
+
 	@staticmethod
 	def _repo(r: JsonDict) -> JsonDict:
 		return {
@@ -189,6 +224,27 @@ class GitHubClient:
 			"description": (str(r["description"]) if r.get("description") else None),
 			"pushed_at": (str(r["pushed_at"]) if r.get("pushed_at") else None),
 		}
+
+
+def _version_tuple(tag: str) -> tuple[int, ...] | None:
+	m = re.fullmatch(r"v?(\d+(?:\.\d+)*)", tag.strip())
+	return tuple(int(x) for x in m.group(1).split(".")) if m else None
+
+
+def github_repo_of(remote: str | None) -> str | None:
+	"""`owner/name` for a GitHub remote (https, ssh or git@), else `None`."""
+	if not remote:
+		return None
+	m = re.search(r"github\.com[/:]([^/\s]+)/([^/\s]+?)(?:\.git)?/?$", remote.strip())
+	return f"{m.group(1)}/{m.group(2)}" if m else None
+
+
+def major_of_branch(branch: str | None) -> int | None:
+	"""`version-15` -> 15, `v15` -> 15; anything else -> None."""
+	if not branch:
+		return None
+	m = re.fullmatch(r"(?:version-|v)(\d+)(?:[.-].*)?", branch.strip())
+	return int(m.group(1)) if m else None
 
 
 def _split(full_name: str) -> tuple[str, str]:

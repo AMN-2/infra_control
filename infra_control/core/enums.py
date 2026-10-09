@@ -167,6 +167,14 @@ class TenantStatus(StrEnum):
 	SUSPENDED = "suspended"
 
 
+class UpdateState(StrEnum):
+	"""Whether a bench app is behind its upstream branch (ADR 0009)."""
+
+	UPDATE_AVAILABLE = "update_available"
+	UP_TO_DATE = "up_to_date"
+	UNKNOWN = "unknown"
+
+
 class BackupFrequency(StrEnum):
 	HOURLY = "hourly"
 	DAILY = "daily"

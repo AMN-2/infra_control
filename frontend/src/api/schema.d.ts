@@ -891,6 +891,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/infra_control.api.benches.check_updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask upstream how far every app on the bench is behind (Infra Operator; read-only, audited) */
+        post: operations["benches_check_updates"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.benches.refs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Branches and tags of one app's upstream repository (to switch its version) */
+        get: operations["benches_refs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/infra_control.api.bulk.preflight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read-only checks per target before creating a rollout (exists, capability, status, lock, backup, optional ping) */
+        post: operations["bulk_preflight"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -997,7 +1048,22 @@ export interface components {
             app: string;
             version: string | null;
             branch: string | null;
+            /** @description Short SHA checked out on the bench */
+            commit: string | null;
+            /** @description Token-free fetch URL of the app's repository */
+            remote: string | null;
+            /** @description Tip of the branch upstream at the last check */
+            upstream_commit: string | null;
+            /** @description Commits upstream has that the bench lacks */
+            behind: number | null;
+            /** @description Newest version tag of the same major upstream */
+            latest_tag: string | null;
+            /** Format: date-time */
+            checked_at: string | null;
+            update_state: components["schemas"]["UpdateState"];
         };
+        /** @enum {string} */
+        UpdateState: "update_available" | "up_to_date" | "unknown";
         Server: {
             /** @description Stable id (naming series), e.g. `SRV-0001` */
             name: string;
@@ -1335,6 +1401,39 @@ export interface components {
             };
             /** @description For high-risk playbooks: must equal `"<playbook key>:<number of targets>"`, e.g. `site.restore:3` */
             confirm?: string;
+        };
+        BulkPreflightRequest: {
+            playbook: string;
+            targets: components["schemas"]["TargetRef"][];
+            /**
+             * @description Also ping each Site or Server (slower)
+             * @default false
+             */
+            ping: boolean;
+        };
+        PreflightCheck: {
+            /** @enum {string} */
+            id: "exists" | "playbook_target" | "capability" | "status" | "lock" | "backup" | "health";
+            /** @enum {string} */
+            status: "pass" | "warn" | "fail";
+            detail: string;
+        };
+        PreflightTarget: {
+            target_doctype: components["schemas"]["TargetDoctype"];
+            target_name: string;
+            /** @description No check failed */
+            ok: boolean;
+            checks: components["schemas"]["PreflightCheck"][];
+        };
+        BulkPreflight: {
+            playbook: string;
+            items: components["schemas"]["PreflightTarget"][];
+            summary: {
+                ok: number;
+                /** @description Targets that pass with warnings */
+                warn: number;
+                fail: number;
+            };
         };
         Alert: {
             name: string;
@@ -3406,6 +3505,94 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    benches_check_updates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    bench: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The bench with refreshed app rows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenchDetail"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    benches_refs: {
+        parameters: {
+            query: {
+                bench: string;
+                app: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Refs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitRefList"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    bulk_preflight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkPreflightRequest"];
+            };
+        };
+        responses: {
+            /** @description Per-target checks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkPreflight"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
         };
     };

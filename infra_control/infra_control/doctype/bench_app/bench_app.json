@@ -8,7 +8,13 @@
  "field_order": [
   "app",
   "version",
-  "branch"
+  "branch",
+  "commit",
+  "remote",
+  "upstream_commit",
+  "behind",
+  "latest_tag",
+  "checked_at"
  ],
  "fields": [
   {
@@ -29,6 +35,36 @@
    "fieldtype": "Data",
    "label": "Branch",
    "in_list_view": 1
+  },
+  {
+   "fieldname": "commit",
+   "fieldtype": "Data",
+   "label": "Commit"
+  },
+  {
+   "fieldname": "remote",
+   "fieldtype": "Data",
+   "label": "Remote"
+  },
+  {
+   "fieldname": "upstream_commit",
+   "fieldtype": "Data",
+   "label": "Upstream Commit"
+  },
+  {
+   "fieldname": "behind",
+   "fieldtype": "Int",
+   "label": "Behind"
+  },
+  {
+   "fieldname": "latest_tag",
+   "fieldtype": "Data",
+   "label": "Latest Tag"
+  },
+  {
+   "fieldname": "checked_at",
+   "fieldtype": "Datetime",
+   "label": "Checked At"
   }
  ],
  "index_web_pages_for_search": 0,

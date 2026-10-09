@@ -86,7 +86,15 @@ def test_normalize_discovery_maps_benches_sites_and_maintenance() -> None:
 			"path": "/home/frappe/frappe-bench",
 			"title": "frappe-bench",
 			"frappe_version": "15.122.0",
-			"apps": [{"app": "frappe", "version": "15.122.0", "branch": "version-15"}],
+			"apps": [
+				{
+					"app": "frappe",
+					"version": "15.122.0",
+					"branch": "version-15",
+					"commit": None,
+					"remote": None,
+				}
+			],
 		}
 	]
 	assert [(s["domain"], s["status"]) for s in sites] == [("a.iq", "Active"), ("b.iq", "Maintenance")]
@@ -251,7 +259,15 @@ def test_suspended_and_archived_sites_keep_their_human_set_state() -> None:
 				"server": "SRV-0004",
 				"path": "/home/frappe/frappe-bench",
 				"frappe_version": "15.122.0",
-				"apps": [{"app": "frappe", "version": "15.122.0", "branch": "version-15"}],
+				"apps": [
+					{
+						"app": "frappe",
+						"version": "15.122.0",
+						"branch": "version-15",
+						"commit": None,
+						"remote": None,
+					}
+				],
 			}
 		],
 		"sites": [

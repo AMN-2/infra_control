@@ -8,6 +8,8 @@ type S = components["schemas"];
 export type BulkOperation = S["BulkOperation"];
 export type BulkDetail = S["BulkOperationDetail"];
 export type BulkCreateRequest = S["BulkCreateRequest"];
+export type BulkPreflight = S["BulkPreflight"];
+export type PreflightTarget = S["PreflightTarget"];
 
 export const useBulkStore = defineStore("bulk", () => {
 	const items = ref<BulkOperation[]>([]);
@@ -54,6 +56,12 @@ export const useBulkStore = defineStore("bulk", () => {
 			return bulk.name;
 		});
 	}
+	/** ADR 0009: read-only checks per target before a rollout is created. */
+	async function preflight(body: S["BulkPreflightRequest"]): Promise<BulkPreflight | undefined> {
+		return run(async () =>
+			unwrap(await api.POST("/api/method/infra_control.api.bulk.preflight", { body }))
+		);
+	}
 	async function action(kind: "pause" | "resume" | "cancel", name: string): Promise<void> {
 		await run(async () => {
 			const paths = {
@@ -95,5 +103,6 @@ export const useBulkStore = defineStore("bulk", () => {
 		create,
 		action,
 		subscribe,
+		preflight,
 	};
 });

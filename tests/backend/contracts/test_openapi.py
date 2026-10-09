@@ -75,6 +75,10 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	"security.enable_2fa": "post",
 	# ADR 0008: in-app login picks up the session's boot data without a page reload.
 	"session.boot": "get",
+	# ADR 0009: bench app update checks and bulk preflight.
+	"benches.check_updates": "post",
+	"benches.refs": "get",
+	"bulk.preflight": "post",
 }
 
 # Plan section 5 unified enums.

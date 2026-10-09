@@ -4,7 +4,8 @@
 Read-only. Stdlib only, Python 3.8+ (whatever Ubuntu ships). Output:
 
 {"benches": [{"path": "/home/frappe/frappe-bench", "frappe_version": "15.98.1",
-              "apps": [{"app": "frappe", "version": "15.98.1", "branch": "version-15"}],
+              "apps": [{"app": "frappe", "version": "15.98.1", "branch": "version-15",
+                        "commit": "a1b2c3d4e5f6", "remote": "https://github.com/frappe/frappe"}],
               "sites": [{"domain": "x.iq", "maintenance_mode": false, "db_name": "_abc"}]}]}
 """
 
@@ -39,6 +40,48 @@ def app_branch(app_dir):
 	return head[:12] or None  # detached: the commit
 
 
+def app_commit(app_dir):
+	"""Short SHA of HEAD: a detached HEAD, else the branch ref file, else packed-refs."""
+	git = os.path.join(app_dir, ".git")
+	head = read(os.path.join(git, "HEAD")).strip()
+	if not head:
+		return None
+	if not head.startswith("ref: "):
+		return head[:12]
+	ref = head[len("ref: ") :]
+	sha = read(os.path.join(git, ref)).strip()
+	if sha:
+		return sha[:12]
+	for line in read(os.path.join(git, "packed-refs")).splitlines():
+		parts = line.split()
+		if len(parts) == 2 and parts[1] == ref:
+			return parts[0][:12]
+	return None
+
+
+def app_remote(app_dir):
+	"""Fetch URL of `upstream` (bench get-app) or `origin`, token-free."""
+	config = read(os.path.join(app_dir, ".git", "config"))
+	remotes = {}
+	current = None
+	for line in config.splitlines():
+		line = line.strip()
+		m = re.match(r'^\[remote "([^"]+)"\]$', line)
+		if m:
+			current = m.group(1)
+			continue
+		if line.startswith("["):
+			current = None
+			continue
+		if current and line.startswith("url"):
+			_, _, url = line.partition("=")
+			remotes[current] = re.sub(r"^(https?://)[^@/]+@", r"\1", url.strip())
+	for name in ("upstream", "origin"):
+		if remotes.get(name):
+			return remotes[name]
+	return next(iter(remotes.values()), None)
+
+
 def apps_of(bench):
 	names = [
 		line.strip() for line in read(os.path.join(bench, "sites", "apps.txt")).splitlines() if line.strip()
@@ -54,7 +97,15 @@ def apps_of(bench):
 		app_dir = os.path.join(bench, "apps", app)
 		if not os.path.isdir(app_dir):
 			continue
-		out.append({"app": app, "version": app_version(app_dir, app), "branch": app_branch(app_dir)})
+		out.append(
+			{
+				"app": app,
+				"version": app_version(app_dir, app),
+				"branch": app_branch(app_dir),
+				"commit": app_commit(app_dir),
+				"remote": app_remote(app_dir),
+			}
+		)
 	return out
 
 

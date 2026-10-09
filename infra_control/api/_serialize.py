@@ -99,6 +99,33 @@ BENCH_FIELDS = [
 ]
 
 
+def installed_app(a: dict[str, Any]) -> dict[str, Any]:
+	commit = a.get("commit") or None
+	upstream = a.get("upstream_commit") or None
+	behind = a.get("behind")
+	behind_n = int(behind) if behind not in (None, "") else None
+	if a.get("checked_at") in (None, ""):
+		state = "unknown"
+	elif behind_n is None and upstream is not None and commit is not None:
+		state = "update_available" if not str(commit).startswith(str(upstream)) else "up_to_date"
+	elif behind_n is None:
+		state = "unknown"
+	else:
+		state = "update_available" if behind_n > 0 else "up_to_date"
+	return {
+		"app": a["app"],
+		"version": a.get("version") or None,
+		"branch": a.get("branch") or None,
+		"commit": commit,
+		"remote": a.get("remote") or None,
+		"upstream_commit": upstream,
+		"behind": behind_n,
+		"latest_tag": a.get("latest_tag") or None,
+		"checked_at": iso_utc(a.get("checked_at")),
+		"update_state": state,
+	}
+
+
 def bench(row: dict[str, Any], *, apps: list[dict[str, Any]], site_count: int) -> dict[str, Any]:
 	return {
 		"name": row["name"],
@@ -109,10 +136,7 @@ def bench(row: dict[str, Any], *, apps: list[dict[str, Any]], site_count: int) -
 		"server": row.get("server") or None,
 		"path": row.get("path") or None,
 		"frappe_version": row.get("frappe_version") or None,
-		"apps": [
-			{"app": a["app"], "version": a.get("version") or None, "branch": a.get("branch") or None}
-			for a in apps
-		],
+		"apps": [installed_app(a) for a in apps],
 		"site_count": site_count,
 		"capabilities": _caps(row["provider"]),
 	}

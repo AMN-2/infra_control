@@ -10,6 +10,8 @@ export type Server = S["Server"];
 export type ServerDetail = S["ServerDetail"];
 export type Bench = S["Bench"];
 export type BenchDetail = S["BenchDetail"];
+export type InstalledApp = S["InstalledApp"];
+export type GitRefList = S["GitRefList"];
 export type Site = S["Site"];
 export type SiteDetail = S["SiteDetail"];
 export type Topology = S["Topology"];
@@ -90,6 +92,30 @@ export const useInventoryStore = defineStore("inventory", () => {
 			);
 			siteDetails.value[name] = d;
 			return d;
+		});
+	}
+	/** ADR 0009: ask upstream how far each app on the bench is behind; refreshes the detail. */
+	async function checkBenchUpdates(name: string): Promise<BenchDetail | undefined> {
+		return run(async () => {
+			const d = unwrap(
+				await api.POST("/api/method/infra_control.api.benches.check_updates", {
+					body: { bench: name },
+				})
+			);
+			benchDetails.value[name] = d;
+			const i = benches.value.findIndex((b) => b.name === name);
+			if (i >= 0) benches.value[i] = { ...benches.value[i], ...d, apps: d.apps };
+			return d;
+		});
+	}
+	/** Branches and tags of one app's upstream repository (for switching its version). */
+	async function fetchBenchRefs(bench: string, app: string): Promise<GitRefList | undefined> {
+		return run(async () => {
+			return unwrap(
+				await api.GET("/api/method/infra_control.api.benches.refs", {
+					params: { query: { bench, app } },
+				})
+			);
 		});
 	}
 	async function fetchBench(name: string): Promise<BenchDetail | undefined> {
@@ -180,6 +206,8 @@ export const useInventoryStore = defineStore("inventory", () => {
 		fetchServers,
 		fetchSites,
 		fetchBenches,
+		checkBenchUpdates,
+		fetchBenchRefs,
 		fetchTopology,
 		fetchServer,
 		fetchSite,

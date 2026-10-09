@@ -257,7 +257,13 @@ def normalize_discovery(
 				"title": path.rstrip("/").rsplit("/", 1)[-1],
 				"frappe_version": b.get("frappe_version"),
 				"apps": [
-					{"app": str(a.get("app")), "version": a.get("version"), "branch": a.get("branch")}
+					{
+						"app": str(a.get("app")),
+						"version": a.get("version"),
+						"branch": a.get("branch"),
+						"commit": a.get("commit"),
+						"remote": a.get("remote"),
+					}
 					for a in b.get("apps") or []
 					if a.get("app")
 				],

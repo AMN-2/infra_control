@@ -356,7 +356,13 @@ def test_servers_list_and_get(ff: FakeFrappe) -> None:
 	status, body = call(servers.get, server="SRV-0001")
 	ff.cache_client.set("infra:lock:server:SRV-0001", running.name)
 	validate("servers.get", body)
-	assert body["benches"][0]["apps"] == [{"app": "frappe", "version": "15.98.1", "branch": "version-15"}]
+	app = body["benches"][0]["apps"][0]
+	assert (app["app"], app["version"], app["branch"], app["update_state"]) == (
+		"frappe",
+		"15.98.1",
+		"version-15",
+		"unknown",
+	)
 	assert body["latest_metrics"]["cpu"] == 23.5 and body["running_job"] == running.name
 	status, body = call(servers.get, server="SRV-0002")
 	assert body["latest_metrics"] is None and body["running_job"] is None and body["benches"] == []

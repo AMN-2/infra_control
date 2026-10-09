@@ -17,6 +17,7 @@ from infra_control.api import _serialize as ser
 from infra_control.api import api, dict_param, enum_param, int_param, str_param
 from infra_control.api._pagination import LIMIT_DEFAULT, LIMIT_MAX, page_newest_first
 from infra_control.bulk import engine as bulk_engine
+from infra_control.bulk import preflight as bulk_preflight
 from infra_control.core.enums import BulkStatus, FailurePolicy, TargetDoctype
 from infra_control.core.errors import NotFound, ValidationError
 from infra_control.core.permissions import INFRA_OPERATOR
@@ -149,3 +150,15 @@ def list(
 		cursor=cursor,
 		serialize=ser.bulk,
 	)
+
+
+@api(methods=("POST",), role=INFRA_OPERATOR)
+def preflight(playbook: str | None = None, targets: Any = None, ping: Any = None) -> dict[str, Any]:
+	"""Read-only checks per target before a rollout is created (ADR 0009)."""
+	key = str_param("playbook", playbook, required=True)
+	assert key is not None
+	rows = _target_list("targets", targets)
+	if len(rows) > 200:
+		raise ValidationError("At most 200 targets per preflight", {"field": "targets"})
+	do_ping = ping in (True, 1, "1", "true", "True")
+	return bulk_preflight.preflight(key, rows, ping=do_ping)

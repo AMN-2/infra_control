@@ -123,6 +123,15 @@ PLAYBOOKS: tuple[dict[str, Any], ...] = (
 		ansible_file="server_trust_ca.yml",
 	),
 	_pb(
+		"server.deprovision",
+		"Deprovision server",
+		"Destroy the server at the provider. Refused while it still has live sites; the Server record is archived, not deleted. Requires typed confirmation.",
+		TargetDoctype.SERVER,
+		Risk.HIGH,
+		required_capability=Capability.SERVER,
+		provider_method="deprovision_server",
+	),
+	_pb(
 		"server.exec",
 		"Run command",
 		"Run one shell command as the bench user and return its output. Destructive commands are refused; everything is audited.",
@@ -261,6 +270,15 @@ PLAYBOOKS: tuple[dict[str, Any], ...] = (
 		required_capability=Capability.SITE,
 		provider_method="install_app",
 		params_schema=_schema(["app"], app={"type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$"}),
+	),
+	_pb(
+		"site.delete",
+		"Delete site",
+		"Take a last database and files backup offsite (fails if that fails), then drop the site and its vhost. The Site record is archived, not deleted. Requires typed confirmation.",
+		TargetDoctype.SITE,
+		Risk.HIGH,
+		required_capability=Capability.SITE,
+		provider_method="delete_site",
 	),
 	_pb(
 		"site.maintenance",

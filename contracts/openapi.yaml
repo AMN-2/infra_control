@@ -393,6 +393,14 @@ paths:
                   target_doctype: Site
                   target_name: demo.smartchoice-iq.com
                   params: {}
+              delete_site:
+                summary: Safe deletion; the last backup is taken first and the Site is archived
+                value:
+                  playbook: site.delete
+                  target_doctype: Site
+                  target_name: demo.smartchoice-iq.com
+                  params: {}
+                  confirm: demo.smartchoice-iq.com
               high_risk:
                 value:
                   playbook: server.reboot
@@ -2708,6 +2716,22 @@ components:
             creates: null
             risk: low
             required_capability: ssh
+            params_schema: { type: object, additionalProperties: false, properties: {} }
+          - key: server.deprovision
+            title: Deprovision server
+            description: Destroy the server at the provider. Refused while it still has live sites; the Server record is archived, not deleted. Requires typed confirmation.
+            target_doctype: Server
+            creates: null
+            risk: high
+            required_capability: server
+            params_schema: { type: object, additionalProperties: false, properties: {} }
+          - key: site.delete
+            title: Delete site
+            description: Take a last database and files backup offsite (fails if that fails), then drop the site and its vhost. The Site record is archived, not deleted. Requires typed confirmation.
+            target_doctype: Site
+            creates: null
+            risk: high
+            required_capability: site
             params_schema: { type: object, additionalProperties: false, properties: {} }
           - key: server.exec
             title: Run command

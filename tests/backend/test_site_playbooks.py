@@ -12,7 +12,7 @@ import responses
 import yaml
 from test_digitalocean import SERVER, FakeRecords, _FakeRunner, adapter, url
 
-from infra_control.core.errors import NotFound, ProviderError
+from infra_control.core.errors import NotFound, ProviderError, ValidationError
 from infra_control.providers.base import OpState
 from infra_control.providers.digitalocean.adapter import BENCH_PLAYBOOKS, SITE_PLAYBOOKS
 from infra_control.providers.digitalocean.ansible import default_playbooks_dir
@@ -340,3 +340,44 @@ def test_add_app_with_a_connection_clones_through_an_authenticated_url() -> None
 	# Without a connection no auth URL is passed at all.
 	a.call("add_app", bench="BENCH-0001", app="erpnext", repo="https://github.com/frappe/erpnext")
 	assert "repo_auth_url" not in runner.started[1][2]
+
+
+def test_delete_site_backs_up_db_and_files_then_archives_the_site() -> None:
+	runner, records = _FakeRunner(), FakeRecords()
+	a = adapter(runner, records=records)
+	ref = a.call("delete_site", site="demo.iq")
+	_server, playbook, extra = runner.started[0]
+	assert playbook == "site_delete.yml" and sorted(extra["backup_urls"]) == ["database", "private", "public"]
+	names = [t.get("name", "") for t in tasks_in(PLAYBOOKS / "site_delete.yml")]
+	assert names.index("Last backup before deleting") < names.index("bench drop-site")
+	records.s3.objects[f"demo.iq/{STAMP}-database.sql.gz"] = 2048 * 1024
+	records.s3.objects[f"demo.iq/{STAMP}-files.tar"] = 1024
+	finish(runner)
+	assert a.get_status(ref).state is OpState.SUCCESS
+	kinds = [c[0] for c in records.calls]
+	assert kinds[:2] == ["backup", "backup"] and kinds[-1] == "archive_site"
+	assert records.calls[-1] == ("archive_site", ("demo.iq",))
+	# Deleting before the backup landed records nothing and keeps the site.
+	runner2, records2 = _FakeRunner(final=OpState.FAILED), FakeRecords()
+	b = adapter(runner2, records=records2)
+	ref2 = b.call("delete_site", site="demo.iq")
+	finish(runner2)
+	assert b.get_status(ref2).state is OpState.FAILED
+	assert ("archive_site", ("demo.iq",)) not in records2.calls
+
+
+def test_deprovision_refuses_live_sites_then_deletes_the_droplet_and_archives() -> None:
+	import responses as rsp
+
+	runner, records = _FakeRunner(), FakeRecords()
+	records.live_sites = ["demo.iq"]
+	a = adapter(runner, records=records)
+	with pytest.raises(ValidationError):
+		a.call("deprovision_server", server="SRV-0001")
+	records.live_sites = []
+	with rsp.RequestsMock() as mock:
+		mock.add(rsp.DELETE, url(f"droplets/{SERVER['provider_ref']}"), status=204)
+		ref = a.call("deprovision_server", server="SRV-0001")
+		assert mock.calls[0].request.method == "DELETE"
+	assert ref.kind == "done" and a.get_status(ref).state is OpState.SUCCESS
+	assert records.calls == [("archive_server", ("SRV-0001",))]

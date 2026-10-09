@@ -49,6 +49,12 @@ class _FcLike(Provider):
 	def install_app(self, site: str, app: str) -> OpRef:
 		return OpRef(self.name, "press_job", "4d")
 
+	def delete_site(self, site: str) -> OpRef:
+		return OpRef(self.name, "press_job", "4e")
+
+	def deprovision_server(self, server: str) -> OpRef:
+		return OpRef(self.name, "press_job", "4f")
+
 	def set_maintenance(self, site: str, on: bool) -> OpRef:
 		return OpRef(self.name, "press_job", "5")
 

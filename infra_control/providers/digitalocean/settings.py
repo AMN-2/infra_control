@@ -191,6 +191,27 @@ def record_site(domain: str, bench: str) -> str:
 	return str(doc.name)
 
 
+def archive_site(site: str) -> None:
+	"""`site.delete` succeeded: the document stays (history, backups) with status Archived."""
+	frappe.db.set_value("Site", site, "status", "Archived")
+
+
+def archive_server(server: str) -> None:
+	"""`server.deprovision` succeeded: the Server (and its benches' sites) are archived, kept."""
+	frappe.db.set_value("Server", server, "status", "Archived")
+	for site in frappe.get_all(
+		"Site", filters={"server": server, "status": ["!=", "Archived"]}, pluck="name"
+	):
+		frappe.db.set_value("Site", site, "status", "Archived")
+
+
+def live_sites_on_server(server: str) -> list[str]:
+	rows: list[str] = frappe.get_all(
+		"Site", filters={"server": server, "status": ["!=", "Archived"]}, pluck="name"
+	)
+	return rows
+
+
 def record_backup(site: str, kind: str, location: str, size_mb: float, job_ref: str) -> str:
 	"""One Backup per stored file; `location` is spaces://bucket/key, never a signed URL."""
 	existing = frappe.db.get_value("Backup", {"location": location}, "name")

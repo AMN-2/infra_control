@@ -34,6 +34,8 @@ KIND_ACTION = "do_action"
 KIND_PROVISION = "provision"
 KIND_ANSIBLE = "ansible"
 KIND_SYNC = "sync"
+KIND_DONE = "done"
+"""Operations that complete inside the call (e.g. a droplet delete): get_status reports success."""
 DISCOVERY_PLAYBOOK = "inventory_discover.yml"
 
 SSH_KEY_NAME = "infra-control"
@@ -55,6 +57,7 @@ SITE_PLAYBOOKS: dict[str, str] = {
 	"add_domain": "site_add_domain.yml",
 	"suspend_site": "site_suspend.yml",
 	"install_app": "site_install_app.yml",
+	"delete_site": "site_delete.yml",
 }
 BENCH_PLAYBOOKS: dict[str, str] = {"update_bench": "bench_update.yml", "add_app": "bench_add_app.yml"}
 SERVICE_PLAYBOOK = "service_control.yml"
@@ -72,6 +75,9 @@ class Records(Protocol):
 	def record_backup(self, site: str, kind: str, location: str, size_mb: float, job_ref: str) -> str: ...
 	def record_domain(self, site: str, domain: str) -> None: ...
 	def record_bench_app(self, bench: str, app: str, branch: str) -> None: ...
+	def archive_site(self, site: str) -> None: ...
+	def archive_server(self, server: str) -> None: ...
+	def live_sites_on_server(self, server: str) -> list[str]: ...
 	def load_backup_set(self, backup: str) -> dict[str, str]: ...
 	def spaces_client(self) -> spaces.SpacesClient | None: ...
 	def reconcile(self, account: str, provider: str, inventory: dict[str, Any]) -> dict[str, Any]: ...
@@ -348,6 +354,31 @@ class DigitalOceanProvider(Provider):
 	def suspend_site(self, site: str, suspended: bool) -> OpRef:
 		return self._start_site("suspend_site", site, {"suspended": bool(suspended)})
 
+	def delete_site(self, site: str) -> OpRef:
+		"""`site.delete`: a last database + files backup offsite (the job fails if it fails), then
+		`bench drop-site`; on success the backups are recorded and the Site is archived."""
+		urls, locations = self._backup_targets(site, with_files=True)
+		return self._start_site(
+			"delete_site",
+			site,
+			{"backup_urls": urls},
+			_Pending("site_deleted", site, {"locations": locations}),
+		)
+
+	def deprovision_server(self, server: str) -> OpRef:
+		"""`server.deprovision`: refuse while the server still has live sites, then delete the
+		droplet (DigitalOcean removes it from firewalls and billing) and archive the Server."""
+		live = self._records.live_sites_on_server(server)
+		if live:
+			raise ValidationError(
+				f"Server still has {len(live)} live site(s); delete or archive them first",
+				{"server": server, "sites": live[:10]},
+			)
+		s = self._server(server)
+		self.client.delete_droplet(s["provider_ref"])
+		self._records.archive_server(server)
+		return OpRef(self.name, KIND_DONE, f"deprovision:{server}")
+
 	def _ensure_dns(self, domain: str, ip: str) -> bool:
 		"""A record for `domain` → the server, when its zone is a DigitalOcean domain on this
 		account. Returns False (and changes nothing) when the zone lives elsewhere."""
@@ -382,7 +413,7 @@ class DigitalOceanProvider(Provider):
 			self._records.record_bench_app(
 				pending.site, str(pending.extra["app"]), str(pending.extra["branch"])
 			)
-		elif pending.kind == "backup":
+		elif pending.kind in ("backup", "site_deleted"):
 			client = self._spaces()
 			for name, location in dict(pending.extra["locations"]).items():
 				_bucket, key = spaces.parse_location(location)
@@ -396,6 +427,8 @@ class DigitalOceanProvider(Provider):
 					round(size / (1024 * 1024), 2),
 					op.external_id,
 				)
+			if pending.kind == "site_deleted":
+				self._records.archive_site(pending.site)
 
 	# --- servers (API + Ansible) -----------------------------------------------------------
 	def create_server(self, **kw: Any) -> OpRef:
@@ -596,6 +629,20 @@ class DigitalOceanProvider(Provider):
 			return status
 		if op.kind == KIND_SYNC:
 			return self._sync_status(op)
+		if op.kind == KIND_DONE:
+			now = datetime.now(UTC)
+			return OpStatus(
+				OpState.SUCCESS,
+				steps=(
+					OpStep(
+						"Delete droplet",
+						OpState.SUCCESS,
+						output=f"{op.external_id}\n",
+						started_at=now,
+						ended_at=now,
+					),
+				),
+			)
 		raise ProviderError("Unknown DigitalOcean operation kind", {"kind": op.kind})
 
 	def _action_status(self, op: OpRef) -> OpStatus:
@@ -764,6 +811,15 @@ class _SettingsRecords:
 
 	def record_bench_app(self, bench: str, app: str, branch: str) -> None:
 		settings.record_bench_app(bench, app, branch)
+
+	def archive_site(self, site: str) -> None:
+		settings.archive_site(site)
+
+	def archive_server(self, server: str) -> None:
+		settings.archive_server(server)
+
+	def live_sites_on_server(self, server: str) -> list[str]:
+		return settings.live_sites_on_server(server)
 
 	def load_backup_set(self, backup: str) -> dict[str, str]:
 		return settings.load_backup_set(backup)

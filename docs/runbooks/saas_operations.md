@@ -96,6 +96,17 @@ Servers provisioned before ADR 0007 need `Trust console certificates` (`server.t
 once from their Actions; new servers trust the CA at provision. Staging runs the bridge as
 the `console` component of `deploy/staging/staging.sh`.
 
+## 9. Delete a site, deprovision a server (safe deletion)
+
+Sites → the site → **Delete site** (typed confirmation of the domain, Infra Admin): a last
+database + files backup is uploaded to Spaces first and the job stops if that fails; then
+`bench drop-site --force` and the nginx vhost is regenerated. The Site record is **archived**,
+not deleted: its backups stay listed and restorable onto another site.
+
+Servers → the server → **Deprovision server** (typed confirmation of the server id): refused
+while the server still has live sites, so nothing is lost by accident; then the droplet is
+destroyed at DigitalOcean (firewall and billing follow) and the Server record is archived.
+
 ## What to check when a job fails
 
 - The failing step's output is in the job viewer; secrets are masked.

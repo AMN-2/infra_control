@@ -483,6 +483,7 @@ def test_playbooks_list_filters_by_capability(ff: FakeFrappe) -> None:
 	status, body = call(playbooks.list, target_doctype="Server", target_name="SRV-0001")
 	assert {p["key"] for p in body["items"]} == {
 		"server.reboot",
+		"server.deprovision",
 		"server.snapshot",
 		"server.apt_security",
 		"server.logs",

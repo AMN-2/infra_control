@@ -127,6 +127,14 @@ class DummyProvider(Provider):
 	def suspend_site(self, site: str, suspended: bool) -> OpRef:
 		return self._start("suspend_site", ["Suspend"], site=site, suspended=suspended)
 
+	def delete_site(self, site: str) -> OpRef:
+		return self._start(
+			"delete_site", ["Last backup before deleting", "bench drop-site", "Reload nginx"], site=site
+		)
+
+	def deprovision_server(self, server: str) -> OpRef:
+		return self._start("deprovision_server", ["Delete droplet"], server=server)
+
 	# --- optional -----------------------------------------------------------------------
 	def create_server(self, **kw: Any) -> OpRef:
 		return self._start(

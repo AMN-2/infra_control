@@ -394,6 +394,17 @@ class FakeRecords:
 	def record_bench_app(self, bench: str, app: str, branch: str) -> None:
 		self.calls.append(("bench_app", (bench, app, branch)))
 
+	def archive_site(self, site: str) -> None:
+		self.calls.append(("archive_site", (site,)))
+
+	def archive_server(self, server: str) -> None:
+		self.calls.append(("archive_server", (server,)))
+
+	live_sites: list[str] = []
+
+	def live_sites_on_server(self, server: str) -> list[str]:
+		return list(self.live_sites)
+
 	def load_backup_set(self, backup: str) -> dict[str, str]:
 		return self.backup_sets[backup]
 

@@ -106,6 +106,8 @@ METHOD_CAPABILITY: dict[str, Capability | None] = {
 	"set_maintenance": Capability.SITE,
 	"add_domain": Capability.SITE,
 	"suspend_site": Capability.SITE,
+	"delete_site": Capability.SITE,
+	"deprovision_server": Capability.SERVER,
 	"get_status": None,
 	"sync_inventory": None,
 	"create_server": Capability.SERVER,
@@ -184,6 +186,14 @@ class Provider(ABC):
 
 	@abstractmethod
 	def suspend_site(self, site: str, suspended: bool) -> OpRef: ...
+
+	@abstractmethod
+	def delete_site(self, site: str) -> OpRef:
+		"""`site.delete`: last backup offsite, then drop the site; the document is archived."""
+
+	@abstractmethod
+	def deprovision_server(self, server: str) -> OpRef:
+		"""`server.deprovision`: destroy the server at the provider once it has no live sites."""
 
 	# --- lifecycle ----------------------------------------------------------------------
 	@abstractmethod

@@ -566,11 +566,12 @@ watch(
 								@click="runPreflight"
 								>{{ preflightFresh ? "Re-run checks" : "Run checks" }}</IcButton
 							>
-							<IcSwitch
+							<span
 								v-if="doctype !== 'Bench'"
-								v-model="ping"
-								label="Ping each target"
-							/>
+								class="flex items-center gap-2 text-sm"
+								><IcSwitch v-model="ping" label="Ping each target" />Ping each
+								target</span
+							>
 							<template v-if="preflightFresh">
 								<IcBadge tone="healthy" dot>{{ summary.ok }} ready</IcBadge>
 								<IcBadge v-if="summary.warn" tone="degraded" dot

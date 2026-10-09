@@ -14,6 +14,7 @@ import {
 import { transitions } from "@/design/motion";
 import { toneFor, type Tone } from "@/design/status";
 import ErrorState from "@/features/system/ErrorState.vue";
+import AttentionCard from "./AttentionCard.vue";
 import { relativeTime, shortTime } from "@/lib/time";
 import { useOverviewStore, type OverviewSummary } from "@/stores/overview";
 
@@ -179,6 +180,47 @@ const stats = computed((): Stat[] => {
 						<div v-else class="h-8" aria-hidden="true" />
 					</IcStat>
 				</RouterLink>
+			</div>
+
+			<div class="grid gap-4 lg:grid-cols-[1fr_20rem]">
+				<AttentionCard />
+				<IcCard title="Quick actions" :padded="false">
+					<nav
+						class="flex flex-col divide-y divide-line text-sm"
+						data-testid="quick-actions"
+					>
+						<RouterLink to="/servers" class="px-4 py-2.5 hover:bg-surface-2"
+							>New server
+							<span class="block text-xs text-fg-subtle"
+								>Servers → New server, from a plan</span
+							></RouterLink
+						>
+						<RouterLink to="/sites" class="px-4 py-2.5 hover:bg-surface-2"
+							>New site
+							<span class="block text-xs text-fg-subtle"
+								>Sites → New site, pick the apps</span
+							></RouterLink
+						>
+						<RouterLink to="/bulk" class="px-4 py-2.5 hover:bg-surface-2"
+							>Bulk rollout
+							<span class="block text-xs text-fg-subtle"
+								>Canary first, then batches</span
+							></RouterLink
+						>
+						<RouterLink to="/tenants" class="px-4 py-2.5 hover:bg-surface-2"
+							>Tenants
+							<span class="block text-xs text-fg-subtle"
+								>Clients and their sites</span
+							></RouterLink
+						>
+						<RouterLink to="/audit" class="px-4 py-2.5 hover:bg-surface-2"
+							>Audit log
+							<span class="block text-xs text-fg-subtle"
+								>Who did what, when</span
+							></RouterLink
+						>
+					</nav>
+				</IcCard>
 			</div>
 
 			<!-- Status breakdown -->

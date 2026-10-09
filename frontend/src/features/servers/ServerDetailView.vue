@@ -168,6 +168,59 @@ const metricLabel = {
 				</span>
 			</div>
 
+			<div class="grid grid-cols-2 gap-3 md:grid-cols-4" data-testid="server-facts-strip">
+				<IcStat
+					label="Sites"
+					:value="server.site_count"
+					tone="neutral"
+					:note="`on ${server.bench_count} bench${server.bench_count === 1 ? '' : 'es'}`"
+					:animate="false"
+				/>
+				<IcStat
+					label="CPU now"
+					:value="Math.round(server.latest_metrics?.cpu ?? 0)"
+					:tone="
+						(server.latest_metrics?.cpu ?? 0) >= 90
+							? 'down'
+							: (server.latest_metrics?.cpu ?? 0) >= 70
+								? 'degraded'
+								: 'healthy'
+					"
+					:note="server.latest_metrics ? '% of all cores' : 'no reading yet'"
+					:animate="false"
+				/>
+				<IcStat
+					label="Disk used"
+					:value="Math.round(server.latest_metrics?.disk ?? 0)"
+					:tone="
+						(server.latest_metrics?.disk ?? 0) >= 90
+							? 'down'
+							: (server.latest_metrics?.disk ?? 0) >= 75
+								? 'degraded'
+								: 'healthy'
+					"
+					:note="server.latest_metrics ? '% of the root volume' : 'no reading yet'"
+					:animate="false"
+				/>
+				<IcStat
+					label="Heartbeat"
+					:value="
+						server.last_heartbeat
+							? Math.round((now - Date.parse(server.last_heartbeat)) / 60000)
+							: 0
+					"
+					:tone="
+						!server.last_heartbeat
+							? 'neutral'
+							: (now - Date.parse(server.last_heartbeat)) / 60000 < 3
+								? 'healthy'
+								: 'down'
+					"
+					:note="server.last_heartbeat ? 'minutes ago' : 'never reported'"
+					:animate="false"
+				/>
+			</div>
+
 			<!-- Metrics: live chips and the session trend -->
 			<IcCard
 				title="Metrics"

@@ -74,6 +74,7 @@ tags:
   - name: providers
   - name: console
   - name: backups
+  - name: tenants
 
 x-realtime-events:
   - infra:job.updated
@@ -1253,6 +1254,195 @@ paths:
         "429": { $ref: "#/components/responses/RateLimited" }
 
   # ---------------------------------------------------------------------------
+  # tenants: the client behind sites
+  # ---------------------------------------------------------------------------
+  /api/method/infra_control.api.tenants.list:
+    get:
+      tags: [tenants]
+      operationId: tenants_list
+      summary: Tenants with their site counts
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/TenantStatus" }
+        - name: query
+          in: query
+          schema: { type: string, description: "Substring of the name" }
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/cursor"
+      responses:
+        "200":
+          description: Page of tenants
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TenantPage" }
+              examples:
+                default: { $ref: "#/components/examples/TenantPage" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.tenants.get:
+    get:
+      tags: [tenants]
+      operationId: tenants_get
+      summary: One tenant with its sites
+      parameters:
+        - name: tenant
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Tenant detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TenantDetail" }
+              examples:
+                default: { $ref: "#/components/examples/TenantDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.tenants.create:
+    post:
+      tags: [tenants]
+      operationId: tenants_create
+      summary: Create a tenant (Infra Operator)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [label]
+              properties:
+                label: { type: string, minLength: 1, description: "Stable id, upper-cased, e.g. CLIENT-D" }
+                title: { type: string }
+                plan: { type: string }
+                contact_email: { type: string }
+                contact_phone: { type: string }
+                notes: { type: string }
+      responses:
+        "200":
+          description: The tenant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TenantEnvelope" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.tenants.update:
+    post:
+      tags: [tenants]
+      operationId: tenants_update
+      summary: Update a tenant's name, plan, contact or notes (Infra Operator); omitted fields keep their value
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tenant]
+              properties:
+                tenant: { type: string }
+                title: { type: string, minLength: 1 }
+                plan: { type: string }
+                contact_email: { type: string }
+                contact_phone: { type: string }
+                notes: { type: string }
+      responses:
+        "200":
+          description: The tenant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TenantEnvelope" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.tenants.assign:
+    post:
+      tags: [tenants]
+      operationId: tenants_assign
+      summary: Attach a site to the tenant (one tenant per site) or detach it with `remove` (Infra Operator)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tenant, site]
+              properties:
+                tenant: { type: string }
+                site: { type: string }
+                remove: { type: boolean, default: false }
+      responses:
+        "200":
+          description: The tenant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TenantEnvelope" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/method/infra_control.api.tenants.suspend:
+    post:
+      tags: [tenants]
+      operationId: tenants_suspend
+      summary: Suspend or activate every site of the tenant, one site.suspend job per site (Infra Operator)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tenant]
+              properties:
+                tenant: { type: string }
+                suspended: { type: boolean, default: true }
+      responses:
+        "200":
+          description: The tenant, the jobs started, and the sites that could not be queued
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [tenant, jobs, errors]
+                properties:
+                  tenant: { $ref: "#/components/schemas/TenantDetail" }
+                  jobs: { type: array, items: { type: string } }
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [site, error]
+                      properties:
+                        site: { type: string }
+                        error: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  # ---------------------------------------------------------------------------
   # audit
   # ---------------------------------------------------------------------------
   /api/method/infra_control.api.audit.list:
@@ -2379,6 +2569,65 @@ components:
         items: { type: array, items: { $ref: "#/components/schemas/Backup" } }
         next_cursor: { $ref: "#/components/schemas/NextCursor" }
 
+    # ----- tenants -------------------------------------------------------------
+    TenantStatus:
+      type: string
+      enum: [active, suspended]
+    Tenant:
+      type: object
+      additionalProperties: false
+      required: [name, label, title, status, plan, contact_email, contact_phone, notes, site_count, modified_at]
+      properties:
+        name: { type: string }
+        label: { type: string }
+        title: { type: string }
+        status: { $ref: "#/components/schemas/TenantStatus" }
+        plan: { type: [string, "null"] }
+        contact_email: { type: [string, "null"] }
+        contact_phone: { type: [string, "null"] }
+        notes: { type: [string, "null"] }
+        site_count: { type: integer }
+        modified_at: { type: [string, "null"], format: date-time }
+    TenantSite:
+      type: object
+      additionalProperties: false
+      required: [name, domain, status, server, bench]
+      properties:
+        name: { type: string }
+        domain: { type: string }
+        status: { $ref: "#/components/schemas/SiteStatus" }
+        server: { type: [string, "null"] }
+        bench: { type: [string, "null"] }
+    TenantDetail:
+      type: object
+      additionalProperties: false
+      required: [name, label, title, status, plan, contact_email, contact_phone, notes, site_count, modified_at, sites]
+      properties:
+        name: { type: string }
+        label: { type: string }
+        title: { type: string }
+        status: { $ref: "#/components/schemas/TenantStatus" }
+        plan: { type: [string, "null"] }
+        contact_email: { type: [string, "null"] }
+        contact_phone: { type: [string, "null"] }
+        notes: { type: [string, "null"] }
+        site_count: { type: integer }
+        modified_at: { type: [string, "null"], format: date-time }
+        sites: { type: array, items: { $ref: "#/components/schemas/TenantSite" } }
+    TenantEnvelope:
+      type: object
+      additionalProperties: false
+      required: [tenant]
+      properties:
+        tenant: { $ref: "#/components/schemas/TenantDetail" }
+    TenantPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Tenant" } }
+        next_cursor: { $ref: "#/components/schemas/NextCursor" }
+
     # ----- audit ---------------------------------------------------------------
     AuditEntry:
       type: object
@@ -2712,6 +2961,27 @@ components:
           - { ts: "2026-10-07T09:28:00Z", value: 35.7 }
           - { ts: "2026-10-07T09:29:00Z", value: 24.1 }
           - { ts: "2026-10-07T09:30:00Z", value: 23.5 }
+    TenantPage:
+      value:
+        items:
+          - { name: CLIENT-D, label: CLIENT-D, title: Client D Trading, status: active, plan: Business, contact_email: it@client-d.iq, contact_phone: "+964 770 000 0000", notes: null, site_count: 2, modified_at: "2026-10-09T08:00:00Z" }
+          - { name: CLIENT-E, label: CLIENT-E, title: Client E Clinics, status: suspended, plan: Starter, contact_email: null, contact_phone: null, notes: "Unpaid since September", site_count: 1, modified_at: "2026-10-08T12:00:00Z" }
+        next_cursor: null
+    TenantDetail:
+      value:
+        name: CLIENT-D
+        label: CLIENT-D
+        title: Client D Trading
+        status: active
+        plan: Business
+        contact_email: it@client-d.iq
+        contact_phone: "+964 770 000 0000"
+        notes: null
+        site_count: 2
+        modified_at: "2026-10-09T08:00:00Z"
+        sites:
+          - { name: demo.smartchoice-iq.com, domain: demo.smartchoice-iq.com, status: Active, server: SRV-0001, bench: BENCH-0001 }
+          - { name: erp.client-d.iq, domain: erp.client-d.iq, status: Active, server: SRV-0001, bench: BENCH-0001 }
     BackupPolicyEnvelope:
       value:
         policy:

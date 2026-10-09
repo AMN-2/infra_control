@@ -217,6 +217,7 @@ All DocTypes live in module `Infra Control`. Naming series shown where relevant.
 |---|---|---|
 | `Infra Settings` (Single) | Global config | `controller_ip`, `telegram_bot_token` (Password), `telegram_chat_id`, `spaces_bucket`, `spaces_key`/`spaces_secret` (Password) |
 | `Provider Account` | Credentials per provider | `provider` (Select), `label`, `api_token` (Password), `team` (FC only), `is_staging` (Check) |
+| `Tenant` (+ child `Tenant Site`) | The client behind sites: contact, plan, status, its sites (A4.x) | `label` (unique id), `title`, `status` (active/suspended), `plan`, `contact_email`, `contact_phone`, `notes`, `sites` (Table) |
 | `Backup Policy` | Per-site backup schedule and retention (A4.2) | `site` (Link, unique), `enabled`, `frequency` (hourly/daily/weekly), `hour`, `weekday`, `with_files`, `retain`, `last_run`, `last_job`, `next_run` |
 | `Git Connection` | GitHub access for repository browsing and private clones (ADR 0005) | `label`, `provider` (github), `token` (Password), verified `login`, `account_type`, `scopes`, `verified_at`, `enabled` |
 | `Server` | One DO droplet | `provider_account`, `provider_ref` (droplet id), `public_ip`, `private_ip`, `role` (app/db/proxy/all), `region`, `size`, `tags`, `status`, `last_heartbeat` |

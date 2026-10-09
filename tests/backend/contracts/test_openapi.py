@@ -63,6 +63,13 @@ REQUIRED_ENDPOINTS: dict[str, str] = {
 	"backups.policy": "get",
 	"backups.set_policy": "post",
 	"backups.list": "get",
+	# Tenants: the client behind sites.
+	"tenants.list": "get",
+	"tenants.get": "get",
+	"tenants.create": "post",
+	"tenants.update": "post",
+	"tenants.assign": "post",
+	"tenants.suspend": "post",
 }
 
 # Plan section 5 unified enums.

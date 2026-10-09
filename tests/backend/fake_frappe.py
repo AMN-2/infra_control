@@ -25,6 +25,7 @@ SERIES = {
 # (self._data[field]); _sync_children persists whichever is present, mirroring how Frappe
 # materialises `get_all_children()` on insert.
 CHILD_DOCTYPES: dict[str, dict[str, str]] = {
+	"Tenant": {"sites": "Tenant Site"},
 	"Alert Rule": {"channels": "Alert Rule Channel"},
 	"Bulk Operation": {"targets": "Bulk Operation Target"},
 }
@@ -88,6 +89,8 @@ class FakeDoc:
 		self._data[key] = value
 
 	def get(self, key: str, default: Any = None) -> Any:
+		if key in self._children:
+			return self._children[key]
 		return self._data.get(key, default)
 
 	def set(self, key: str, value: Any) -> None:
@@ -112,7 +115,7 @@ class FakeDoc:
 		if not self._data.get("name"):
 			if dt == "Infra Job Step":
 				self._data["name"] = f"{self._data['job']}-{self._data['step_index']}"
-			elif dt == "Git Connection":  # autoname field:label
+			elif dt in ("Git Connection", "Tenant"):  # autoname field:label
 				self._data["name"] = self._data["label"]
 			else:
 				self._data["name"] = f"{SERIES.get(dt, dt + '-')}{next(self._frappe.counter):05d}"

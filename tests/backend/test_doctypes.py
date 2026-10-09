@@ -31,6 +31,7 @@ PLAN_DOCTYPES = {
 	"Provider Account",
 	"Git Connection",  # ADR 0005
 	"Backup Policy",  # A4.2
+	"Tenant",  # A4.x tenants
 	"Server",
 	"Bench",
 	"Site",
@@ -44,12 +45,21 @@ PLAN_DOCTYPES = {
 	"Backup",
 	"Infra Audit Log",
 }
-CHILD_TABLES = {"Server Tag", "Bench App", "Site Domain", "Bulk Operation Target", "Alert Rule Channel"}
+CHILD_TABLES = {
+	"Server Tag",
+	"Bench App",
+	"Site Domain",
+	"Bulk Operation Target",
+	"Alert Rule Channel",
+	"Tenant Site",
+}
 
 # DocType field -> contract enum schema name.
 SELECT_ENUMS: dict[tuple[str, str], str] = {
 	("Server", "status"): "ServerStatus",
 	("Site", "status"): "SiteStatus",
+	("Tenant", "status"): "TenantStatus",
+	("Backup Policy", "frequency"): "BackupFrequency",
 	("Infra Job", "status"): "JobStatus",
 	("Infra Job Step", "status"): "StepStatus",
 	("Bulk Operation", "status"): "BulkStatus",

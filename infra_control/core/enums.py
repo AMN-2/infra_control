@@ -162,6 +162,11 @@ class AuditResult(StrEnum):
 	DENIED = "denied"
 
 
+class TenantStatus(StrEnum):
+	ACTIVE = "active"
+	SUSPENDED = "suspended"
+
+
 class BackupFrequency(StrEnum):
 	HOURLY = "hourly"
 	DAILY = "daily"

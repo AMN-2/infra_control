@@ -1,6 +1,6 @@
 {
-  "_CreateSiteDialog-DFIzbRRO.js": {
-    "file": "assets/CreateSiteDialog-DFIzbRRO.js",
+  "_CreateSiteDialog-DP9kC1YH.js": {
+    "file": "assets/CreateSiteDialog-DP9kC1YH.js",
     "name": "CreateSiteDialog",
     "imports": [
       "_components-Cxfhysdj.js",
@@ -8,6 +8,14 @@
       "_IcSkeleton-Dr8ICW4i.js",
       "_IcSelect-V6jAxYa0.js",
       "index.html"
+    ]
+  },
+  "_ErrorState-CWZBkzE3.js": {
+    "file": "assets/ErrorState-CWZBkzE3.js",
+    "name": "ErrorState",
+    "imports": [
+      "_components-Cxfhysdj.js",
+      "_IcEmptyState-DxkCQL0h.js"
     ]
   },
   "_IcBadge-DRG5d0LT.js": {
@@ -75,17 +83,19 @@
       "_components-Cxfhysdj.js"
     ]
   },
-  "_TargetActions-D3AmuBIL.js": {
-    "file": "assets/TargetActions-D3AmuBIL.js",
+  "_TargetActions-BzFseZIA.js": {
+    "file": "assets/TargetActions-BzFseZIA.js",
     "name": "TargetActions",
     "imports": [
       "_components-Cxfhysdj.js",
+      "__async-Btkrcmvd.js",
       "_IcBadge-DRG5d0LT.js",
       "_IcSkeleton-Dr8ICW4i.js",
       "_play-B2UwuRtG.js",
       "_IcSelect-V6jAxYa0.js",
       "_IcTabs-Bg3YhVkR.js",
       "index.html",
+      "_time-Dc7ArAlC.js",
       "_playbooks-DAAYqNeA.js",
       "_git-CNFHpnJk.js"
     ]
@@ -147,13 +157,17 @@
     "file": "assets/rolldown-runtime-B0Z9INg1.js",
     "name": "rolldown-runtime"
   },
-  "_time-Bnc5LEhV.js": {
-    "file": "assets/time-Bnc5LEhV.js",
-    "name": "time",
+  "_tenants-LIEqq2WW.js": {
+    "file": "assets/tenants-LIEqq2WW.js",
+    "name": "tenants",
     "imports": [
       "_components-Cxfhysdj.js",
-      "_IcEmptyState-DxkCQL0h.js"
+      "__async-Btkrcmvd.js"
     ]
+  },
+  "_time-Dc7ArAlC.js": {
+    "file": "assets/time-Dc7ArAlC.js",
+    "name": "time"
   },
   "_trash-2-DdUctWmV.js": {
     "file": "assets/trash-2-DdUctWmV.js",
@@ -163,7 +177,7 @@
     ]
   },
   "index.html": {
-    "file": "assets/index-BH-YcKAy.js",
+    "file": "assets/index-BulnyTol.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -180,6 +194,8 @@
       "src/features/servers/ServerDetailView.vue",
       "src/features/sites/SitesView.vue",
       "src/features/sites/SiteDetailView.vue",
+      "src/features/tenants/TenantsView.vue",
+      "src/features/tenants/TenantDetailView.vue",
       "src/features/jobs/JobsView.vue",
       "src/features/jobs/JobDetailView.vue",
       "src/features/bulk/BulkView.vue",
@@ -189,7 +205,7 @@
       "src/features/system/NotFoundView.vue"
     ],
     "css": [
-      "assets/index-Cr1l0e7n.css"
+      "assets/index-DI78Fj-g.css"
     ],
     "assets": [
       "assets/space-grotesk-vietnamese-wght-normal-D0rl6rjA.woff2",
@@ -251,7 +267,7 @@
     "isDynamicEntry": true
   },
   "src/features/alerts/AlertsView.vue": {
-    "file": "assets/AlertsView-30rQcPZh.js",
+    "file": "assets/AlertsView-Bov39qGM.js",
     "name": "AlertsView",
     "src": "src/features/alerts/AlertsView.vue",
     "isDynamicEntry": true,
@@ -265,11 +281,12 @@
       "_IcSelect-V6jAxYa0.js",
       "_IcTabs-Bg3YhVkR.js",
       "index.html",
-      "_time-Bnc5LEhV.js"
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js"
     ]
   },
   "src/features/bulk/BulkView.vue": {
-    "file": "assets/BulkView-nbYo1Ns7.js",
+    "file": "assets/BulkView-B2QkrxBd.js",
     "name": "BulkView",
     "src": "src/features/bulk/BulkView.vue",
     "isDynamicEntry": true,
@@ -282,12 +299,13 @@
       "_IcSelect-V6jAxYa0.js",
       "_realtime-BjOHv7cP.js",
       "index.html",
-      "_time-Bnc5LEhV.js",
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js",
       "_playbooks-DAAYqNeA.js"
     ]
   },
   "src/features/design/DesignShowcase.vue": {
-    "file": "assets/DesignShowcase-BGsxgAB0.js",
+    "file": "assets/DesignShowcase-DwU0WFw0.js",
     "name": "DesignShowcase",
     "src": "src/features/design/DesignShowcase.vue",
     "isDynamicEntry": true,
@@ -311,7 +329,7 @@
     ]
   },
   "src/features/jobs/JobDetailView.vue": {
-    "file": "assets/JobDetailView-CSC3Hubc.js",
+    "file": "assets/JobDetailView-COsbMF5S.js",
     "name": "JobDetailView",
     "src": "src/features/jobs/JobDetailView.vue",
     "isDynamicEntry": true,
@@ -321,11 +339,12 @@
       "_IcSkeleton-Dr8ICW4i.js",
       "_IcProgress-Cl6xf_59.js",
       "index.html",
-      "_time-Bnc5LEhV.js"
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js"
     ]
   },
   "src/features/jobs/JobsView.vue": {
-    "file": "assets/JobsView-C8Poylcj.js",
+    "file": "assets/JobsView-BsholiqN.js",
     "name": "JobsView",
     "src": "src/features/jobs/JobsView.vue",
     "isDynamicEntry": true,
@@ -336,11 +355,12 @@
       "_IcSelect-V6jAxYa0.js",
       "_IcTable-Bt32DaJA.js",
       "index.html",
-      "_time-Bnc5LEhV.js"
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js"
     ]
   },
   "src/features/overview/OverviewView.vue": {
-    "file": "assets/OverviewView-D4o4cxLy.js",
+    "file": "assets/OverviewView-9j5lRU5u.js",
     "name": "OverviewView",
     "src": "src/features/overview/OverviewView.vue",
     "isDynamicEntry": true,
@@ -350,11 +370,12 @@
       "_IcEmptyState-DxkCQL0h.js",
       "_IcProgress-Cl6xf_59.js",
       "index.html",
-      "_time-Bnc5LEhV.js"
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js"
     ]
   },
   "src/features/servers/ServerDetailView.vue": {
-    "file": "assets/ServerDetailView-BHW-T3Z4.js",
+    "file": "assets/ServerDetailView-JfmMZP7q.js",
     "name": "ServerDetailView",
     "src": "src/features/servers/ServerDetailView.vue",
     "isDynamicEntry": true,
@@ -371,9 +392,10 @@
       "_IcTabs-Bg3YhVkR.js",
       "_IcTable-Bt32DaJA.js",
       "index.html",
-      "_time-Bnc5LEhV.js",
-      "_TargetActions-D3AmuBIL.js",
-      "_CreateSiteDialog-DFIzbRRO.js"
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js",
+      "_TargetActions-BzFseZIA.js",
+      "_CreateSiteDialog-DP9kC1YH.js"
     ],
     "dynamicImports": [
       "node_modules/@xterm/xterm/lib/xterm.mjs",
@@ -382,7 +404,7 @@
     ]
   },
   "src/features/servers/ServersView.vue": {
-    "file": "assets/ServersView-CqI4k7BX.js",
+    "file": "assets/ServersView-CFypb7m8.js",
     "name": "ServersView",
     "src": "src/features/servers/ServersView.vue",
     "isDynamicEntry": true,
@@ -396,7 +418,8 @@
       "_IcSelect-V6jAxYa0.js",
       "_IcTable-Bt32DaJA.js",
       "index.html",
-      "_time-Bnc5LEhV.js"
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js"
     ]
   },
   "src/features/servers/chartEngine.ts": {
@@ -409,7 +432,7 @@
     ]
   },
   "src/features/settings/GitHubView.vue": {
-    "file": "assets/GitHubView-C8g6NDJ8.js",
+    "file": "assets/GitHubView-DYlvMIuB.js",
     "name": "GitHubView",
     "src": "src/features/settings/GitHubView.vue",
     "isDynamicEntry": true,
@@ -419,12 +442,13 @@
       "_IcSkeleton-Dr8ICW4i.js",
       "_trash-2-DdUctWmV.js",
       "_IcEmptyState-DxkCQL0h.js",
-      "_time-Bnc5LEhV.js",
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js",
       "_git-CNFHpnJk.js"
     ]
   },
   "src/features/sites/SiteDetailView.vue": {
-    "file": "assets/SiteDetailView-BhUzXziC.js",
+    "file": "assets/SiteDetailView-DwNBzQOk.js",
     "name": "SiteDetailView",
     "src": "src/features/sites/SiteDetailView.vue",
     "isDynamicEntry": true,
@@ -434,15 +458,17 @@
       "_IcSkeleton-Dr8ICW4i.js",
       "_IcProgress-Cl6xf_59.js",
       "_IcProviderBadge-wj3gcjgr.js",
+      "_IcSelect-V6jAxYa0.js",
       "_IcTabs-Bg3YhVkR.js",
       "_IcTable-Bt32DaJA.js",
       "index.html",
-      "_time-Bnc5LEhV.js",
-      "_TargetActions-D3AmuBIL.js"
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js",
+      "_TargetActions-BzFseZIA.js"
     ]
   },
   "src/features/sites/SitesView.vue": {
-    "file": "assets/SitesView-ByhXmJ5Y.js",
+    "file": "assets/SitesView-OOkdHr3Z.js",
     "name": "SitesView",
     "src": "src/features/sites/SitesView.vue",
     "isDynamicEntry": true,
@@ -453,8 +479,9 @@
       "_IcSelect-V6jAxYa0.js",
       "_IcTable-Bt32DaJA.js",
       "index.html",
-      "_time-Bnc5LEhV.js",
-      "_CreateSiteDialog-DFIzbRRO.js"
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js",
+      "_CreateSiteDialog-DP9kC1YH.js"
     ]
   },
   "src/features/system/NotFoundView.vue": {
@@ -467,8 +494,42 @@
       "_IcEmptyState-DxkCQL0h.js"
     ]
   },
+  "src/features/tenants/TenantDetailView.vue": {
+    "file": "assets/TenantDetailView-clKCVScx.js",
+    "name": "TenantDetailView",
+    "src": "src/features/tenants/TenantDetailView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-Cxfhysdj.js",
+      "_IcBadge-DRG5d0LT.js",
+      "_IcSkeleton-Dr8ICW4i.js",
+      "_IcSelect-V6jAxYa0.js",
+      "_IcTable-Bt32DaJA.js",
+      "index.html",
+      "_ErrorState-CWZBkzE3.js",
+      "_tenants-LIEqq2WW.js"
+    ]
+  },
+  "src/features/tenants/TenantsView.vue": {
+    "file": "assets/TenantsView-ibLCV70Y.js",
+    "name": "TenantsView",
+    "src": "src/features/tenants/TenantsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_components-Cxfhysdj.js",
+      "_IcBadge-DRG5d0LT.js",
+      "_IcSkeleton-Dr8ICW4i.js",
+      "_IcEmptyState-DxkCQL0h.js",
+      "_IcSelect-V6jAxYa0.js",
+      "_IcTable-Bt32DaJA.js",
+      "index.html",
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js",
+      "_tenants-LIEqq2WW.js"
+    ]
+  },
   "src/features/topology/TopologyView.vue": {
-    "file": "assets/TopologyView-NwVef7So.js",
+    "file": "assets/TopologyView-CSnLjPoV.js",
     "name": "TopologyView",
     "src": "src/features/topology/TopologyView.vue",
     "isDynamicEntry": true,
@@ -479,7 +540,8 @@
       "_IcEmptyState-DxkCQL0h.js",
       "_IcProviderBadge-wj3gcjgr.js",
       "index.html",
-      "_time-Bnc5LEhV.js"
+      "_ErrorState-CWZBkzE3.js",
+      "_time-Dc7ArAlC.js"
     ]
   }
 }

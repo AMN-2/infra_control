@@ -9,10 +9,17 @@
 - name: Node.js from NodeSource
   ansible.builtin.include_tasks: nodejs.yml
 
+# NodeSource's nodejs package puts npm's global prefix at /usr, so a `creates: /usr/local/bin/yarn`
+# guard never matched and the task re-ran on every converge (Molecule idempotence, 2026-10-10).
+- name: Check whether yarn is installed
+  ansible.builtin.command: yarn --version
+  register: bench_yarn_check
+  changed_when: false
+  failed_when: false
+
 - name: Install yarn globally
   ansible.builtin.command: npm install -g yarn
-  args:
-    creates: /usr/local/bin/yarn
+  when: bench_yarn_check.rc != 0
 
 - name: Supervisor is enabled and running
   ansible.builtin.service:

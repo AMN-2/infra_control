@@ -15,6 +15,16 @@ elsewhere). `frontend/dist` is no longer tracked (it is git-ignored and rebuilt 
 contract; frontend check:api, format, lint, typecheck, vitest, build, bundle size.
 
 
+## Production package (2026-10-10)
+
+`deploy/production/` (install.sh, deploy.sh, onboard-server.sh, nginx + supervisor templates)
+and `docs/runbooks/production_install.md` take a fresh droplet to a controller and connect new
+or existing DigitalOcean servers. Code: `Infra Settings.allow_production_accounts` gates
+non-staging accounts (Q13; `registry.config_from_account`, posture `production_gate`,
+3 unit tests). **Not yet run on a real droplet**: the installer was syntax-checked and its
+nginx rendering tested locally; its first end-to-end run is the next step, followed by the
+Phase 4 gate (48 h read-only onboarding of one production server).
+
 ## Phase 0 tasks
 
 | Task | State | Branch | PR | Verified by |

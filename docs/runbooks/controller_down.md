@@ -30,8 +30,8 @@ serving their sites without it; only control, monitoring and scheduled jobs stop
 Daily `bench backup --with-files` of the controller site is uploaded to the off-site bucket
 (Infra Settings → off-site; `backups/controller.py`). On a fresh droplet:
 
-1. Provision a bench with only `frappe` and `infra_control` (`deploy/staging/README.md` for
-   the shape; production uses `bench setup production`).
+1. Provision a bench with only `frappe` and `infra_control`: `deploy/production/install.sh`
+   on a fresh droplet (`production_install.md`), with the same `INFRA_SITE`.
 2. Download the newest `controller/<site>/<date>/` objects from the off-site bucket.
 3. `bench --site <site> restore <db.sql.gz> --with-public-files … --with-private-files …`
    then `bench --site <site> migrate`.

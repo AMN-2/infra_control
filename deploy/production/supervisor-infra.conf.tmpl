@@ -1,0 +1,29 @@
+; Infra Control extras next to bench's own supervisor.conf (rendered by install.sh).
+; @BENCH_DIR@ / @BENCH_USER@ are substituted; bench's config supplies web, socketio, redis and
+; the default/short/long workers.
+
+[program:infra-control-worker-infra]
+command=@BENCH_DIR@/env/bin/bench worker --queue infra
+directory=@BENCH_DIR@
+user=@BENCH_USER@
+autostart=true
+autorestart=true
+stopwaitsecs=1800
+killasgroup=true
+stdout_logfile=@BENCH_DIR@/logs/worker-infra.log
+stderr_logfile=@BENCH_DIR@/logs/worker-infra.error.log
+environment=HOME="/home/@BENCH_USER@"
+
+[program:infra-control-console]
+command=@BENCH_DIR@/env/bin/python -m infra_control.console.service
+directory=@BENCH_DIR@/sites
+user=@BENCH_USER@
+autostart=true
+autorestart=true
+stopwaitsecs=60
+stdout_logfile=@BENCH_DIR@/logs/console.log
+stderr_logfile=@BENCH_DIR@/logs/console.error.log
+environment=HOME="/home/@BENCH_USER@",BENCH="@BENCH_DIR@",CONSOLE_HOST="127.0.0.1",CONSOLE_PORT="8012"
+
+[group:infra-control]
+programs=infra-control-worker-infra,infra-control-console

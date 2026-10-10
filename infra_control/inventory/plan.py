@@ -72,7 +72,9 @@ def _norm(value: Any) -> Any:
 	if isinstance(value, list):
 		return [_norm(v) for v in value]
 	if isinstance(value, dict):
-		return {k: _norm(v) for k, v in value.items()}
+		# An absent key and a key holding None/"" mean the same thing (a Bench App row always has
+		# `commit`/`remote` columns; a discovery payload may omit them), so drop empty entries.
+		return {k: n for k, v in value.items() if (n := _norm(v)) is not None}
 	return str(value) if not isinstance(value, bool) else value
 
 

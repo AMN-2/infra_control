@@ -18,6 +18,10 @@ dependencies = [
     # Roles use only ansible.builtin modules, so ansible-core alone is enough on the controller.
     "ansible-core>=2.17,<2.20",
     "ansible-runner>=2.4",
+    # Job engine validates playbook params against contracts/ at run time (A1.2).
+    "jsonschema>=4.23",
+    # Web console bridge (ADR 0007): aiohttp server next to the edge proxy.
+    "aiohttp>=3.9",
 ]
 
 [project.optional-dependencies]
@@ -28,7 +32,6 @@ dev = [
     "pytest>=8",
     "hypothesis>=6",
     "responses>=0.23",
-    "jsonschema>=4.23",
     "openapi-spec-validator>=0.7",
     "PyYAML>=6",
     "types-PyYAML",

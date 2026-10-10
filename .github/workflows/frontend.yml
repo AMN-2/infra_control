@@ -53,6 +53,21 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Start the contract mocks (Prism on :4010, realtime replay on :9000)
+        working-directory: contracts/mock
+        run: |
+          npm ci --no-audit --no-fund
+          (npm run mock > "$RUNNER_TEMP/prism.log" 2>&1 &)
+          (npm run realtime > "$RUNNER_TEMP/realtime.log" 2>&1 &)
+          for i in $(seq 1 60); do
+            curl -fsS -o /dev/null http://127.0.0.1:4010/api/method/infra_control.api.overview.summary \
+              -H 'Authorization: token mock:mock' && curl -fsS -o /dev/null http://127.0.0.1:9000/socket.io/?EIO=4\&transport=polling && break
+            sleep 1
+          done
+          curl -fsS -o /dev/null -H 'Authorization: token mock:mock' http://127.0.0.1:4010/api/method/infra_control.api.overview.summary \
+            || { echo "Prism did not come up"; cat "$RUNNER_TEMP/prism.log"; exit 1; }
+          curl -fsS -o /dev/null http://127.0.0.1:9000/socket.io/?EIO=4\&transport=polling \
+            || { echo "realtime mock did not come up"; cat "$RUNNER_TEMP/realtime.log"; exit 1; }
       - run: npm run test:e2e
         env:
           CI: 'true'

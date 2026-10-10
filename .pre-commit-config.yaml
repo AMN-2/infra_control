@@ -18,7 +18,7 @@ repos:
       - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.1
+    rev: v0.16.2
     hooks:
       - id: ruff
         name: "Run ruff import sorter"
@@ -38,7 +38,12 @@ repos:
         # Ignore any files that might contain jinja / bundles
         exclude: |
             (?x)^(
+                frontend/.*|
+                tests/frontend/.*|
+                contracts/mock/.*|
+                deploy/.*|
                 infra_control/public/dist/.*|
+                infra_control/public/frontend/.*|
                 .*node_modules.*|
                 .*boilerplate.*|
                 infra_control/templates/includes/.*|
@@ -55,7 +60,12 @@ repos:
         # Ignore any files that might contain jinja / bundles
         exclude: |
             (?x)^(
+                frontend/.*|
+                tests/frontend/.*|
+                contracts/mock/.*|
+                deploy/.*|
                 infra_control/public/dist/.*|
+                infra_control/public/frontend/.*|
                 cypress/.*|
                 .*node_modules.*|
                 .*boilerplate.*|

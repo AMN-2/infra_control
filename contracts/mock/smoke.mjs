@@ -41,6 +41,14 @@ const QUERY = {
 	"bulk.get": { bulk: "BULK-0007" },
 	"alert_rules.get": { rule: "RULE-0003" },
 	"search.query": { q: "demo" },
+	"git.repos": { connection: "GIT-0001" },
+	"git.refs": { connection: "GIT-0001", repo: "frappe/erpnext" },
+	"providers.options": { account: "DO-STAGING" },
+	"console.transcript": { session: "20261009-011451-5b0b80" },
+	"backups.policy": { site: "demo.smartchoice-iq.com" },
+	"backups.list": { site: "demo.smartchoice-iq.com" },
+	"tenants.get": { tenant: "TEN-0001" },
+	"benches.refs": { bench: "BENCH-0001", app: "erpnext" },
 };
 const BODY = {
 	"jobs.cancel": { job: "JOB-00042" },
@@ -52,6 +60,14 @@ const BODY = {
 	"alert_rules.create": { title: "RAM above 95%", kind: "metric", target_doctype: "Server", metric: "ram", operator: "gt", threshold: 95, for_minutes: 5, severity: "critical", channels: ["telegram"] },
 	"alert_rules.update": { rule: "RULE-0003", threshold: 90 },
 	"alert_rules.delete": { rule: "RULE-0003" },
+	"git.connect": { label: "SmartChoice GitHub", token: "ghp_mock" },
+	"git.disconnect": { connection: "GIT-0001" },
+	"console.ticket": { server: "SRV-0001" },
+	"backups.set_policy": { site: "demo.smartchoice-iq.com", enabled: true, frequency: "daily", hour: 2, retain: 7 },
+	"tenants.create": { label: "demo-client", title: "Demo Client" },
+	"tenants.update": { tenant: "TEN-0001", title: "Demo Client" },
+	"tenants.assign": { tenant: "TEN-0001", site: "demo.smartchoice-iq.com" },
+	"tenants.suspend": { tenant: "TEN-0001", suspended: true },
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

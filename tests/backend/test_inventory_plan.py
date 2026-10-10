@@ -307,3 +307,47 @@ def test_empty_inventory_is_an_empty_plan() -> None:
 	)
 	assert isinstance(plan, SyncPlan)
 	assert all(v == 0 for v in plan.summary.values())
+
+
+def test_stored_app_rows_with_empty_commit_and_remote_are_not_an_update() -> None:
+	"""A Bench App row always carries `commit`/`remote` (None when discovery did not report them);
+	a payload that omits those keys describes the same apps, so the second sync is idempotent."""
+	docs = {
+		"servers": [server_doc("SRV-0004", "999", "gate-03.fra1")],
+		"benches": [
+			{
+				"name": "BENCH-0003",
+				"server": "SRV-0004",
+				"path": "/home/frappe/frappe-bench",
+				"frappe_version": "15.122.0",
+				"apps": [
+					{
+						"app": "frappe",
+						"version": "15.122.0",
+						"branch": "version-15",
+						"commit": None,
+						"remote": "",
+					}
+				],
+			}
+		],
+		"sites": [],
+	}
+	inv = {
+		"servers": [droplet("999", "gate-03.fra1")],
+		"benches": [
+			{
+				"server_ref": "999",
+				"path": "/home/frappe/frappe-bench",
+				"title": "frappe-bench",
+				"frappe_version": "15.122.0",
+				"apps": [{"app": "frappe", "version": "15.122.0", "branch": "version-15"}],
+			}
+		],
+		"sites": [],
+		"unreachable": [],
+		"discovered": ["999"],
+	}
+	plan = plan_sync(ACCOUNT, "digitalocean", inv, docs)
+	assert plan.update_benches == []
+	assert plan.create_benches == []

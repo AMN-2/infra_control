@@ -46,7 +46,10 @@ class TestInfraPage(FrappeTestCase):
 	def test_guest_is_redirected_to_login(self) -> None:
 		response = self.client.get("/infra/servers/SRV-0001", headers=self.host)
 		self.assertEqual(response.status_code, 302)
-		self.assertEqual(response.headers["Location"], "/login?redirect-to=%2Finfra%2Fservers%2FSRV-0001")
+		# ADR 0008: guests go to the in-app login, which renders this same page with guest boot data.
+		self.assertEqual(
+			response.headers["Location"], "/infra/login?redirect-to=%2Finfra%2Fservers%2FSRV-0001"
+		)
 
 	def test_logged_in_user_gets_the_page_on_any_subpath(self) -> None:
 		sid = self._login(*_ensure_login_user())

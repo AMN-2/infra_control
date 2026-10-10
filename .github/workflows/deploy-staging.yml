@@ -5,7 +5,7 @@ name: deploy-staging
 #   STAGING_HOST      the host's IP or name
 #   STAGING_USER      the bench user (frappe)
 #   STAGING_SSH_KEY   a private key whose public half is in that user's ~/.ssh/authorized_keys
-# Without them the job fails at the SSH step and nothing on the host changes.
+# Without them the job logs a warning and exits 0, so main stays green until they are set.
 
 on:
   push:
@@ -33,7 +33,10 @@ jobs:
           KEY: ${{ secrets.STAGING_SSH_KEY }}
           BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
         run: |
-          test -n "$HOST" -a -n "$USER" -a -n "$KEY" || { echo "staging secrets are not set"; exit 1; }
+          if [ -z "$HOST" ] || [ -z "$USER" ] || [ -z "$KEY" ]; then
+            echo "::warning::staging secrets are not set (STAGING_HOST/USER/SSH_KEY); skipping the deploy"
+            exit 0
+          fi
           install -m 700 -d ~/.ssh
           printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null

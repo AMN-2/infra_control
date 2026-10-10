@@ -65,9 +65,10 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
 
-      - name: Install dev tooling
+      - name: Install frappe (import-only, no site) and dev tooling
         run: |
           python -m pip install --upgrade pip
+          pip install "frappe @ git+https://github.com/frappe/frappe.git@${FRAPPE_BRANCH}"
           pip install -e ".[dev]"
 
       - name: pytest (contract)

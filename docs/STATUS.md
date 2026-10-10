@@ -1,7 +1,19 @@
 # Agent A status
 
 Resume file for the next Agent A session. Update before every session ends.
-Last update: 2026-10-08 (session 5; Phase 3 tasks complete on both sides, gate pending).
+Last update: 2026-10-10 (release merge; Phase 3 tasks complete on both sides, live gates pending).
+
+## Release merge (2026-10-10)
+
+Everything to date was merged into `main` by the reviewer's instruction: `integration/phase2`
+(all Phase 0-4 work, 45 commits past the old `main`) plus `develop` (whose four commits were
+already in phase2 with identical patches; the merge commit records the history, the tree is
+phase2's). `main`, `develop` and `integration/phase2` now point at the same commit. The 28
+stacked PRs #4-#31 are contained in it (#30's only difference was a Q10 row that phase2 carries
+elsewhere). `frontend/dist` is no longer tracked (it is git-ignored and rebuilt by
+`deploy/staging/deploy.sh`). Gates on the merged tree: ruff, mypy --strict, pytest unit +
+contract; frontend check:api, format, lint, typecheck, vitest, build, bundle size.
+
 
 ## Phase 0 tasks
 

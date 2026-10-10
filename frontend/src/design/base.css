@@ -124,13 +124,15 @@
 
 :root[data-visibility="hidden"] .ic-pulse::after,
 :root[data-visibility="hidden"] .ic-glow::before,
-:root[data-visibility="hidden"] .ic-live {
+:root[data-visibility="hidden"] .ic-live,
+:root[data-visibility="hidden"] .ic-skeleton {
 	animation-play-state: paused;
 }
 
 @media (prefers-reduced-motion: reduce) {
 	:root:not([data-motion="full"]) .ic-pulse::after,
-	:root:not([data-motion="full"]) .ic-live {
+	:root:not([data-motion="full"]) .ic-live,
+	:root:not([data-motion="full"]) .ic-skeleton {
 		animation: none;
 	}
 	:root:not([data-motion="full"]) .ic-glow::before {
@@ -139,7 +141,8 @@
 	}
 }
 :root[data-motion="reduce"] .ic-pulse::after,
-:root[data-motion="reduce"] .ic-live {
+:root[data-motion="reduce"] .ic-live,
+:root[data-motion="reduce"] .ic-skeleton {
 	animation: none;
 }
 :root[data-motion="reduce"] .ic-glow::before {

@@ -58,14 +58,20 @@ export interface TopologyLayout {
 	height: number;
 }
 
+function push(map: Map<string, string[]>, key: string, value: string): void {
+	const list = map.get(key);
+	if (list) list.push(value);
+	else map.set(key, [value]);
+}
+
 export function layoutTopology(topology: Pick<Topology, "nodes" | "edges">): TopologyLayout {
 	const nodes = new Map(topology.nodes.map((n) => [n.id, n]));
 	const children = new Map<string, string[]>();
 	const parents = new Map<string, string[]>();
 	for (const e of topology.edges) {
 		if (!nodes.has(e.source) || !nodes.has(e.target) || e.source === e.target) continue;
-		children.set(e.source, [...(children.get(e.source) ?? []), e.target]);
-		parents.set(e.target, [...(parents.get(e.target) ?? []), e.source]);
+		push(children, e.source, e.target);
+		push(parents, e.target, e.source);
 	}
 
 	const columnOf = (n: TopologyNode): number => Math.max(0, COLUMNS.indexOf(n.type));

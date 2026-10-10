@@ -174,6 +174,26 @@ Live DigitalOcean resources (staging team): droplets gate-02.fra1 (SRV-0003) and
   canary/batches/params), "Drop blocked", status tiles, batches grouped in the detail.
 - Gates: backend suite incl. `test_bench_updates.py`; Playwright `benches.spec.ts`, `bulk.spec.ts`.
 
+## B4.1 performance pass (2026-10-10)
+
+Audit of reduced motion, topology scale and empty/error/loading states (branch
+`agent-b/B4.1-performance-pass`). Fixed: the SSH console's blinking cursor now follows reduced
+motion (the one ungated animation); `.ic-skeleton` obeys reduced motion and the hidden tab on its
+own class; topology adjacency is built in O(E) instead of O(k^2) per parent; each topology node is
+its own component so a heartbeat patches one card instead of re-rendering all of them; pulse dots
+are keyed by edge id (a v-for ref array does not follow source order); the dead `lit` state is
+gone; the Security view has an empty state for the checks list. New unit test: a generated
+200-node topology (2 providers, 20 servers, 40 benches, 138 sites) lays out with one column per
+type, no vertical overlap, under 50 ms; pulse edges stay within the server's subtree. Bundle
+139.1 KB gz (budget 250).
+
+Found, not changed (candidates for B4.2): list views show their error only when nothing is
+cached (a failed refetch over stale data is silent; AlertsView is the exception); `inventory.error`
+is shared by servers, sites, benches, topology and the detail views; detail-page job tabs render
+`jobs.loading` but never `jobs.error`; the realtime "watch it live" half of the run-playbook flow
+and canary/batch progress after a bulk start have no E2E coverage (jobs.spec and bulk.spec stop at
+the viewer/wizard); `inventory.ts` still does an O(n) `nodes.find` per heartbeat.
+
 ## Environment notes
 
 - Push over HTTPS (`git push https://github.com/AMN-2/infra_control.git <branch>`); SSH keys

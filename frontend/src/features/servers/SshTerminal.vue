@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref, useTemplateRef } from "vue";
 import type { Terminal } from "@xterm/xterm";
 import { IcBadge, IcButton } from "@/design/components";
+import { reducedMotion } from "@/design/motion";
 import { token } from "@/design/tokens";
 import { useConsoleStore } from "@/stores/console";
 
@@ -47,7 +48,7 @@ async function ensureTerminal(): Promise<Terminal> {
 	]);
 	term = new XTerm({
 		rows: 24,
-		cursorBlink: true,
+		cursorBlink: !reducedMotion.value,
 		fontFamily: token("--ic-font-mono"),
 		fontSize: 13,
 		lineHeight: 1.3,

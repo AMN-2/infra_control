@@ -135,3 +135,71 @@ describe("nodeRoute", () => {
 		});
 	});
 });
+
+describe("layoutTopology at scale (B4.1: 200 nodes)", () => {
+	/** 2 providers, 20 servers, 40 benches, 138 sites: 200 nodes, 198 edges. */
+	function large() {
+		const nodes: TopologyNode[] = [];
+		const edges: { id: string; source: string; target: string }[] = [];
+		let benchIndex = 0;
+		for (let p = 0; p < 2; p++) {
+			const provider = node("provider", `P-${p}`);
+			nodes.push(provider);
+			for (let s = 0; s < 10; s++) {
+				const server = node("server", `SRV-${p}-${s}`, { has_running_job: s % 7 === 0 });
+				nodes.push(server);
+				edges.push(edge(provider.id, server.id));
+				for (let b = 0; b < 2; b++) {
+					const bench = node("bench", `B-${p}-${s}-${b}`);
+					nodes.push(bench);
+					edges.push(edge(server.id, bench.id));
+					const sites = 3 + (benchIndex < 18 ? 1 : 0); // 40 * 3 + 18 = 138
+					benchIndex += 1;
+					for (let i = 0; i < sites; i++) {
+						const site = node("site", `s${p}${s}${b}${i}.iq`);
+						nodes.push(site);
+						edges.push(edge(bench.id, site.id));
+					}
+				}
+			}
+		}
+		return { nodes, edges };
+	}
+
+	it("places 200 nodes without overlap, in column order, well under a frame budget", () => {
+		const topology = large();
+		expect(topology.nodes).toHaveLength(200);
+		const started = performance.now();
+		const layout = layoutTopology(topology);
+		const elapsed = performance.now() - started;
+		expect(layout.nodes).toHaveLength(200);
+		expect(layout.edges).toHaveLength(topology.edges.length);
+		expect(elapsed).toBeLessThan(50);
+
+		const columnX = new Map<TopologyNode["type"], number>();
+		for (const p of layout.nodes) {
+			const x = columnX.get(p.node.type);
+			if (x === undefined) columnX.set(p.node.type, p.x);
+			else expect(p.x).toBe(x); // one column per type
+		}
+		const byColumn = new Map<number, number[]>();
+		for (const p of layout.nodes) byColumn.set(p.x, [...(byColumn.get(p.x) ?? []), p.y]);
+		for (const ys of byColumn.values()) {
+			ys.sort((a, b) => a - b);
+			for (let i = 1; i < ys.length; i++) {
+				expect((ys[i] ?? 0) - (ys[i - 1] ?? 0)).toBeGreaterThanOrEqual(NODE_H);
+			}
+		}
+		expect(layout.width).toBeGreaterThan(0);
+		expect(layout.height).toBeGreaterThanOrEqual(138 * NODE_H);
+	});
+
+	it("pulses a server's own subtree only, in O(subtree) edges", () => {
+		const layout = layoutTopology(large());
+		const edges = pulseEdges(layout, "SRV-0-3");
+		// provider edge + 2 bench edges + up to 8 site edges
+		expect(edges.length).toBeGreaterThanOrEqual(3);
+		expect(edges.length).toBeLessThanOrEqual(11);
+		expect(edges.every((e) => e.id.includes("SRV-0-3") || e.id.includes("B-0-3-"))).toBe(true);
+	});
+});

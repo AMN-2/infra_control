@@ -5,6 +5,7 @@ import {
 	IcButton,
 	IcCard,
 	IcConfirmDialog,
+	IcEmptyState,
 	IcPageHeader,
 	IcSkeleton,
 	pushToast,
@@ -105,7 +106,12 @@ async function enable(): Promise<void> {
 				</p>
 			</IcCard>
 			<IcCard title="Checks" :padded="false">
-				<ul class="divide-y divide-line" data-testid="security-checks">
+				<IcEmptyState
+					v-if="!ordered.length"
+					title="No checks reported"
+					description="The posture endpoint returned no checks for this site."
+				/>
+				<ul v-else class="divide-y divide-line" data-testid="security-checks">
 					<li
 						v-for="c in ordered"
 						:key="c.id"

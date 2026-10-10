@@ -219,3 +219,38 @@ def test_dummy_provider_runs_steps_fails_and_cancels() -> None:
 	ref = p.call("backup_site", site="demo")
 	assert p.cancel(ref) is True
 	assert p.get_status(ref).state is OpState.CANCELLED
+
+
+def _registry_frappe(monkeypatch: pytest.MonkeyPatch, *, is_staging: int, allow: int) -> None:
+	from fake_frappe import FakeFrappe
+
+	f = FakeFrappe()
+	monkeypatch.setattr(registry, "frappe", f)
+	f.add(
+		"Provider Account",
+		name="DO-PROD",
+		label="DO-PROD",
+		provider="digitalocean",
+		enabled=1,
+		is_staging=is_staging,
+		api_token="tok",
+	)
+	f.singles["Infra Settings"] = {"allow_production_accounts": allow}
+
+
+def test_production_account_is_refused_until_the_gate_is_on(monkeypatch: pytest.MonkeyPatch) -> None:
+	_registry_frappe(monkeypatch, is_staging=0, allow=0)
+	with pytest.raises(ValidationError) as exc:
+		registry.config_from_account("DO-PROD")
+	assert "production" in str(exc.value)
+
+
+def test_production_account_is_usable_when_the_gate_is_on(monkeypatch: pytest.MonkeyPatch) -> None:
+	_registry_frappe(monkeypatch, is_staging=0, allow=1)
+	cfg = registry.config_from_account("DO-PROD")
+	assert cfg.is_staging is False and cfg.api_token == "tok"
+
+
+def test_staging_account_ignores_the_production_gate(monkeypatch: pytest.MonkeyPatch) -> None:
+	_registry_frappe(monkeypatch, is_staging=1, allow=0)
+	assert registry.config_from_account("DO-PROD").is_staging is True

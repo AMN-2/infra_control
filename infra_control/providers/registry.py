@@ -72,13 +72,23 @@ def build(config: ProviderConfig) -> Provider:
 	return adapter_class(str(config.provider))(config)
 
 
+def production_accounts_allowed() -> bool:
+	"""Plan rule 11.6 (staging only) is the default; the production controller opts out explicitly."""
+	return bool(frappe.db.get_single_value("Infra Settings", "allow_production_accounts"))
+
+
 def config_from_account(account: str) -> ProviderConfig:
-	"""Read a `Provider Account`. Only staging accounts are usable while the plan's rule 11.6 holds."""
+	"""Read a `Provider Account`. Non-staging accounts need `allow_production_accounts` in Infra Settings."""
 	if not frappe.db.exists("Provider Account", account):
 		raise NotFound("Provider Account", account)
 	doc: Any = frappe.get_doc("Provider Account", account)
 	if not doc.enabled:
 		raise ValidationError(f"Provider Account {account} is disabled", {"account": account})
+	if not doc.is_staging and not production_accounts_allowed():
+		raise ValidationError(
+			f"Provider Account {account} is a production account and production accounts are not enabled",
+			{"account": account, "hint": "Infra Settings → Production → Allow production accounts"},
+		)
 	return ProviderConfig(
 		account=account,
 		provider=ProviderName(doc.provider),

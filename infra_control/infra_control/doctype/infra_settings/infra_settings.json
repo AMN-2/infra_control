@@ -8,6 +8,8 @@
  "field_order": [
   "controller_ip",
   "job_heartbeat_timeout_minutes",
+  "sb_production",
+  "allow_production_accounts",
   "sb_telegram",
   "telegram_bot_token",
   "telegram_chat_id",
@@ -41,6 +43,18 @@
    "label": "Job heartbeat timeout (minutes)",
    "default": "5",
    "description": "Running jobs without a worker heartbeat for this long are failed and their locks released."
+  },
+  {
+   "fieldname": "sb_production",
+   "fieldtype": "Section Break",
+   "label": "Production"
+  },
+  {
+   "fieldname": "allow_production_accounts",
+   "fieldtype": "Check",
+   "label": "Allow production accounts",
+   "default": "0",
+   "description": "Off: only Provider Accounts marked staging can be used (plan rule 11.6). Turn on only on the production controller, after the Phase 4 gate (docs/runbooks/production_install.md)."
   },
   {
    "fieldname": "sb_telegram",

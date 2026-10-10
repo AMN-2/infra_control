@@ -103,6 +103,23 @@ def checks() -> list[dict[str, Any]]:
 			"Production tokens use custom scopes and a separate DigitalOcean project (plan 13.3).",
 		)
 	)
+	allow_prod = bool(frappe.db.get_single_value("Infra Settings", "allow_production_accounts"))
+	if allow_prod:
+		prod_status, prod_detail = "warn", "production accounts enabled on this controller"
+		prod_hint = (
+			"Expected only on the production controller after the Phase 4 gate; keep staging controllers off."
+		)
+	elif prod:
+		prod_status, prod_detail = (
+			"warn",
+			f"{len(prod)} production account(s) present but unusable (gate off)",
+		)
+		prod_hint = (
+			"Turn on Infra Settings → Allow production accounts when this controller is the production one."
+		)
+	else:
+		prod_status, prod_detail, prod_hint = "pass", "staging only (plan rule 11.6)", ""
+	out.append(_check("production_gate", "Production accounts gate", prod_status, prod_detail, prod_hint))
 
 	ssh_key = Path(os.path.expanduser(str(frappe.conf.get("infra_ssh_private_key") or "~/.ssh/id_ed25519")))
 	mode = _mode(ssh_key)
